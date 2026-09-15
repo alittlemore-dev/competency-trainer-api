@@ -15,8 +15,7 @@ Portfolio and articles site
 - File storage: MinIO through an aiobotocore S3-compatible adapter
 - Auth: PASETO (pyseto) + Argon2 password hashing
 - Logging: structlog + ECS logging + Sentry SDK
-- Frontend: Angular 22 hybrid SSR/CSR + Bootstrap 5, served by a frontend-owned Node.js SSR image
-- Edge: nginx reverse proxy for TLS, `/api/*`, exact `/sitemap.xml` and `/robots.txt`, frontend, the public MinIO object endpoint, and VPN-only internal web panel routing
+- Scope: backend service for shared platform clients and the integrated runtime
 
 ## General rules
 
@@ -53,14 +52,13 @@ Portfolio and articles site
   schemas/use cases below the HTTP boundary.
 - Keep the admin dashboard as a standalone cross-domain, role-specific composition page; dashboard
   widgets and business logic remain owned by their source domains.
-- Privileged behavior must be enforced by backend guards and/or use cases, not only by hiding or
-  disabling frontend controls. When a UI hides actions based on role or auth state, keep a matching
-  backend authorization check and cover the protected path with an API/use-case test.
+- Privileged behavior must be enforced by backend guards and use cases. Cover each protected path
+  with an API or use-case test.
 - Authentication uses explicit `Authorization` bearer access tokens plus a Secure, HttpOnly,
   SameSite session cookie scoped to refresh/logout under `/api/auth/*`. Preserve the required CSRF
   guard header, Fetch Metadata checks, cookie policy, and server-side verification tests. Before
   expanding browser-sent credentials to any additional state-changing handler, design and test the
-  matching CSRF boundary in the same backend/frontend change.
+  matching CSRF boundary in the same backend change.
 - Do not add default values in real production code. API parameters, schemas, dataclasses, settings, helpers, services, and infrastructure-facing code should require callers or environment configuration to pass values explicitly. Filter dataclasses may define defaults for omitted filters, pagination, relationship-loading switches, and list-mode switches when the default means "do not apply this filter" or preserves the normal list behavior; tests, test helpers, and factories may keep defaults when they make test setup clearer.
 - Avoid `None`/`null` in production schemas, DTOs, and persisted structured content when a truthful
   non-null representation exists. Prefer empty strings for intentionally blank text, empty
@@ -86,18 +84,12 @@ Portfolio and articles site
 - The following Make commands are trusted for agent use and may be approved as recurring command
   prefixes when the local Codex permission flow asks for them:
   `make test-backend-unit`, `make test-backend`, `make test-backend-integration`,
-  `make test-frontend`, `make tests`, `make tests-fast`, `make tests-coverage`,
-  `make tests-coverage-frontend`, `make -C backend test-unit`, `make -C backend test`,
+  `make tests`, `make tests-fast`, `make tests-coverage`, `make -C backend test-unit`, `make -C backend test`,
   `make -C backend test-integration`, `make -C backend tests-coverage`,
   `make -C backend types`, `make -C backend format-check`, `make -C backend ruff-lint-check`,
   `make -C backend lint-check`, `make -C backend bandit`, `make -C backend security-bandit`,
   `make -C backend security-pip-audit`, `make -C backend vulture`, `make -C backend security`,
-  `make performance-lighthouse`, `make query-plans-realistic`,
-  `make query-plans-stress`,
-  `make -C frontend test`, `make -C frontend test-coverage`,
-  `make -C frontend tests-coverage`, `make -C frontend lint`, `make -C frontend security`,
-  `make -C frontend typecheck`, `make -C frontend format-check`, `make -C frontend ssr-smoke`,
-  and `make -C frontend build`.
+  `make query-plans-realistic`, and `make query-plans-stress`.
 - Before adding any new Make command to the trusted-for-agents list, inspect the target and the
   scripts it delegates to for agent-safety risks, including repository writes, destructive file or
   Docker operations, database migrations or downgrades, dependency installation, network access,
@@ -109,10 +101,9 @@ Portfolio and articles site
 - Keep Makefiles as thin wrappers only: Make recipes may call Bash scripts under the relevant
   `scripts/` directory or delegate to nested Makefiles with `$(MAKE) -C ...`, while command logic,
   env loading, shell branching, Docker orchestration, cleanup, and tool invocations belong in
-  dedicated scripts such as `backend/scripts/`, `frontend/scripts/`, and `infra/scripts/`.
-- Do not change lock files (`backend/uv.lock`, `frontend/package-lock.json`) unless dependencies intentionally changed.
+  dedicated scripts such as `backend/scripts/`.
+- Do not change `backend/uv.lock` unless dependencies intentionally changed.
 - When changing any library, dependency, runtime, or tool version, update the matching badges in `.github/badges/` in the same change.
-- Frontend npm installs must enforce peer dependency contracts. Resolve Angular, TypeScript, and tooling peer dependency conflicts in `frontend/package.json` and `frontend/package-lock.json` instead of using `--legacy-peer-deps` or `--force`, except for an explicitly documented temporary workaround with a TODO and removal plan.
 - Do not commit real or production secrets, tokens, private keys, or environment values.
   Configuration must flow through environment-backed settings. Deterministic non-secret test
   credentials may be committed only in dedicated test fixtures or test environment files and must
@@ -128,11 +119,6 @@ Portfolio and articles site
   not bind raw authored content to `[innerHTML]`, use `bypassSecurityTrustHtml`, or add a new
   Markdown renderer without XSS regression tests for `<script>`, event-handler attributes, and
   unsafe URL schemes.
-- Root Docker Compose and `infra/**` changes must preserve the current private-network and public
-  exposure baseline. Do not add public service ports, host networking, privileged containers,
-  Docker socket mounts, broad capabilities, or root runtime users unless explicitly required and
-  accompanied by a documented security tradeoff. Detailed nginx, CSP, VPN, and edge-routing rules
-  belong in `infra/AGENTS.md`.
 - Keep agent access as a separate private machine contour. Production transport is only the
   Litestar REST API at `https://agent.<APP_DOMAIN>:18083/internal/agent/v1`, bound to
   `VPN_BIND_ADDRESS` and authenticated by nginx with distinct client certificates. MCP exists only
@@ -141,8 +127,6 @@ Portfolio and articles site
   trusted nginx-to-backend network contour. Never weaken availability with a public/plaintext
   listener, bearer fallback, shared certificate, human PASETO reuse, generic CRUD/HTTP/SQL/shell
   access, publishing, deletion, structure mutation, or server-side URL fetching. Detailed backend
-  and edge rules belong in `backend/AGENTS.md`, `infra/AGENTS.md`, and `docs/agent-access.md`.
-- More specific instructions live in nested `AGENTS.md` files under `infra/`, `backend/`,
-  `backend/src/core/`, `backend/src/infra/postgresql/`, `backend/tests/`, `frontend/`,
-  `frontend/src/app/`, `frontend/src/app/core/editor/`, and
-  `frontend/src/app/features/admin-panel/`.
+  rules belong in `backend/AGENTS.md` and `docs/agent-access.md`.
+- More specific instructions live in nested `AGENTS.md` files under `backend/`,
+  `backend/src/core/`, `backend/src/infra/postgresql/`, and `backend/tests/`.

@@ -199,7 +199,6 @@ verify_runtime_restart_policies() {
     local service_name
     local unless_stopped_services=(
         "$ACTIVE_BACKEND_SLOT"
-        "$ACTIVE_FRONTEND_SLOT"
         "taskiq-worker"
         "taskiq-scheduler"
         "postgres"
@@ -251,7 +250,7 @@ stop_previous_slot() {
     fi
 
     sleep "$DEPLOY_DRAIN_SECONDS"
-    docker compose stop "backend-${previous_slot}" "frontend-${previous_slot}" || true
+    docker compose stop "backend-${previous_slot}" || true
 }
 
 if [ ! -f .env ]; then
@@ -284,12 +283,11 @@ fi
 
 export ACTIVE_DEPLOY_SLOT="$target_slot"
 export ACTIVE_BACKEND_SLOT="backend-${target_slot}"
-export ACTIVE_FRONTEND_SLOT="frontend-${target_slot}"
 
 prepare_minio_volume_permissions
 compose_up_wait postgres valkey minio databasus
 run_backend_init
-compose_up_wait "$ACTIVE_BACKEND_SLOT" "$ACTIVE_FRONTEND_SLOT" taskiq-worker taskiq-scheduler
+compose_up_wait "$ACTIVE_BACKEND_SLOT" taskiq-worker taskiq-scheduler
 sync_certificates
 switch_nginx
 verify_runtime_restart_policies

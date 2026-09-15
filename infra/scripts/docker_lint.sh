@@ -12,7 +12,6 @@ dockle_accept_files="${DOCKLE_ACCEPT_FILES:-settings.py}"
 dockle_ignore_codes="${DOCKLE_IGNORE_CODES:-DKL-DI-0005}"
 dockerfiles=(
     "backend/Dockerfile"
-    "frontend/Dockerfile"
     "infra/minio/Dockerfile"
     "infra/nginx/Dockerfile"
 )

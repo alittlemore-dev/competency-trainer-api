@@ -104,7 +104,7 @@ constructed as `Draft`; clients cannot submit `publishStatus` or `publishedAt`.
 The human management contour stays separate from the Agent API:
 
 ```text
-Angular owner UI -> `/api/admin/agent-clients` -> owner guard -> normal application DB role
+Owner client -> `/api/admin/agent-clients` -> owner guard -> normal application DB role
 ```
 
 - Only the owner may register/revoke clients or read their audit events. Admin and moderator roles

@@ -1,28 +1,23 @@
 # Мой сайт
 
-<p align="center">
-  <img src="../frontend/public/logo-512x512.png" alt="Логотип проекта" width="180">
-</p>
-
 [🇺🇸 English version](./README.md)
 
 | Категория | Технологии |
 |----------|------------|
-| Покрытие | ![coverage-backend](./badges/coverage-backend.svg) ![coverage-frontend](./badges/coverage-frontend.svg) |
+| Покрытие | ![coverage-backend](./badges/coverage-backend.svg) |
 | Backend | ![python](./badges/python.svg) ![litestar](./badges/litestar.svg) ![async](./badges/async.svg) ![pydantic](./badges/pydantic.svg) ![dishka](./badges/dishka.svg) ![taskiq](./badges/taskiq.svg) ![paseto](./badges/paseto.svg) ![argon2](./badges/argon2.svg) ![mcp](./badges/mcp.svg) |
 | База данных | ![postgresql](./badges/postgresql.svg) ![sqlalchemy](./badges/sqlalchemy.svg) ![alembic](./badges/alembic.svg) |
 | Кэш | ![valkey](./badges/valkey.svg) |
-| Frontend | ![angular](./badges/angular.svg) ![typescript](./badges/typescript.svg) ![bootstrap](./badges/bootstrap.svg) |
-| Тестирование | ![pytest](./badges/pytest.svg) ![jest](./badges/jest.svg) ![lhci](./badges/lhci.svg) |
+| Тестирование | ![pytest](./badges/pytest.svg) |
 | DevOps | ![docker](./badges/docker.svg) ![nginx](./badges/nginx.svg) ![minio](./badges/minio.svg) ![docker-compose](./badges/docker-compose.svg) |
-| Качество | ![ruff](./badges/ruff.svg) ![mypy](./badges/mypy.svg) ![bandit](./badges/bandit.svg) ![pip-audit](./badges/pip-audit.svg) ![trivy](./badges/trivy.svg) ![hadolint](./badges/hadolint.svg) ![dockle](./badges/dockle.svg) ![vulture](./badges/vulture.svg) ![eslint](./badges/eslint.svg) ![prettier](./badges/prettier.svg) |
+| Качество | ![ruff](./badges/ruff.svg) ![mypy](./badges/mypy.svg) ![bandit](./badges/bandit.svg) ![pip-audit](./badges/pip-audit.svg) ![trivy](./badges/trivy.svg) ![hadolint](./badges/hadolint.svg) ![dockle](./badges/dockle.svg) ![vulture](./badges/vulture.svg) |
 | Логирование | ![structlog](./badges/structlog.svg) ![ecs-logging](./badges/ecs-logging.svg) ![sentry](./badges/sentry.svg) |
 | Архитектура | ![clean-architecture](./badges/clean-architecture.svg) ![type-safe](./badges/type-safe.svg) |
-| Инструменты | ![uv](./badges/uv.svg) ![granian](./badges/granian.svg) ![node](./badges/node.svg) ![npm](./badges/npm.svg) |
+| Инструменты | ![uv](./badges/uv.svg) ![granian](./badges/granian.svg) |
 | CI/CD | ![github-actions](./badges/github-actions.svg) ![dependabot](./badges/dependabot.svg) |
 
 > [!NOTE]
-> Backend coverage — pytest (Python). Frontend coverage — Jest (TypeScript). Оба генерируются в отдельных CI job-ах.
+> Покрытие backend генерируется pytest (Python).
 
 Инженерный сайт с публичной case-study страницей, обновлениями, матрицей компетенций,
 локализованными статьями и защищёнными рабочими областями для управления контентом.
@@ -31,14 +26,12 @@
 
 - [Идея проекта](../docs/idea.md)  
 - [Что нужно сделать](../docs/TODO.md)
-- [Безопасный доступ агентов](../docs/agent-access.md)
 
 ## 📂 Структура проекта
 
 ```
 competency-trainer/
 ├── infra/          # nginx reverse proxy, скрипты запуска
-├── frontend/       # Angular 22 hybrid SSR/CSR (собственный Node.js-образ)
 ├── backend/        # Litestar API + доменная логика
 │   ├── src/        # Исходный код приложения
 │   ├── tests/      # Backend-тесты (pytest)
@@ -111,12 +104,10 @@ make run
 
 `make run` заранее проверяет обязательные значения `.env` и материализует runtime secrets как
 локальные файлы `.deploy-state/compose-secrets/`. Затем он поднимает PostgreSQL, Valkey, MinIO,
-Databasus, backend с ограниченным Agent route-контуром, frontend и nginx через Docker health checks,
+Databasus, backend с ограниченным Agent route-контуром и nginx через Docker health checks,
 выполняет одноразовую backend-инициализацию и переключает публичный трафик между blue/green
-backend/frontend слотами с принудительным recreation nginx, чтобы применить Compose-изменения
-порта, secrets, пользователя и image. Скрипт также проверяет фактические runtime restart policies:
-nginx возвращается после перезапуска Docker/VPS и завершает себя после устойчивого отказа локальной
-liveness-проверки, чтобы Docker восстановил edge без watchdog с Docker socket.
+backend-слотами с принудительным recreation nginx, чтобы применить Compose-изменения порта,
+secrets, пользователя и image. Скрипт также проверяет фактические runtime restart policies.
 
 ## Локальный MCP bridge
 
@@ -134,7 +125,6 @@ liveness-проверки, чтобы Docker восстановил edge без 
 
 Локальный edge nginx перенаправляет HTTP на HTTPS, поэтому в браузере используйте HTTPS-ссылки.
 
-- Frontend: `https://localhost`
 - API: `https://localhost/api`
 - API liveness: `https://localhost/api/healthcheck`
 - API readiness: `https://localhost/api/healthcheck/ready`
@@ -157,19 +147,15 @@ port. Подробнее: [WireGuard internal access](../docs/wireguard-internal
 ## 🧪 Тесты
 
 ```bash
-make tests-compose              # запустить/переиспользовать test DB, backend + frontend, очистить своё
-make tests-fast                 # backend unit + frontend tests; backend test DB не нужна
-make tests                      # полный backend + frontend
+make tests-compose              # запустить/переиспользовать test DB, backend-тесты, очистить своё
+make tests-fast                 # backend unit-тесты; backend test DB не нужна
+make tests                      # полный набор backend-тестов
 make test-env-up                # запустить переиспользуемый test PostgreSQL
 make test-env-down              # остановить test PostgreSQL и удалить данные
 make test-backend               # backend unit + integration + serial migrations
 make test-backend-unit          # unit-тесты backend, DB не нужна
 make test-backend-integration   # интеграционные тесты backend, test DB готовится автоматически
 make tests-coverage             # отчёт покрытия backend
-make tests-coverage-frontend    # отчёт покрытия frontend
-make test-frontend              # только frontend (jest)
-make -C frontend ssr-smoke      # production SSR build + smoke HTML публичной статьи, обновлений, case-study и вопроса матрицы
-make performance-lighthouse     # production Angular SSR build + strict Lighthouse CI quality/performance gates
 make query-plans-realistic      # обязательный main gate: реалистичные данные, планы + latency
 make query-plans-stress         # ручной большой профиль: строгие планы, latency как observation
 ```

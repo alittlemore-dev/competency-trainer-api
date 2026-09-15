@@ -114,39 +114,6 @@ x-backend-healthcheck: &backend-healthcheck
   timeout: 5s
   retries: 24
 
-x-frontend-build: &frontend-build
-  build:
-    context: ./frontend
-    dockerfile: Dockerfile
-  image: "competency_trainer_frontend:${IMAGE_TAG:?IMAGE_TAG must be set}"
-  user: "1000:1000"
-  read_only: true
-  cap_drop:
-    - ALL
-  security_opt:
-    - no-new-privileges:true
-  tmpfs:
-    - /tmp:mode=1777,uid=1000,gid=1000
-  environment:
-    - PORT=4000
-    - APP_URL_SCHEMA=${APP_URL_SCHEMA}
-    - APP_DOMAIN=${APP_DOMAIN}
-    - SSR_PUBLIC_ORIGIN=${APP_URL_SCHEMA}://${APP_DOMAIN}
-    - NG_ALLOWED_HOSTS=${APP_DOMAIN}
-  restart: unless-stopped
-  networks:
-    - app-network
-
-x-frontend-healthcheck: &frontend-healthcheck
-  test:
-    [
-      "CMD-SHELL",
-      "node -e \"fetch('http://127.0.0.1:4000/healthz').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))\"",
-    ]
-  interval: 5s
-  timeout: 5s
-  retries: 24
-
 x-process-healthcheck: &process-healthcheck
   test: ["CMD-SHELL", "python -c \"import os, signal; os.kill(1, 0)\""]
   interval: 10s
@@ -217,30 +184,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck: *process-healthcheck
-
-  frontend-blue:
-    <<: *frontend-build
-    container_name: competency_trainer_frontend_blue
-    environment:
-      - PORT=4000
-      - APP_URL_SCHEMA=${APP_URL_SCHEMA}
-      - APP_DOMAIN=${APP_DOMAIN}
-      - SSR_API_ORIGIN=http://backend-blue:8080
-      - SSR_PUBLIC_ORIGIN=${APP_URL_SCHEMA}://${APP_DOMAIN}
-      - NG_ALLOWED_HOSTS=${APP_DOMAIN}
-    healthcheck: *frontend-healthcheck
-
-  frontend-green:
-    <<: *frontend-build
-    container_name: competency_trainer_frontend_green
-    environment:
-      - PORT=4000
-      - APP_URL_SCHEMA=${APP_URL_SCHEMA}
-      - APP_DOMAIN=${APP_DOMAIN}
-      - SSR_API_ORIGIN=http://backend-green:8080
-      - SSR_PUBLIC_ORIGIN=${APP_URL_SCHEMA}://${APP_DOMAIN}
-      - NG_ALLOWED_HOSTS=${APP_DOMAIN}
-    healthcheck: *frontend-healthcheck
 
   valkey:
     image: valkey/valkey:9.0.1
@@ -331,7 +274,6 @@ services:
       - SSL_CERT=${SSL_CERT}
       - SSL_KEY=${SSL_KEY}
       - ACTIVE_BACKEND_SLOT=${ACTIVE_BACKEND_SLOT:-backend-blue}
-      - ACTIVE_FRONTEND_SLOT=${ACTIVE_FRONTEND_SLOT:-frontend-blue}
       - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL}
       - NGINX_LIVENESS_FAILURE_LIMIT=12
     command: ["/usr/local/bin/competency-trainer-nginx-entrypoint"]

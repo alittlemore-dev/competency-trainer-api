@@ -34,22 +34,6 @@ jobs:
     name: "Backend Vulture"
     uses: ./.github/workflows/_backend_vulture.yaml
 
-  frontend-style:
-    name: "Frontend style"
-    uses: ./.github/workflows/_frontend_style.yaml
-
-  frontend-lint:
-    name: "Frontend lint"
-    uses: ./.github/workflows/_frontend_lint.yaml
-
-  frontend-typecheck:
-    name: "Frontend typecheck"
-    uses: ./.github/workflows/_frontend_typecheck.yaml
-
-  frontend-security:
-    name: "Frontend security"
-    uses: ./.github/workflows/_frontend_security.yaml
-
   backend-tests:
     name: "Backend tests"
     needs:
@@ -61,15 +45,6 @@ jobs:
       - backend-vulture
     uses: ./.github/workflows/_backend_tests.yaml
 
-  frontend-tests:
-    name: "Frontend tests"
-    needs:
-      - frontend-style
-      - frontend-lint
-      - frontend-typecheck
-      - frontend-security
-    uses: ./.github/workflows/_frontend_tests.yaml
-
   backend-query-plans:
     name: "Backend query plans"
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
@@ -80,27 +55,11 @@ jobs:
       profile: realistic
       timeout_minutes: 20
 
-  frontend-ssr-smoke:
-    name: "Frontend SSR smoke"
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    needs:
-      - frontend-tests
-    uses: ./.github/workflows/_frontend_ssr_smoke.yaml
-
-  frontend-lighthouse:
-    name: "Frontend Lighthouse"
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    needs:
-      - frontend-tests
-    uses: ./.github/workflows/_frontend_lighthouse.yaml
-
   dockerfile-lint:
     name: "Dockerfile lint"
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     needs:
       - backend-query-plans
-      - frontend-ssr-smoke
-      - frontend-lighthouse
     uses: ./.github/workflows/_dockerfile_lint.yaml
 
   trivy-config-scan:
@@ -108,8 +67,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     needs:
       - backend-query-plans
-      - frontend-ssr-smoke
-      - frontend-lighthouse
     uses: ./.github/workflows/_trivy_config_scan.yaml
 
   backend-docker-image-security:
@@ -117,33 +74,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     needs:
       - backend-query-plans
-      - frontend-ssr-smoke
-      - frontend-lighthouse
     uses: ./.github/workflows/_backend_docker_image_security.yaml
-
-  frontend-docker-image-security:
-    name: "Frontend Docker image security"
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    needs:
-      - backend-query-plans
-      - frontend-ssr-smoke
-      - frontend-lighthouse
-    uses: ./.github/workflows/_frontend_docker_image_security.yaml
 
   nginx-docker-image-security:
     name: "Nginx Docker image security"
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     needs:
       - backend-query-plans
-      - frontend-ssr-smoke
-      - frontend-lighthouse
     uses: ./.github/workflows/_nginx_docker_image_security.yaml
-
-  infra-security:
-    name: "Infrastructure security"
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    needs:
-      - backend-query-plans
-      - frontend-ssr-smoke
-      - frontend-lighthouse
-    uses: ./.github/workflows/_infra_security.yaml

@@ -34,30 +34,6 @@ db.sqlite3
 db.sqlite3-journal
 media/
 
-# Node/React
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-.pnpm-store/
-.npm
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# Frontend build
-frontend/dist/
-frontend/build/
-frontend/.next/
-frontend/out/
-frontend/.vercel
-frontend/.turbo
-frontend/.lighthouseci/
-frontend/performance/reports/lighthouse/
-
 # IDE
 .idea/
 .vscode/
@@ -86,13 +62,9 @@ env/
 # Logs
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Testing
 coverage/
-.nyc_output/
 
 # Misc
 .DS_Store

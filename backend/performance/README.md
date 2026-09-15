@@ -1,7 +1,6 @@
 # Performance Testing
 
-This directory contains deterministic PostgreSQL storage query-plan tooling. Frontend Lighthouse
-quality and performance gates live under `frontend/lighthouse/` and run through Lighthouse CI.
+This directory contains deterministic PostgreSQL storage query-plan tooling.
 
 ## Layout
 
@@ -22,19 +21,6 @@ make test-backend-integration
 
 This is a functional wiring and contract check. It intentionally does not impose HTTP throughput or
 latency thresholds.
-
-## Lighthouse CI
-
-Use Lighthouse CI from the repository root for lab performance, resource budgets, accessibility,
-best-practices, and SEO gates on the Angular hybrid SSR/CSR routes:
-
-```bash
-make performance-lighthouse
-```
-
-The frontend target builds the production Angular SSR bundle, starts a deterministic mock API and
-Node SSR runtime, audits the public case-study, articles list/detail, and matrix list/detail routes,
-then writes HTML/JSON reports to `frontend/performance/reports/lighthouse/`.
 
 ## Query Plan Checks
 
@@ -122,9 +108,6 @@ baseline, effective threshold, overrun flag, and separate blocking findings and 
 ## Additional Details
 
 The query-plan Make targets prepare the backend uv environment and test PostgreSQL, then write
-timestamped reports. Lighthouse CI covers frontend quality and lab performance separately from
-backend SQL-plan checks.
+timestamped reports.
 
 References:
-
-- https://web.dev/articles/lighthouse-ci

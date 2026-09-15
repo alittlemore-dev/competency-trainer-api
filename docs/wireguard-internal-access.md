@@ -34,7 +34,7 @@ backend secrets or affect public/admin availability. A compromised service that 
 backend on the private application network can forge the forwarded certificate header, so private
 network isolation and the nginx-to-backend trust assumption are required controls.
 
-PostgreSQL, Valkey, backend, frontend, MinIO, and Databasus must not publish
+PostgreSQL, Valkey, backend, MinIO, and Databasus must not publish
 their own Docker ports. nginx remains the only compose service with public port
 mappings.
 

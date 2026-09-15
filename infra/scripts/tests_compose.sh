@@ -20,9 +20,6 @@ case "$mode" in
         ;;
     all)
         make -C backend test TEST_ENV_FILE="$TEST_DB_ENV_FILE" || status=$?
-        if [ "$status" -eq 0 ]; then
-            make test-frontend || status=$?
-        fi
         ;;
     *)
         echo "Unknown compose test mode: $mode" >&2

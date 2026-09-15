@@ -66,7 +66,7 @@ make tests-coverage      # all + coverage report
 From the repository root:
 
 ```bash
-make tests-fast          # backend unit + frontend tests; no backend test PostgreSQL
+make tests-fast          # backend unit tests; no backend test PostgreSQL
 make tests-compose       # starts/reuses test PostgreSQL, runs tests, then cleans up owned services
 make test-env-up         # start isolated test PostgreSQL manually
 make test-env-down       # stop isolated test PostgreSQL and remove its data

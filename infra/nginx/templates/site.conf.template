@@ -19,11 +19,6 @@ upstream backend {
     server ${ACTIVE_BACKEND_SLOT}:8080 resolve;
 }
 
-upstream frontend {
-    zone frontend_zone 64k;
-    server ${ACTIVE_FRONTEND_SLOT}:4000 resolve;
-}
-
 upstream minio_api { server minio:9000 resolve; zone minio_api_zone 64k; }
 upstream minio_panel { server minio:9001 resolve; zone minio_panel_zone 64k; }
 upstream databasus { server databasus:4005 resolve; zone databasus_zone 64k; }
@@ -177,7 +172,7 @@ server {
     }
 
     location / {
-        proxy_pass http://frontend;
+        return 404;
     }
 }
 

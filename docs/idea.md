@@ -3,7 +3,7 @@
 ## Concept
 
 Portfolio and articles site with an interactive competency matrix and an engineering case study.
-Documents technical decisions through Clean Architecture, Angular, API-first backend design, and a modern DevOps stack.
+Documents technical decisions through Clean Architecture, API-first backend design, and a modern DevOps stack.
 
 ## Audience
 
@@ -40,7 +40,6 @@ Documents technical decisions through Clean Architecture, Angular, API-first bac
 
 - Clean Architecture and best practices
 - Interactive competency matrix with a database-backed taxonomy
-- Angular hybrid SSR/CSR frontend served as an independent Docker image
 - Infrastructure nginx kept as an edge reverse proxy for public routing and TLS
 
 ## Goal

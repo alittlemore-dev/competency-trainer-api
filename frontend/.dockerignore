@@ -1,7 +1,0 @@
-node_modules
-dist
-.angular
-coverage
-performance/reports
-.git
-npm-debug.log

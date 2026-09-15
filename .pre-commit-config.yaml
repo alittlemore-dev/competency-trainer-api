@@ -7,9 +7,3 @@ repos:
         language: system
         pass_filenames: false
         files: ^backend/(src|tests)/.*\.py$
-      - id: make-quality-frontend
-        name: Quality check (frontend)
-        entry: make quality-frontend
-        language: system
-        pass_filenames: false
-        files: ^frontend/src/.*\.(ts|html|scss)$
