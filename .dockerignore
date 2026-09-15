@@ -18,5 +18,11 @@ docs
 .claude
 CLAUDE.md
 node_modules
-backend/performance/reports
+performance/reports
 frontend/performance/reports
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+htmlcov

@@ -8,7 +8,7 @@ local stdio bridge that translates five typed tools into that REST contract.
 
 ```text
 Codex or another MCP host
-  -> `backend/src/agent_bridge.py`
+  -> `src/agent_bridge.py`
   -> local stdio bridge transport (`entrypoints/agent_bridge`, five tools)
   -> core bridge contracts and orchestration
   -> infra HTTP/mTLS and crypto/files adapters

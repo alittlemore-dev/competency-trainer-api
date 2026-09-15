@@ -15,10 +15,10 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v7
         with:
-          python-version-file: "backend/pyproject.toml"
+          python-version-file: "pyproject.toml"
       - name: "Install UV"
         uses: astral-sh/setup-uv@v10.0.1
         with:
           cache-suffix: "backend-vulture"
       - name: "Dead code scan"
-        run: make -C backend vulture
+        run: make vulture

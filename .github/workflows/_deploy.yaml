@@ -35,7 +35,7 @@ jobs:
       - name: Prepare deploy payload
         run: |
           mkdir -p .deploy-payload
-          cp -a Makefile docker-compose.yml backend/ infra/ .env .deploy-payload/
+          cp -a Makefile docker-compose.yml Dockerfile pyproject.toml uv.lock scripts src tests performance start_application.sh infra/ .env .deploy-payload/
 
       - name: Sync runtime files to server
         uses: burnett01/rsync-deployments@9.0.0

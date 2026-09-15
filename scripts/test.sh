@@ -7,7 +7,7 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$backend_dir"
 
 action="${1:?action is required}"
-TEST_ENV_FILE="${2:-${TEST_ENV_FILE:-../.env.test}}"
+TEST_ENV_FILE="${2:-${TEST_ENV_FILE:-.env.test}}"
 TEST_ENV_OVERRIDES="${3:-${TEST_ENV_OVERRIDES:-}}"
 
 ensure_backend_deps

@@ -2,7 +2,7 @@
 
 backend_script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 backend_dir="$(cd -- "${backend_script_dir}/.." && pwd)"
-repo_dir="$(cd -- "${backend_dir}/.." && pwd)"
+repo_dir="$(cd -- "${backend_dir}" && pwd)"
 
 # shellcheck source=test_services.sh
 . "${script_dir}/test_services.sh"

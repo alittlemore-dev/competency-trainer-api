@@ -91,7 +91,7 @@ different query sets. It stores profile, source SHA, sample count, and the media
 medians for each query. Once committed, the effective `realistic` threshold becomes
 `min(SLA, max(2 × baseline, baseline + 20 ms))`; missing or stale query names then fail the run.
 
-Reports are written to `backend/performance/reports/query-plans/<timestamp>/`:
+Reports are written to `performance/reports/query-plans/<timestamp>/`:
 
 - `summary.md`
 - `summary.json`
@@ -103,7 +103,7 @@ baseline, effective threshold, overrun flag, and separate blocking findings and 
 
 ## Useful Environment Values
 
-- `PERFORMANCE_REPORT_DIR`: report output directory, relative to `backend/` when using Make.
+- `PERFORMANCE_REPORT_DIR`: report output directory, relative to the project root when using Make.
 
 ## Additional Details
 

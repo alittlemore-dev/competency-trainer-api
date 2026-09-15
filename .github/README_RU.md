@@ -32,10 +32,9 @@
 ```
 competency-trainer/
 ├── infra/          # nginx reverse proxy, скрипты запуска
-├── backend/        # Litestar API + доменная логика
-│   ├── src/        # Исходный код приложения
-│   ├── tests/      # Backend-тесты (pytest)
-│   └── performance/ # сценарии и отчёты проверки планов PostgreSQL
+├── src/            # Исходный код приложения
+├── tests/          # Backend-тесты (pytest)
+├── performance/    # Сценарии и отчёты проверки планов PostgreSQL
 ├── .env.example    # Пример переменных окружения
 ├── .env.test       # Безопасные переменные для тестового окружения
 ├── docker-compose.test.yml

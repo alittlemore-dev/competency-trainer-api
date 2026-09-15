@@ -2,7 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-backend_dir="$(cd -- "${script_dir}/.." && pwd)"
+backend_dir="$(cd -- "${script_dir}" && pwd)"
 cd "$backend_dir"
 
 require_uv() {
@@ -21,7 +21,7 @@ case "$action" in
     revision)
         message="${2:-}"
         if [ -z "$message" ]; then
-            echo 'Migration message is required. Use: make -C backend revision message="describe change"' >&2
+            echo 'Migration message is required. Use: make revision message="describe change"' >&2
             exit 2
         fi
         PYTHONPATH=src uv run alembic -c "$alembic_config" revision -m "$message" --autogenerate

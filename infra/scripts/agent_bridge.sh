@@ -22,5 +22,5 @@ set -a
 set +a
 
 cd "$repo_dir"
-exec env PYTHONPATH="${repo_dir}/backend/src" \
-    uv run --project "${repo_dir}/backend" python -m agent_bridge
+exec env PYTHONPATH="${repo_dir}/src" \
+    uv run --project "${repo_dir}" python -m agent_bridge

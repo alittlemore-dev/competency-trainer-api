@@ -30,7 +30,7 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v7
         with:
-          python-version-file: "backend/pyproject.toml"
+          python-version-file: "pyproject.toml"
       - name: "Install UV"
         uses: astral-sh/setup-uv@v10.0.1
         with:
@@ -40,7 +40,7 @@ jobs:
       - name: "Coverage Badge"
         run: |
           pip install -U genbadge defusedxml
-          genbadge coverage -n backend -i backend/coverage.xml -o .github/badges/coverage-backend.svg
+          genbadge coverage -n backend -i coverage.xml -o .github/badges/coverage-backend.svg
       - name: "Verify Changed files"
         id: verify-changed-files
         run: |

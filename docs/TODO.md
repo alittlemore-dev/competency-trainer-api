@@ -264,8 +264,8 @@
     - [x] Global alert/notification area for API success and error feedback
     - [x] Theme service with `data-bs-theme`, localStorage persistence, and initial theme application
     - [x] Grid-only competency matrix view
-    - [x] Move shared styles from `backend/src/static/styles.css` to Angular SCSS structure
-    - [x] Move public assets from `backend/src/static/` to `frontend/public/`
+    - [x] Move shared styles from `src/static/styles.css` to Angular SCSS structure
+    - [x] Move public assets from `src/static/` to `frontend/public/`
   - [x] SEO and root files
     - [x] Page title and meta description per route
     - [x] Open Graph and Twitter meta tags for public pages
@@ -789,7 +789,7 @@ Graph views, plugin APIs, and plugin-system support are explicitly out of scope 
 - [x] UI localisation
 - [x] Database localisation
 - [ ] Migrate from Makefile to Just
-- [x] Move complex logic out of Makefiles into dedicated script folders (`backend/scripts/`, `frontend/scripts/`, `infra/scripts/`); keep Makefiles as thin wrappers that only call Bash scripts or nested Makefiles.
+- [x] Move complex logic out of Makefiles into dedicated script folders (`scripts/`, `frontend/scripts/`, `infra/scripts/`); keep Makefiles as thin wrappers that only call Bash scripts or nested Makefiles.
 - [x] Refactor project scripts so `make <command>` fully prepares and runs tests, linters, checkers, and similar commands without manual setup (start required Docker services, prepare data, and run other prerequisites as needed).
 - [x] Cache on API get methods + cache invalidation on changes
 - [x] Background cache warm

@@ -11,7 +11,7 @@ dockle_accept_keys="${DOCKLE_ACCEPT_KEYS:-KEY_SHA512}"
 dockle_accept_files="${DOCKLE_ACCEPT_FILES:-settings.py}"
 dockle_ignore_codes="${DOCKLE_IGNORE_CODES:-DKL-DI-0005}"
 dockerfiles=(
-    "backend/Dockerfile"
+    "Dockerfile"
     "infra/minio/Dockerfile"
     "infra/nginx/Dockerfile"
 )

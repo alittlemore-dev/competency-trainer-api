@@ -89,7 +89,7 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v7
         with:
-          python-version-file: "backend/pyproject.toml"
+          python-version-file: "pyproject.toml"
       - name: "Install UV"
         uses: astral-sh/setup-uv@v10.0.1
         with:
@@ -101,4 +101,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: query-plan-reports-${{ inputs.profile }}
-          path: backend/performance/reports/query-plans/
+          path: performance/reports/query-plans/

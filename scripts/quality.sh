@@ -32,7 +32,7 @@ run_format_check() {
 run_lint_file() {
     file_path="${1:-}"
     if [ -z "$file_path" ]; then
-        echo "file is required. Use: make -C backend lint-file file=path/to/file.py" >&2
+        echo "file is required. Use: make lint-file file=path/to/file.py" >&2
         exit 2
     fi
     uv run ruff check --fix "$file_path" --config ./pyproject.toml
@@ -54,7 +54,7 @@ run_lint_check() {
 
 action="${1:?action is required}"
 shift
-test_env_file="${1:-${TEST_ENV_FILE:-../.env.test}}"
+test_env_file="${1:-${TEST_ENV_FILE:-.env.test}}"
 test_env_overrides="${2:-${TEST_ENV_OVERRIDES:-}}"
 
 if [ "$action" != "clean" ]; then

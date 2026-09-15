@@ -32,10 +32,9 @@ and protected owner/admin/moderator content workspaces.
 ```
 competency-trainer/
 ├── infra/          # nginx reverse proxy, run scripts
-├── backend/        # Litestar API + domain logic
-│   ├── src/        # Application source
-│   ├── tests/      # Backend tests (pytest)
-│   └── performance/ # PostgreSQL query-plan scenarios and reports
+├── src/            # Litestar API + domain logic
+├── tests/          # Backend tests (pytest)
+├── performance/    # PostgreSQL query-plan scenarios and reports
 ├── .env.example    # Example environment variables
 ├── .env.test       # Safe test-only environment variables
 ├── docker-compose.test.yml

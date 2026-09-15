@@ -1,6 +1,6 @@
 # Core Layer Instructions
 
-These rules apply to backend core code under `backend/src/core/**/*.py`.
+These rules apply to backend core code under `src/core/**/*.py`.
 
 ## Strict Import Rules
 
@@ -8,7 +8,7 @@ These rules apply to backend core code under `backend/src/core/**/*.py`.
   packages, outer layers, infrastructure config, or logging, including in exception modules.
 - Keep domain invariants and parser rules in core. Receive infrastructure-owned settings and
   configurable policy through explicit schemas, parameters, or IOC wiring; their source remains
-  `backend/src/infra/config/constants.py`.
+  `src/infra/config/constants.py`.
 
 ## Shared Core Files
 
@@ -24,7 +24,7 @@ generators.py   # Shared generators
 
 ## Domain Structure
 
-Common files per domain in `backend/src/core/<domain>/`. Not all files are required.
+Common files per domain in `src/core/<domain>/`. Not all files are required.
 
 ```text
 schemas.py              # domain models (dataclasses or class with init dunder method)

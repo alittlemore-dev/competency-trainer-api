@@ -1,6 +1,6 @@
 x-backend-build: &backend-build
   build:
-    context: ./backend
+    context: .
     dockerfile: Dockerfile
   image: "competency_trainer_application:${IMAGE_TAG:?IMAGE_TAG must be set}"
   user: "10001:10001"

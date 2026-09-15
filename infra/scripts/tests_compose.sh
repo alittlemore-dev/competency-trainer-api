@@ -16,10 +16,10 @@ trap cleanup_owned_test_db EXIT
 
 case "$mode" in
     backend)
-        make -C backend test TEST_ENV_FILE="$TEST_DB_ENV_FILE" || status=$?
+        make test TEST_ENV_FILE="$TEST_DB_ENV_FILE" || status=$?
         ;;
     all)
-        make -C backend test TEST_ENV_FILE="$TEST_DB_ENV_FILE" || status=$?
+        make test TEST_ENV_FILE="$TEST_DB_ENV_FILE" || status=$?
         ;;
     *)
         echo "Unknown compose test mode: $mode" >&2

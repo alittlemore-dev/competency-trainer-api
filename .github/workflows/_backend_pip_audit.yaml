@@ -15,10 +15,10 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v7
         with:
-          python-version-file: "backend/pyproject.toml"
+          python-version-file: "pyproject.toml"
       - name: "Install UV"
         uses: astral-sh/setup-uv@v10.0.1
         with:
           cache-suffix: "backend-pip-audit"
       - name: "pip-audit"
-        run: make -C backend security-pip-audit
+        run: make security-pip-audit

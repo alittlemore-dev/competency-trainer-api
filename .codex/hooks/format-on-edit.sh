@@ -29,7 +29,7 @@ while IFS= read -r changed_path; do
     relative_path=$(repo_relative_path "$changed_path")
 
     case "$relative_path" in
-        backend/src/*.py|backend/src/*.pyi|backend/tests/*.py|backend/tests/*.pyi|backend/performance/*.py|backend/performance/*.pyi)
+        src/*.py|src/*.pyi|tests/*.py|tests/*.pyi|performance/*.py|performance/*.pyi)
             format_backend=1
             ;;
     esac
