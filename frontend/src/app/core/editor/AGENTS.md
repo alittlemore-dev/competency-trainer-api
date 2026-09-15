@@ -51,20 +51,19 @@ These rules apply to every file under `frontend/src/app/core/editor/`.
 
 ## Testing and Verification
 
-- Use TDD for every editor behavior change or bug fix: add the smallest focused failing behavioral
-  regression first, confirm the failure reason, then implement the shared invariant behind it.
-- Inspect the task-relevant existing coverage before changing behavior. Fully cover changed critical
-  editor and Markdown behavior across the applicable modes, boundaries, input methods, selection
-  directions, undo/redo, and malformed-input cases without imposing arbitrary numeric coverage gates.
+- For editor fixes, reproduce the regression at the relevant public contract when practical.
+  Follow the repository verification policy rather than imposing a separate TDD workflow.
+- Cover changed critical editor/Markdown behavior at the affected modes, input methods,
+  selection/undo boundaries, and malformed-input cases. Avoid unrelated coverage expansion.
 - Test observable contracts through public CodeMirror state, transactions, commands, events, stable
   semantic classes, and rendered output. Do not assert private helper names, source text, arbitrary
   DOM nesting, or other implementation details.
 - Do not weaken, delete, skip, or narrow an existing regression test merely to accept a new
   implementation. When the product contract intentionally changes, state the change and replace the
   old expectation with coverage for the new contract and the previous regression boundary.
-- JSDOM cannot prove real-browser geometry, scrolling, selection color, caret rendering, font
-  metrics, clipboard permissions, or all IME behavior. Report any remaining browser-only gap and ask
-  the user to confirm the required manual browser check before claiming that behavior is verified.
-- Run the relevant focused editor suites during red/green work and the applicable frontend Make
-  checks before completion, then review for regressions, flaky timing, accessibility gaps, SSR/CSP
-  violations, and untested browser-only behavior.
+- JSDOM does not verify geometry, scrolling, selection/caret rendering, font metrics, clipboard
+  permissions, or all IME behavior. Check affected contracts in the available real browser. If a
+  required interaction cannot be automated or accessed, report the remaining gap and request only
+  that specific manual check; do not claim it was verified.
+- Run focused editor suites and the applicable frontend Make checks for the changed contract.
+  Include accessibility, CSP, timing, and browser/SSR boundaries where relevant.

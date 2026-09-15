@@ -6,9 +6,7 @@ files under `backend/`. Keep shared cross-project configuration and common infra
 
 ## Code Style
 
-- line-length: 100 (ruff + black)
-- ruff: ALL rules, see ignores in `pyproject.toml`
-- mypy: strict mode (`disallow_untyped_defs = true` etc.)
+- Use `backend/pyproject.toml` as the source for formatting, lint, and typing configuration.
 - No docstrings unless interface is non-obvious from types
 - Comments: only for non-obvious WHY, never WHAT
 - No Python class name may start with a leading underscore anywhere under `backend/`, including
@@ -89,15 +87,13 @@ files under `backend/`. Keep shared cross-project configuration and common infra
 
 ## HTTP and Schemas
 
-- API controllers must contain only HTTP validation, auth/permission checks, use case calls, and request/response mapping.
 - Controllers must receive dependencies through `FromDishka[...]`, typed as the concrete use case
   class registered in Dishka.
 - Endpoint/controller modules must not define `@staticmethod`, `@classmethod`, or private helper
   methods for request-derived values or parameter assembly when a Litestar `Provide` dependency can
   own that logic. Put those dependencies in a neighboring `dependencies.py` module.
-- When an endpoint receives many query, path, header, or cookie parameters and only assembles them
-  into one filter/read parameter object, prefer moving that assembly into a Litestar `Provide`
-  dependency in a neighboring `dependencies.py` module so the handler receives the object directly.
+- Assemble query/path/header/cookie parameter objects in neighboring `dependencies.py` Litestar
+  `Provide` dependencies when this keeps handlers focused on their HTTP contract.
 - Public discovery response assembly, such as sitemap URL collection, sitemap XML rendering, and
   robots.txt rendering, must not live in `endpoints.py` controller modules. Keep it in a neighboring
   `backend/src/entrypoints/litestar/**` module owned by the HTTP entrypoint layer, not in `core`.

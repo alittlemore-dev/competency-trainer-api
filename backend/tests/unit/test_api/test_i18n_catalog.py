@@ -33,6 +33,16 @@ class TestI18nCatalog:
     def test_date_picker_catalog_has_accessible_dialog_labels(self) -> None:
         russian_messages = get_i18n_messages(language=LanguageEnum.RU)
         english_messages = get_i18n_messages(language=LanguageEnum.EN)
+        transactional_keys = {
+            "shared.datePicker.cancel",
+            "shared.datePicker.done",
+            "shared.datePicker.today",
+            "shared.datePicker.selectDate",
+            "shared.datePicker.unavailableDate",
+        }
+
+        assert transactional_keys <= russian_messages.keys()
+        assert transactional_keys <= english_messages.keys()
 
         assert russian_messages["shared.datePicker.dialog"] == "Выбор даты"
         assert russian_messages["shared.datePicker.change"] == "Изменить дату"
@@ -74,6 +84,7 @@ class TestI18nCatalog:
             "markdownEditor.fullscreen.exit",
             "markdownEditor.toolbar.aria",
             "markdownEditor.preview.empty",
+            "markdownEditor.preview.imageFailed",
             "markdownEditor.shortcuts.summary",
             "markdownEditor.shortcuts.tabEscape",
             "markdownEditor.shortcuts.modifierHintMac",
@@ -85,6 +96,7 @@ class TestI18nCatalog:
             "markdownEditor.shortcuts.group.media",
             "markdownEditor.upload.uploading",
             "markdownEditor.upload.failed",
+            "markdownEditor.upload.unsupported",
             "markdownEditor.upload.retry",
             "markdownEditor.upload.dismiss",
             "markdownEditor.search.find",

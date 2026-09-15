@@ -35,14 +35,10 @@ These rules apply to SQLAlchemy models, PostgreSQL storages, and Alembic migrati
 - Do not hand-write new Alembic revision files from scratch. Generate new migrations with the
   project's Alembic autogeneration Make target first, then edit the generated revision only for
   intentional data updates, naming cleanup, operation ordering, or other explicit refinements.
-- Use typed Alembic operations and SQLAlchemy Core expressions in migrations by default. A narrow,
-  documented raw-SQL exception is allowed only for PostgreSQL DDL or expressions that cannot be
-  represented by the typed operations available in the project. Raw DML remains prohibited when
-  SQLAlchemy Core query builder constructs can express the operation.
+- Use typed Alembic operations and SQLAlchemy Core expressions for migrations, including data
+  reads/writes. Raw SQL (`sqlalchemy.text()`, SQL strings in `op.execute()`, or
+  `exec_driver_sql()`) is allowed only for a documented PostgreSQL DDL/expression that available
+  typed operations cannot express; never use raw DML where SQLAlchemy Core suffices.
 - Schema changes, including indexes and constraints, must be represented in SQLAlchemy ORM models,
   and matching migrations must use Alembic operations plus SQLAlchemy expressions. Do not leave an
   index, constraint, or column in a migration without the corresponding ORM model metadata.
-- Data reads or writes inside migrations must be built with SQLAlchemy Core query builder constructs (`sa.select`, `sa.update`, `sa.insert`, `sa.delete`, expressions, functions, and bind parameters).
-- Do not use handwritten SQL strings, `sqlalchemy.text()`, `op.execute()` with SQL strings, or
-  `connection.exec_driver_sql()` unless the narrow documented PostgreSQL DDL/expression exception
-  above applies. Never use raw DML when SQLAlchemy Core can express it.

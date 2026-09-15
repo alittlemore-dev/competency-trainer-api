@@ -15,8 +15,8 @@ under `frontend/`. Shared repository infrastructure and configuration must live 
 
 ## TypeScript
 
-- `strict: true` — no exceptions
-- No `any`. Use `unknown` + type narrowing if shape is unknown
+- Keep strict typing and the repository lint/format configuration; use `unknown` and narrowing
+  rather than `any` for unknown shapes.
 - Explicit return types on public methods and functions
 - Prefer `interface` over `type` for object shapes
 
@@ -95,7 +95,6 @@ under `frontend/`. Shared repository infrastructure and configuration must live 
 ## Forms
 
 - `FormControl<T>` and `FormGroup<T>` — always typed
-- No `any` in form types
 - Single field -> `FormControl<T>`. Multiple related fields -> `FormGroup`
 - Mark required form-field labels with
   `<span class="required-marker text-danger" aria-hidden="true">*</span>` and keep the control's
@@ -117,8 +116,7 @@ under `frontend/`. Shared repository infrastructure and configuration must live 
 
 ## Comments
 
-- No comments explaining WHAT the code does
-- Comments only for non-obvious WHY: hidden constraint, workaround, subtle invariant
+- Comment only on non-obvious constraints, workarounds, or invariants.
 
 ## Styles
 
@@ -129,86 +127,19 @@ under `frontend/`. Shared repository infrastructure and configuration must live 
   use the positive accent; destructive or publication-state-changing actions should usually be less
   visually dominant unless the surrounding design establishes a stronger pattern.
 
-## Frontend Testing
+## Frontend Verification
 
-These rules apply to frontend validation. The unit-test-specific guidance applies when editing
-`frontend/src/**/*.spec.ts`.
-
-### Manual Browser Checks
-
-- When manually testing frontend routes in a browser, start the local service stack from the
-  repository root with `make run` and test the app served by that stack. Do not replace this with
-  ad hoc Node/SSR harnesses, one-off mock servers, or direct `ng serve` runs unless `make run` is
-  unavailable or the task explicitly needs a narrower fallback; if a fallback is used, state why and
-  clean it up before finishing.
-
-### Philosophy
-
-Test behavior, not implementation. Focus on what the component/service does, not how it does it internally.
-
-### Runner
-
-Jest via `jest-preset-angular`. No Karma, no browser. Fast, CI-friendly.
-
-### What to Test
-
-| Subject | What to verify |
-|---|---|
-| Page components | All states render: loading, error, empty, populated |
-| Presentational components | Inputs render correctly, outputs emit on interaction |
-| Services | Correct endpoint called, response mapped to model |
-| `ApiClient` | Base URL prepended, error shape passed through |
-| Guards | Allow, redirect, error, and authentication-restoration behavior required by the guard contract |
-
-### What Not to Test
-
-- Angular framework internals (router wiring, DI resolution)
-- Third-party library behavior
-- Template structure unrelated to state (CSS classes, exact DOM nesting)
-- Dependency declarations, package versions, lockfile contents, and exact build-tool config trivia
-- Source-code text, component metadata, private implementation details, or exact editorial/changelog
-  content that should be handled by review instead of CI
-
-### Patterns
-
-```ts
-TestBed.configureTestingModule({
-  imports: [ComponentUnderTest],
-  providers: [
-    { provide: SomeService, useValue: mockService },
-  ],
-});
-```
-
-- Use `jest.fn()` for service mocks.
-- Test via rendered DOM state, not internal signal values.
-- Trigger CD with `fixture.detectChanges()`.
-
-```ts
-TestBed.configureTestingModule({
-  providers: [provideHttpClientTesting(), MatrixService, ApiClient],
-});
-```
-
-- Use `HttpTestingController` to assert requests and flush responses.
-- Test: correct URL called, response mapped to expected model shape.
-- Always call `httpMock.verify()` after each test.
-- When changing SSR route config, server entrypoints, public detail SEO, or transfer-cache behavior, update focused unit tests and `make ssr-smoke`.
-- Review task-relevant coverage for every implementation change. Fully cover changed critical
-  behavior, especially shared core and Markdown editor logic; repository coverage thresholds belong
-  in test configuration, not in this file.
-
-### Signals in Tests
-
-- Set signal values directly on the component instance.
-- Call `fixture.detectChanges()` after mutating signals.
-- Assert on template output, not signal internals.
-
-### File Naming
-
-`<subject>.component.spec.ts` / `<subject>.service.spec.ts` — co-located with source file.
-
-### End-to-End Tests
-
-Do not introduce or scaffold an end-to-end framework without an explicit project-level testing
-strategy decision.
+- Use the existing Make targets for tests, lint, typecheck, format-check, security, and build as
+  relevant to the change. Do not bypass them without explicit task authorization. Jest setup and
+  runner options are defined in `frontend/jest.config.ts`; follow adjacent specs and test helpers.
+- Check observable loading/error/empty/populated states, input/output interactions, API request
+  contracts, and guard behavior where changed. Use rendered DOM and HTTP test responses rather
+  than private state, arbitrary DOM nesting, source text, framework internals, dependency metadata,
+  or exact editorial copy. Co-locate new behavioral specs with their component/service.
+- Cover changed critical behavior; numerical coverage gates belong in test/CI configuration.
+  Do not introduce an end-to-end framework without a project-level testing strategy decision.
+- For integrated browser validation, use `make run` from the application repository root.
+  Use a narrower fallback only when the stack is unavailable or the task requires it; explain the
+  limitation and clean up temporary servers after verification.
+- For SSR routing, server entrypoints, public-detail SEO, or transfer-cache changes, run the
+  focused tests and `make -C frontend ssr-smoke` from the repository root.

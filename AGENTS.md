@@ -20,7 +20,8 @@ Portfolio and articles site
 
 ## General rules
 
-- When library/API documentation, code generation, setup, or configuration steps are needed, search the internet without me having to explicitly ask. Prefer official documentation and primary sources, and cite the sources used in the response.
+- Use current official documentation when library/API behavior, setup, or configuration is
+  uncertain or version-sensitive; cite external sources used.
 - Do not perform any git action that changes repository state unless I explicitly ask for it. This includes `git add`, `git commit`, `git push`, `git stash`, branch creation, branch switching, rebasing, merging, resetting, checking out files, and similar mutating operations.
 - When updating `docs/TODO.md`, do not modify the content or scope of an existing TODO item. Record
   newly discovered follow-up work as a separate TODO item instead of expanding an existing one. Do
@@ -28,28 +29,19 @@ Portfolio and articles site
   explicitly requested follow-up work. When an existing TODO item has been fully implemented, change
   its checkbox from `[ ]` to `[x]`; updating completion status is not a content modification and must
   not be skipped.
-- For non-trivial tasks, create and follow a structured implementation plan before changing code or
-  configuration. Trivial docs-only edits and direct answers do not require a plan.
-- Do not leave Superpowers workflow artifact files in the repository. Do not create or retain design
-  specs or other Superpowers-generated documentation. A temporary implementation plan may be
-  created when required for execution, but delete the plan file before the final response. Preserve
-  the existing `docs/superpowers/specs/` and `docs/superpowers/plans/` directories; never remove
-  these directories during cleanup.
-- If a task turns out to be large enough to risk context degradation, split it into explicit subtasks and run sequential subagents for those subtasks. Each subagent must start its assigned subtask atomically, with a narrow scope and clear handoff back to the main thread.
-- Implement behavior changes and bug fixes with TDD by default: add or update the failing test first, then make it pass. If a test is not practical for the change, state why before implementing.
-  Do not apply TDD by default to infrastructure-only changes such as Dockerfiles, docker compose,
-  nginx, Make targets, deployment scripts, and environment wiring. Add infrastructure tests only
-  when there is a high risk of silently regressing a pre-deploy invariant that ordinary checks would
-  not catch, such as required environment-variable coverage. Do not add tests that merely assert
-  incidental implementation details, such as dependency declarations, package versions, lockfile
-  contents, source-code string scans, private helper absence, exact script command text, or the exact
-  presence of a Dockerfile command, when a direct review or a real build/run check is the meaningful
-  validation.
-- Treat UX regressions as real bugs. When changing user-facing flows, check not only correctness but
-  also whether the interaction feels stable, predictable, accessible, and respectful of the user's
-  context. Bad UX includes theme flashing during navigation or page load, controls that are hard to
-  reach or understand, misleading button hierarchy, unclear loading/error states, layout shifts, and
-  interfaces that force the user to guess what to do next.
+- Scale planning to the task: use a concise plan for multi-step or cross-cutting work. Requested
+  changes include necessary reversible local edits and task-relevant verification; do not stop for
+  a separate workflow approval when scope and authorization are already clear.
+- Keep task plans in the conversation unless a durable handoff requires a file or the user asks
+  for one. Do not create workflow artifacts solely to satisfy a skill.
+- Verify changed behavior with focused tests and use a reproducing regression test for bug fixes
+  where practical. Choose test order and scope to fit the change; do not require TDD ceremonies
+  for documentation, configuration, generated output, or mechanical edits.
+- Validate infrastructure through its real Make-backed build, configuration, or runtime checks.
+  Add tests for otherwise unprotected high-risk invariants, not package versions, source text,
+  exact shell commands, or other implementation trivia.
+- Preserve stable, accessible user flows: check relevant loading/error feedback, theme continuity,
+  layout stability, action hierarchy, and unsaved context when changing UI behavior.
 - When adding new functionality that implies access restrictions, ask which user roles should have
   access unless the role policy is already specified. Do not ask this for public/unrestricted
   functionality or when existing instructions already define the role access.
@@ -76,45 +68,21 @@ Portfolio and articles site
   Keep `None`/`null` only where absence is semantically necessary or no valid non-null
   representation exists, such as unknown dates, optional filters, external contract fields that are
   explicitly nullable, or framework/browser APIs that naturally return null.
-- Before finishing implementation work, do a self-review/code-review pass focused on bugs, regressions, missing tests, and instruction compliance.
-- Treat actionable warnings as failures: any warning from project code, tests, tooling, builds, or local runs that can be fixed through project code or configuration, an intentional dependency/runtime/tool update, or another practical fix must be fixed when it first appears. Warnings caused by the current version of a third-party library or its dependencies are not failures when no project-side fix, supported upgrade, or practical alternative exists; in that case, note the warning if relevant and do not derail the current task trying to eliminate it.
-- Before claiming completion, run the relevant checks through existing `make` targets: tests, linters, type checks, format checks, migrations, or local-run checks as applicable. For broad or cross-cutting changes, run the full practical check suite. If any relevant check is skipped, explain why in the final response.
-- After each code, configuration, documentation, infrastructure, or instruction change, explicitly
-  check whether infrastructure, documentation, CI/CD, and relevant `AGENTS.md` instructions must be
-  updated; keep them consistent with the change.
-  - At minimum, search related terms in `docs/`, `.github/`, root README-style files, and nested `AGENTS.md` files before finishing.
-  - After changes in code, architecture, implementation approach, accepted engineering decisions,
-    quality/security/operations posture, roadmap, or "what next" direction, explicitly analyze
-    whether the public "How this site is built" case-study page (`/ru/how-this-site-is-built`,
-    `/en/how-this-site-is-built`) should be updated. Decide what should be added, removed, or
-    changed there, and keep that page current when the change affects the site's public technical
-    story.
-  - Do not present trivial implementation facts, routine CRUD, ordinary normalized database
-    modeling, framework defaults, or other baseline engineering hygiene as "technology choices" or
-    public case-study highlights. The case-study page should mention only decisions that are
-    genuinely distinctive, risky, educational, or important to the product's architecture,
-    security, operations, UX, or quality story.
-  - Keep the public case-study conceptual and independent of current configuration. Do not include
-    exact retention periods, intervals, batch sizes, environment-variable names, or similarly
-    changeable operational values there; keep those details in deployment and operations
-    documentation.
-  - For sufficiently large user-visible, architectural, security, operations, or delivery changes,
-    ask whether the change should be added to the public updates/changelog page. Do not ask for
-    routine refactoring, small fixes, incidental cleanup, dependency churn, or implementation-only
-    details. Prefer grouping related changes under an existing larger milestone, such as auth,
-    matrix, deployment, quality, localization, or content workflows, instead of creating a separate
-    updates entry for every task.
-  - In every final task response, include a separate chat-only `AGENTS.md candidates` section. If
-    there are no candidates, say so explicitly.
-  - Proposals may be written in Russian, but content added to an `AGENTS.md` file must be in English.
-  - If no documentation, infrastructure, CI/CD, or instruction updates are needed, mention that check in the final response.
-- Use existing `make` targets for installation, checks, tests, migrations, and local runs when available instead of calling lower-level tools directly.
-- Never bypass Make targets for tests or checks. Test, lint, type-check, security, format-check,
-  coverage, quality, build-verification, and similar validation commands must be run only through
-  existing `make` targets. Do not call lower-level tools such as `pytest`, `ruff`, `mypy`,
-  `coverage`, `bandit`, `vulture`, `npm`, or framework CLIs directly unless I explicitly instruct
-  that exact bypass for the current task. If a Make target cannot run because of local environment
-  or permission issues, report the blocker instead of bypassing Make.
+- Fix warnings introduced by the change or blocking its verification. Report relevant pre-existing
+  warnings separately; do not expand the task into unrelated dependency upgrades or cleanup.
+- Run the relevant existing Make checks and review the resulting diff before completion. Broaden
+  checks for cross-cutting changes or unresolved risk, not merely to repeat passing verification.
+  Report actual results and any relevant checks that could not run.
+- Read and update documentation, infrastructure, and CI only where the changed contract requires
+  it. Propose AGENTS.md changes only for durable, non-duplicate improvements; omit empty reports.
+  Keep AGENTS.md content in English.
+- Update the public "How this site is built" page when the change materially affects its technical
+  story. Keep it conceptual: omit routine implementation details and mutable operational values.
+  For substantial user-visible, architectural, security, operations, or delivery milestones, ask
+  whether to include a public updates entry; group related work and skip routine maintenance.
+- Use existing Make targets for installation, checks, tests, migrations, and local runs. Do not
+  bypass them with lower-level validation tools without explicit authorization for the task; report
+  a blocked target rather than silently substituting a different check environment.
 - The following Make commands are trusted for agent use and may be approved as recurring command
   prefixes when the local Codex permission flow asks for them:
   `make test-backend-unit`, `make test-backend`, `make test-backend-integration`,

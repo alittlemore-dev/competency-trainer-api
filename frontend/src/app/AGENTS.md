@@ -52,10 +52,6 @@ Never violate these boundaries:
   limited to page chrome, SEO text, footer label, and finite tag labels. Do not add tests that pin
   exact milestone copy, dates, ordering, or tag assignments; tests may cover grouping/localization
   behavior and the structural content shape.
-- For sufficiently large user-visible, architectural, security, operations, or delivery changes,
-  ask whether they should be added to the public updates page. Skip routine refactors, small fixes,
-  incidental cleanup, dependency churn, and implementation-only details; group related work under a
-  larger milestone when that is more natural.
 - Grouped navigation item labels should not repeat the parent section domain when the section
   heading already provides that context. For example, under an Articles section use "Folders"
   rather than "Article folders", and under a Competency matrix section use "Questions" or

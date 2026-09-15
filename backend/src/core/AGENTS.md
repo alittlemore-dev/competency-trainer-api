@@ -4,20 +4,11 @@ These rules apply to backend core code under `backend/src/core/**/*.py`.
 
 ## Strict Import Rules
 
-Never violate these boundaries:
-
-- `backend/src/core/**` may import only the Python standard library and other objects from
-  `backend/src/core/**` (`core.*`). All external imports are forbidden.
-- `backend/src/core/**` must not import `sqlalchemy`, `litestar`, `dishka`, `aiobotocore`,
-  `pyseto`, `structlog`, `sentry_sdk`, `verbose_http_exceptions`, or any other third-party
-  framework/infrastructure packages.
-- `backend/src/core/**` must not import from `infra/postgresql/`, `entrypoints/`, `infra/ioc/`, `infra/s3`, or any outer layers.
-- Do not add new imports from `infra.config` or logging into core; pass configurable values through parameters or injected abstractions.
-- Core-owned domain invariants and parser-specific rules belong with their owning domain objects or
-  parsers. Environment/configuration values, shared operational limits, and configurable policies
-  remain in `backend/src/infra/config/constants.py` and must reach core through schemas, constructor
-  parameters, or IOC wiring; core must never import infra config.
-- Core exception modules must stay free of `verbose_http_exceptions` imports.
+- Core may import only the Python standard library and `core.*`. Do not import third-party
+  packages, outer layers, infrastructure config, or logging, including in exception modules.
+- Keep domain invariants and parser rules in core. Receive infrastructure-owned settings and
+  configurable policy through explicit schemas, parameters, or IOC wiring; their source remains
+  `backend/src/infra/config/constants.py`.
 
 ## Shared Core Files
 
@@ -59,14 +50,10 @@ event_dispatchers.py    # Domain event/reporting interfaces; concrete transports
   data is a valid collaborator; do not create a class whose only purpose is to provide the current
   time. Pass operation-specific concrete values, especially current timestamps and policy/config
   data, explicitly to public use-case methods, and never inject callable factories for them.
-- Use cases must contain orchestration only: do not add private/static helper methods or
-  collection-transformation loops; place reusable business logic in services and
-  construction/conversion logic in domain schema classmethods.
-- Use cases must not define private helper methods. Keep straightforward field checks directly in
-  the public use-case method, move domain-entity checks onto the relevant domain schema/value
-  object, and perform storage reads plus DB-derived decisions directly inside the public use-case
-  method. Move shared cross-use-case behavior into a domain service; there are no private-helper
-  exceptions for use cases.
+- Use cases contain orchestration, straightforward field checks, storage reads, and DB-derived
+  decisions. Do not add private/static helpers or collection-transformation loops. Put entity
+  checks on domain objects, construction/conversion in schema classmethods, and shared behavior
+  in domain services.
 - When an operation has both a target entity identifier and a current actor identifier, the public
   use-case method must read both domain entities when actor permissions are relevant, then call a
   public permission/check method on the actor or target domain schema. Do not encode actor-vs-target

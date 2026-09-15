@@ -30,6 +30,18 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "shell.nav.articles": "Статьи",
         "shell.nav.adminPanel": "Админ-панель",
         "shell.nav.toggleNavigation": "Открыть навигацию",
+        "shell.navigation": "Навигация по сайту",
+        "shell.services.title": "Сервисы",
+        "shell.services.workspace": "Личное рабочее пространство",
+        "shell.services.matrix": "Матрица компетенций",
+        "shell.services.articles": "Статьи",
+        "shell.services.admin": "Админ-панель",
+        "shell.account": "Меню аккаунта",
+        "auth.login.sessionExpired": "Сессия истекла. Войдите снова, чтобы продолжить работу.",
+        "auth.login.identityChanged": "Вход выполнен под другим аккаунтом. Предыдущая рабочая область закрыта.",
+        "shell.settings": "Настройки",
+        "shell.auth.logoutFailed": "Не удалось завершить сессию на сервере. Локальный вход сброшен.",
+        "shell.language.failed": "Не удалось загрузить выбранный язык. Попробуйте ещё раз.",
         "shell.theme.light": "Light",
         "shell.theme.dark": "Dark",
         "shell.theme.toggle": "Переключить тему",
@@ -80,6 +92,7 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "markdownEditor.fullscreen.exit": "Выйти из полноэкранного режима",
         "markdownEditor.toolbar.aria": "Действия Markdown-редактора",
         "markdownEditor.preview.empty": "Нет содержимого для предпросмотра.",
+        "markdownEditor.preview.imageFailed": "Не удалось загрузить изображение для предпросмотра.",
         "markdownEditor.shortcuts.summary": "Горячие клавиши",
         "markdownEditor.shortcuts.tabEscape": (
             "Чтобы перейти из редактора к следующему элементу страницы, нажмите Escape, затем Tab."
@@ -95,6 +108,7 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "markdownEditor.shortcuts.group.media": "Медиа",
         "markdownEditor.upload.uploading": "Загрузка изображения…",
         "markdownEditor.upload.failed": "Не удалось загрузить {fileName}.",
+        "markdownEditor.upload.unsupported": "{fileName} — неподдерживаемый формат изображения.",
         "markdownEditor.upload.retry": "Повторить",
         "markdownEditor.upload.dismiss": "Закрыть",
         "markdownEditor.completions": "Варианты автодополнения",
@@ -1019,11 +1033,18 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "shared.datePicker.nextYear": "Следующий год",
         "shared.datePicker.clear": "Очистить",
         "shared.datePicker.close": "Закрыть",
+        "shared.datePicker.cancel": "Отмена",
+        "shared.datePicker.done": "Готово",
+        "shared.datePicker.today": "Сегодня",
+        "shared.datePicker.selectDate": "Выберите дату",
         "shared.datePicker.formatHint": "Формат даты: ДД.ММ.ГГГГ",
         "shared.datePicker.invalidDate": "Введите корректную дату в формате ДД.ММ.ГГГГ.",
         "shared.datePicker.requiredDate": "Укажите дату.",
+        "shared.datePicker.unavailableDate": "Эта дата недоступна.",
         "shared.datePicker.keyboardHelp": (
-            "Используйте стрелки для выбора дня, Page Up и Page Down для смены месяца."
+            "Используйте стрелки для выбора дня, Page Up и Page Down для смены месяца. "
+            "Выбор изменяет черновик; нажмите «Готово», чтобы применить его. "
+            "Escape или «Отмена» отменяют изменения."
         ),
         "articles.filters.submit": "Найти",
         "articles.filters.reset": "Сбросить",
@@ -1200,6 +1221,18 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "shell.nav.articles": "Articles",
         "shell.nav.adminPanel": "Admin panel",
         "shell.nav.toggleNavigation": "Toggle navigation",
+        "shell.navigation": "Site navigation",
+        "shell.services.title": "Services",
+        "shell.services.workspace": "Personal workspace",
+        "shell.services.matrix": "Competency matrix",
+        "shell.services.articles": "Articles",
+        "shell.services.admin": "Admin panel",
+        "shell.account": "Account menu",
+        "auth.login.sessionExpired": "Your session expired. Sign in again to continue.",
+        "auth.login.identityChanged": "Signed in with a different account. The previous workspace has been closed.",
+        "shell.settings": "Settings",
+        "shell.auth.logoutFailed": "Could not end the server session. You have been signed out locally.",
+        "shell.language.failed": "Could not load the selected language. Please try again.",
         "shell.theme.light": "Light",
         "shell.theme.dark": "Dark",
         "shell.theme.toggle": "Toggle theme",
@@ -1249,6 +1282,7 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "markdownEditor.fullscreen.exit": "Exit fullscreen",
         "markdownEditor.toolbar.aria": "Markdown editor actions",
         "markdownEditor.preview.empty": "There is no content to preview.",
+        "markdownEditor.preview.imageFailed": "Could not load image preview.",
         "markdownEditor.shortcuts.summary": "Keyboard shortcuts",
         "markdownEditor.shortcuts.tabEscape": (
             "To move from the editor to the next page control, press Escape, then Tab."
@@ -1264,6 +1298,7 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "markdownEditor.shortcuts.group.media": "Media",
         "markdownEditor.upload.uploading": "Uploading image…",
         "markdownEditor.upload.failed": "Could not upload {fileName}.",
+        "markdownEditor.upload.unsupported": "{fileName} is not a supported image.",
         "markdownEditor.upload.retry": "Retry",
         "markdownEditor.upload.dismiss": "Dismiss",
         "markdownEditor.completions": "Completions",
@@ -2183,11 +2218,18 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "shared.datePicker.nextYear": "Next year",
         "shared.datePicker.clear": "Clear",
         "shared.datePicker.close": "Close",
+        "shared.datePicker.cancel": "Cancel",
+        "shared.datePicker.done": "Done",
+        "shared.datePicker.today": "Today",
+        "shared.datePicker.selectDate": "Select date",
         "shared.datePicker.formatHint": "Date format: MM/DD/YYYY",
         "shared.datePicker.invalidDate": "Enter a valid date in MM/DD/YYYY format.",
         "shared.datePicker.requiredDate": "Enter a date.",
+        "shared.datePicker.unavailableDate": "This date is unavailable.",
         "shared.datePicker.keyboardHelp": (
-            "Use arrow keys to choose a day and Page Up or Page Down to change month."
+            "Use arrow keys to choose a day and Page Up or Page Down to change month. "
+            "A selection updates the draft; press Done to apply it. "
+            "Escape or Cancel discards the changes."
         ),
         "articles.filters.submit": "Search",
         "articles.filters.reset": "Reset",
