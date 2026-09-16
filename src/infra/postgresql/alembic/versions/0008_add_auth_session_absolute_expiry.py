@@ -2,9 +2,6 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_dev_utils.types.datetime import UTCDateTime
 
-from infra.config.settings import settings
-
-
 revision = "0008"
 down_revision = "0007"
 branch_labels = None
@@ -15,6 +12,7 @@ AUTH_SESSIONS = sa.table(
     sa.column("created_at", UTCDateTime(timezone=True)),
     sa.column("absolute_expires_at", UTCDateTime(timezone=True)),
 )
+LEGACY_SESSION_ABSOLUTE_EXPIRE_SECONDS = 2_592_000
 
 
 def upgrade() -> None:
@@ -37,7 +35,7 @@ def upgrade() -> None:
                 0,
                 0,
                 0,
-                settings.auth.session_absolute_expire_seconds,
+                LEGACY_SESSION_ABSOLUTE_EXPIRE_SECONDS,
             ),
         ),
     )

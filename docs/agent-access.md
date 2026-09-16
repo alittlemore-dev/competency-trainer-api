@@ -32,7 +32,7 @@ Codex or another MCP host
   `404` for `/internal/agent/v1` and strips any caller-supplied
   `X-Agent-Client-Certificate` header before proxying other backend routes.
 - Each automation or device has a distinct agent client, certificate, scopes, revocation state,
-  claims, and audit history. Agent identity is not a human PASETO identity.
+  claims, and audit history. Agent identity is not a human application identity.
 - The supported REST contract has no publish, delete-item, generic CRUD, or SQL operation. mTLS
   identity, scopes, transport validation, core rules, and operation-specific storages therefore
   prevent an agent from requesting those effects through this contour.
@@ -314,7 +314,7 @@ or raw client metadata.
    Draft-only behavior, rotation, and audit checks pass.
 
 Never restore availability with a public or plaintext listener, shared certificate, bearer-only
-fallback, human PASETO reuse, direct trust of a caller-supplied certificate header, generic admin
+fallback, human-identity reuse, direct trust of a caller-supplied certificate header, generic admin
 access, or a generic SQL operation.
 
 ## Operational References

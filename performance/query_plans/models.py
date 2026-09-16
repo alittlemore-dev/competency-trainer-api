@@ -22,12 +22,6 @@ class TimingMode(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class AuthCardinalities:
-    users: int
-    sessions: int
-
-
-@dataclass(frozen=True, slots=True)
 class ArticleCardinalities:
     folders: int
     articles: int
@@ -57,7 +51,6 @@ class AgentAccessCardinalities:
 
 @dataclass(frozen=True, slots=True)
 class ProfileCardinalities:
-    auth: AuthCardinalities
     articles: ArticleCardinalities
     matrix: MatrixCardinalities
     agent_access: AgentAccessCardinalities
@@ -92,8 +85,6 @@ class QueryPlanProfile:
         section_count = matrix.sheets * matrix.sections_per_sheet
         subsection_count = section_count * matrix.subsections_per_section
         return {
-            "auth__user_model": cardinalities.auth.users,
-            "auth__auth_session_model": cardinalities.auth.sessions,
             "articles__article_folder_model": cardinalities.articles.folders,
             "articles__article_model": cardinalities.articles.articles,
             "articles__tag_model": cardinalities.articles.tags,
@@ -203,7 +194,6 @@ class CliArgs:
 REALISTIC_PROFILE = QueryPlanProfile(
     name="realistic",
     cardinalities=ProfileCardinalities(
-        auth=AuthCardinalities(users=100, sessions=500),
         articles=ArticleCardinalities(
             folders=20,
             articles=5_000,
@@ -234,7 +224,6 @@ REALISTIC_PROFILE = QueryPlanProfile(
 STRESS_PROFILE = QueryPlanProfile(
     name="stress",
     cardinalities=ProfileCardinalities(
-        auth=AuthCardinalities(users=10_000, sessions=50_000),
         articles=ArticleCardinalities(
             folders=200,
             articles=200_000,

@@ -22,15 +22,13 @@ class MinioBucketNamesConstants:
 
 class ValkeyDatabaseConstants:
     response_cache: int = 0
-    auth_revocations: int = 1
-    question_suggestion_quota: int = 2
-    taskiq_broker: int = 3
-    taskiq_results: int = 4
+    question_suggestion_quota: int = 1
+    taskiq_broker: int = 2
+    taskiq_results: int = 3
 
 
 class ValkeyNamespaceConstants:
     admin_cache_warm_operations: str = "ADMIN_CACHE_WARM_OPERATIONS"
-    auth_revocations: str = "AUTH_REVOCATIONS"
     framework: str = "LITESTAR"
     matrix_question_suggestions: str = "MATRIX_QUESTION_SUGGESTIONS"
 
@@ -62,7 +60,6 @@ class TaskiqConstants:
     manual_cache_warm_task_name: Literal["manual_cache_warm"] = "manual_cache_warm"
     cache_warm_operation_key_prefix: Literal["operation"] = "operation"
     cache_warm_latest_operation_key: Literal["latest"] = "latest"
-    auth_session_prune_task_name: Literal["auth_session_prune"] = "auth_session_prune"
     agent_audit_prune_task_name: Literal["agent_audit_prune"] = "agent_audit_prune"
     file_orphan_prune_task_name: Literal["file_orphan_prune"] = "file_orphan_prune"
 
@@ -128,27 +125,12 @@ class QuestionQueueImportConstants:
 
 class AdminValidationConstants:
     slug_pattern: str = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
-    account_username_pattern: str = r"^[A-Za-z0-9._]+$"
-    account_username_min_length: int = 3
-    account_password_min_length: int = 8
     short_text_max_length: int = 255
     url_max_length: int = 2_048
     seo_description_max_length: int = 320
     email_max_length: int = 254
     article_content_max_length: int = 100_000
     matrix_long_text_max_length: int = 20_000
-
-
-class AuthConstants:
-    session_cookie_name: Literal["__Secure-msid"] = "__Secure-msid"
-    session_cookie_path: Literal["/api/auth"] = "/api/auth"
-    csrf_guard_header_name: Literal["X-CSRF-Guard"] = "X-CSRF-Guard"
-    csrf_guard_header_value: Literal["1"] = "1"
-    fetch_metadata_site_header_name: Literal["Sec-Fetch-Site"] = "Sec-Fetch-Site"
-    fetch_metadata_cross_site_value: Literal["cross-site"] = "cross-site"
-    no_store_header_value: Literal["no-store"] = "no-store"
-    session_secret_byte_count: int = 32
-    session_expiring_soon_days: int = 7
 
 
 class AgentAccessConstants:
@@ -181,7 +163,6 @@ class Constants:
     search: SearchConstants = SearchConstants()
     question_queue_import: QuestionQueueImportConstants = QuestionQueueImportConstants()
     admin_validation: AdminValidationConstants = AdminValidationConstants()
-    auth: AuthConstants = AuthConstants()
     agent_access: AgentAccessConstants = AgentAccessConstants()
 
 

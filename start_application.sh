@@ -22,26 +22,15 @@ load_secret_file() {
 
 load_runtime_secrets() {
     local secret_variable_names=(
-        "APP_SECRET_KEY"
-        "AUTH_PRIVATE_KEY"
         "DB_PASSWORD"
         "MINIO_ACCESS_KEY"
         "MINIO_SECRET_KEY"
-        "OWNER_INIT_PASSWORD"
         "SENTRY_DSN"
     )
     local variable_name
 
     for variable_name in "${secret_variable_names[@]}"; do
         load_secret_file "$variable_name"
-    done
-
-    local certificate_variable_name
-    for certificate_variable_name in AUTH_PRIVATE_KEY AUTH_PUBLIC_KEY; do
-        if [ -n "${!certificate_variable_name:-}" ]; then
-            printf -v "$certificate_variable_name" "%b" "${!certificate_variable_name}"
-            export "$certificate_variable_name"
-        fi
     done
 }
 

@@ -14,7 +14,7 @@ from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
 from entrypoints.litestar.response_cache import ResponseCacheDomain
 from tests.test_cases import ApiTestCase
-from tests.unit.mocks.providers.auth import test_current_datetime
+from tests.unit.mocks.providers.general import test_current_datetime
 
 
 class TestAdminArticlesAPI(ApiTestCase):

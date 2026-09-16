@@ -4,9 +4,8 @@ import pytest_asyncio
 from httpx import codes
 
 from core.articles.schemas import ArticleFilters
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.api.competency_matrix.endpoints import (
     AdminCompetencyMatrixApiController,
 )
@@ -18,7 +17,7 @@ from tests.test_cases import ApiTestCase
 class TestApiScopeRoutes(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.articles_use_case = await self.container.get_articles_use_case()
 
     def test_public_articles_list_forces_public_visibility(self) -> None:
@@ -54,7 +53,7 @@ class TestApiScopeRoutes(ApiTestCase):
         )
 
     def test_admin_articles_list_uses_admin_prefix_for_draft_visibility(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )

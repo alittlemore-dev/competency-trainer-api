@@ -3,8 +3,6 @@ from datetime import UTC, datetime
 from litestar import Request
 from litestar.datastructures import State
 
-from core.auth.schemas import JwtUser
-from core.auth.types import Token
 from core.competency_matrix.schemas import (
     CompetencyMatrixItemBySlugGetParams,
     CompetencyMatrixItemGetParams,
@@ -14,6 +12,7 @@ from core.competency_matrix.schemas import (
     QuestionSuggestionLimitParams,
 )
 from core.enums import PublishStatusEnum
+from core.identity import UserIdentity
 from core.types import SearchName
 from entrypoints.litestar.api.parameters import (
     EntityPkPath,
@@ -131,7 +130,7 @@ def provide_competency_matrix_workspace_filters(  # noqa: PLR0913
 
 
 def provide_question_suggestion_limit_params(
-    request: Request[JwtUser, Token | None, State],
+    request: Request[UserIdentity, object | None, State],
 ) -> QuestionSuggestionLimitParams:
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for is not None:
@@ -156,6 +155,6 @@ def provide_question_suggestion_limit_params(
 
 
 def provide_suggested_by_username(
-    request: Request[JwtUser, Token | None, State],
+    request: Request[UserIdentity, object | None, State],
 ) -> str:
     return request.user.role.value if request.user.is_anon else request.user.username

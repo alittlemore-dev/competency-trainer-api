@@ -1,7 +1,7 @@
 from litestar.connection import ASGIConnection
 from litestar.handlers import BaseRouteHandler
 
-from core.auth.exceptions import UnauthorizedError
+from core.identity import UnauthorizedError
 
 
 class AdminUserGuard:

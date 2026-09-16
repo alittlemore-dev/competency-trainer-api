@@ -49,10 +49,16 @@ def upgrade() -> None:
             sa.select(users.c.username).where(users.c.role == "OWNER"),
         ),
     )
-    if len(owner_usernames) != 1:
+    attribution_backfill_required = bool(
+        connection.scalar(sa.select(sa.exists().where(items.c.suggested_by_username.is_(None))))
+        or connection.scalar(
+            sa.select(sa.exists().where(queued_questions.c.suggested_by_username.is_(None))),
+        )
+    )
+    if len(owner_usernames) != 1 and attribution_backfill_required:
         msg = "Exactly one owner is required to backfill matrix question attribution"
         raise RuntimeError(msg)
-    owner_username = owner_usernames[0]
+    owner_username = owner_usernames[0] if owner_usernames else "owner"
     connection.execute(
         sa.update(items).values(suggested_by_username=owner_username),
     )

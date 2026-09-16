@@ -18,12 +18,6 @@ from verbose_http_exceptions.ext.litestar import (
 )
 from verbose_http_exceptions.ext.litestar.types import LitestarExceptionHandlersMap
 
-from core.account.exceptions import (
-    AccountUsernameAlreadyExistsError,
-    InvalidManagedAccountRoleError,
-    ManagedAccountActionForbiddenError,
-    SelfAccountActionForbiddenError,
-)
 from core.agent_access.exceptions import (
     AgentAuditPaginationError,
     AgentAuthenticationError,
@@ -37,7 +31,6 @@ from core.articles.exceptions import (
     ArticleFolderAlreadyExistsError,
     ArticleFolderPriorityInvalidError,
 )
-from core.auth.exceptions import ForbiddenError, UnauthorizedError
 from core.competency_matrix.exceptions import (
     CompetencyMatrixItemNotPublicReadyError,
     CompetencyMatrixStructureAlreadyExistsError,
@@ -50,6 +43,7 @@ from core.competency_matrix.exceptions import (
 )
 from core.exceptions import DomainError, EntryNotFoundError
 from core.files.exceptions import FileClientInternalError, FileInUseError, InvalidFileDataError
+from core.identity import ForbiddenError, UnauthorizedError
 from infra.healthcheck import ReadinessCheckError
 
 DOMAIN_ERROR_MAPPING: dict[type[DomainError], type[BaseVerboseHTTPException]] = {
@@ -74,10 +68,6 @@ DOMAIN_ERROR_MAPPING: dict[type[DomainError], type[BaseVerboseHTTPException]] = 
     QuestionSuggestionAlreadyExistsError: ConflictHTTPException,
     QuestionSuggestionSheetUnavailableError: BadRequestHTTPException,
     QuestionQueueImportInvalidError: BadRequestHTTPException,
-    AccountUsernameAlreadyExistsError: BadRequestHTTPException,
-    InvalidManagedAccountRoleError: BadRequestHTTPException,
-    SelfAccountActionForbiddenError: ForbiddenHTTPException,
-    ManagedAccountActionForbiddenError: ForbiddenHTTPException,
     ArticleFolderAlreadyExistsError: BadRequestHTTPException,
     ArticleFolderPriorityInvalidError: BadRequestHTTPException,
 }

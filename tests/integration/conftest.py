@@ -33,7 +33,6 @@ from infra.postgresql.models import (
     MatrixQuestionDraftCompletionModel,
     QueuedQuestionModel,
     TagModel,
-    UserModel,
 )
 from infra.postgresql.query_monitoring import install_query_monitoring
 from infra.postgresql.utils import downgrade, migrate
@@ -146,7 +145,6 @@ async def clear_tables(engine: AsyncEngine) -> None:
         await conn.execute(delete(AgentCertificateModel))
         await conn.execute(delete(AgentClientModel))
         await conn.execute(delete(QueuedQuestionModel))
-        await conn.execute(delete(UserModel))
         await conn.execute(delete(ExternalResourceModel))
         await conn.execute(delete(CompetencyMatrixItemModel))
         await conn.execute(delete(ArticleFileUsageModel))

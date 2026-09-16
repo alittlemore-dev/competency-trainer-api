@@ -16,7 +16,6 @@ class TestQueryPlanProfiles:
         assert profile.explain_runs == 3
         assert profile.explain_work_mem_mb == 16
         assert profile.cardinalities == query_plan_models.ProfileCardinalities(
-            auth=query_plan_models.AuthCardinalities(users=100, sessions=500),
             articles=query_plan_models.ArticleCardinalities(
                 folders=20,
                 articles=5_000,
@@ -48,7 +47,6 @@ class TestQueryPlanProfiles:
         assert profile.explain_runs == 3
         assert profile.explain_work_mem_mb == 64
         assert profile.cardinalities == query_plan_models.ProfileCardinalities(
-            auth=query_plan_models.AuthCardinalities(users=10_000, sessions=50_000),
             articles=query_plan_models.ArticleCardinalities(
                 folders=200,
                 articles=200_000,
@@ -75,8 +73,6 @@ class TestQueryPlanProfiles:
         profile = query_plan_models.REALISTIC_PROFILE
 
         assert profile.relation_cardinalities == {
-            "auth__user_model": 100,
-            "auth__auth_session_model": 500,
             "articles__article_folder_model": 20,
             "articles__article_model": 5_000,
             "articles__tag_model": 500,
@@ -129,29 +125,3 @@ class TestQueryPlanProfiles:
                 "competency_matrix__external_resource_model",
             )
             assert expectation.allow_seq_scan_reason is None
-
-    @pytest.mark.parametrize(
-        "scenario_name",
-        [
-            "auth_session_list_user_sessions",
-            "auth_session_revoke_user_sessions",
-            "auth_session_revoke_user_sessions_except",
-        ],
-    )
-    def test_scaled_auth_session_scenarios_require_expiry_index(
-        self,
-        scenario_name: str,
-    ) -> None:
-        scenario = next(
-            scenario for scenario in STORAGE_SCENARIOS if scenario.name == scenario_name
-        )
-
-        expectation = scenario.plan_expectation(
-            policy=ABSOLUTE_SLA_POLICY,
-            query_name=None,
-            profile=query_plan_models.STRESS_PROFILE,
-        )
-
-        assert tuple(index.name for index in expectation.expected_indexes) == (
-            "auth_sessions_username_lower_active_expiry_idx",
-        )

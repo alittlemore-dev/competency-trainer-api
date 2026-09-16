@@ -1,5 +1,6 @@
 import secrets
 import uuid
+from datetime import UTC, datetime
 
 from dishka import Provider, Scope, provide
 
@@ -8,6 +9,10 @@ from core.types import IntId
 
 
 class GeneralProvider(Provider):
+    @provide(scope=Scope.REQUEST, cache=False)
+    async def provide_current_datetime(self) -> datetime:
+        return datetime.now(tz=UTC)
+
     @provide(scope=Scope.APP)
     async def provide_hex_uuid_id_generator(self) -> HexUuidIdGenerator:
         return HexUuidIdGenerator(generator=generate_uuid4_hex)

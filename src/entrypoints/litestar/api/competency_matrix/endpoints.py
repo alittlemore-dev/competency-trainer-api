@@ -7,8 +7,6 @@ from litestar import Controller, Request, delete, get, post, put, status_codes
 from litestar.datastructures import State
 from litestar.di import NamedDependency, Provide
 
-from core.auth.schemas import JwtUser
-from core.auth.types import Token
 from core.competency_matrix.parsers import QuestionQueueImportParser
 from core.competency_matrix.schemas import (
     CompetencyMatrixItemBySlugGetParams,
@@ -22,6 +20,7 @@ from core.competency_matrix.schemas import (
 )
 from core.competency_matrix.use_cases import CompetencyMatrixUseCase
 from core.generators import HexUuidIdGenerator
+from core.identity import UserIdentity
 from entrypoints.litestar.api.competency_matrix.dependencies import (
     provide_competency_matrix_item_draft_status_params,
     provide_competency_matrix_item_get_params,
@@ -341,7 +340,7 @@ class AdminCompetencyMatrixApiController(Controller):
     )
     async def update_competency_matrix_sheet_priorities(
         self,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             MatrixStructurePriorityUpdateRequestSchema,
             api_json_body(
@@ -369,7 +368,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def update_competency_matrix_section_priorities(
         self,
         sheet_id: SheetIdPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             MatrixStructurePriorityUpdateRequestSchema,
             api_json_body(
@@ -399,7 +398,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def update_competency_matrix_subsection_priorities(
         self,
         section_id: SectionIdPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             MatrixStructurePriorityUpdateRequestSchema,
             api_json_body(
@@ -601,7 +600,7 @@ class AdminCompetencyMatrixApiController(Controller):
         self,
         pk: EntityPkPath,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             CompetencyMatrixItemRequestSchema,
             api_json_body(
@@ -729,7 +728,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def create_competency_matrix_item(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             CompetencyMatrixItemRequestSchema,
             api_json_body(
@@ -817,7 +816,7 @@ class AdminCompetencyMatrixApiController(Controller):
         self,
         pk: EntityPkPath,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             CompetencyMatrixItemRequestSchema,
             api_json_body(
@@ -878,7 +877,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def delete_competency_matrix_item(
         self,
         pk: EntityPkPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[CompetencyMatrixUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -903,7 +902,7 @@ class AdminCompetencyMatrixApiController(Controller):
     )
     async def set_draft_status_to_competency_matrix_item(
         self,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[CompetencyMatrixUseCase],
         params: NamedDependency[CompetencyMatrixItemPublishStatusSwitchParams],
         post_commit_actions: FromDishka[PostCommitActions],
@@ -929,7 +928,7 @@ class AdminCompetencyMatrixApiController(Controller):
     )
     async def set_published_status_to_competency_matrix_item(
         self,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[CompetencyMatrixUseCase],
         params: NamedDependency[CompetencyMatrixItemPublishStatusSwitchParams],
         post_commit_actions: FromDishka[PostCommitActions],

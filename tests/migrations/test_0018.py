@@ -44,8 +44,24 @@ knowledge_file_kind = postgresql.ENUM(
     create_type=False,
 )
 language = postgresql.ENUM("RU", "EN", name="language_enum", create_type=False)
+role = postgresql.ENUM(
+    "ANON",
+    "USER",
+    "MODERATOR",
+    "ADMIN",
+    "OWNER",
+    name="role_enum",
+    create_type=False,
+)
+LEGACY_STORED_HASH = "legacy-hash"
 
-users = sa.table("auth__user_model", sa.column("username", sa.String(length=255)))
+users = sa.table(
+    "auth__user_model",
+    sa.column("username", sa.String(length=255)),
+    sa.column("password_hash", sa.String(length=255)),
+    sa.column("role", role),
+    sa.column("is_active", sa.Boolean()),
+)
 resumes = sa.table(
     "resumes__resume_model",
     sa.column("title", sa.String(length=255)),
@@ -203,9 +219,14 @@ async def seed_removed_domain_data(engine: AsyncEngine) -> str:
     tag_id = "18000000000000000000000000000004"
     relationship_type_id = "18000000000000000000000000000005"
     async with engine.begin() as connection:
-        author_username = cast(
-            "str",
-            (await connection.execute(sa.select(users.c.username).limit(1))).scalar_one(),
+        author_username = "owner"
+        await connection.execute(
+            users.insert().values(
+                username=author_username,
+                password_hash=LEGACY_STORED_HASH,
+                role="OWNER",
+                is_active=True,
+            ),
         )
         await connection.execute(
             resumes.insert().values(

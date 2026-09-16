@@ -3,7 +3,6 @@ from taskiq import TaskiqScheduler
 from taskiq.schedule_sources import LabelScheduleSource
 
 from entrypoints.taskiq.agent_access import tasks as agent_access_tasks  # noqa: F401
-from entrypoints.taskiq.auth import tasks as auth_tasks  # noqa: F401
 from entrypoints.taskiq.broker import broker
 from entrypoints.taskiq.cache_warm import tasks  # noqa: F401
 from entrypoints.taskiq.files import tasks as file_tasks  # noqa: F401

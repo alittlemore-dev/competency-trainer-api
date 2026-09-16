@@ -12,7 +12,6 @@ from core.agent_access.use_cases import AgentAuditCleanupUseCase
 from entrypoints.taskiq import broker as taskiq_broker_module
 from entrypoints.taskiq import worker as taskiq_worker_module
 from entrypoints.taskiq.agent_access import tasks as agent_access_tasks_module
-from entrypoints.taskiq.auth import tasks as auth_tasks_module
 from entrypoints.taskiq.cache_warm import tasks as cache_warm_tasks_module
 from entrypoints.taskiq.files import tasks as file_tasks_module
 from infra.config.constants import constants
@@ -27,8 +26,8 @@ class TestTaskiqBrokerConfiguration:
     def test_taskiq_uses_dedicated_valkey_databases(self) -> None:
         result_backend = taskiq_broker_module.broker.result_backend
 
-        assert constants.valkey.databases.taskiq_broker == 3
-        assert constants.valkey.databases.taskiq_results == 4
+        assert constants.valkey.databases.taskiq_broker == 2
+        assert constants.valkey.databases.taskiq_results == 3
         assert (
             taskiq_broker_module.broker.connection_pool.connection_kwargs["db"]
             == constants.valkey.databases.taskiq_broker
@@ -63,17 +62,6 @@ class TestTaskiqScheduleConfiguration:
             {
                 "schedule_id": "cache_warm_all",
                 "interval": settings.taskiq.cache_warm_interval_seconds,
-            },
-        ]
-        assert "cron" not in schedule[0]
-
-    def test_auth_session_prune_uses_interval_schedule_without_cron(self) -> None:
-        schedule = auth_tasks_module.prune_expired_auth_sessions.labels["schedule"]
-
-        assert schedule == [
-            {
-                "schedule_id": "auth_session_prune",
-                "interval": settings.taskiq.auth_session_prune_interval_seconds,
             },
         ]
         assert "cron" not in schedule[0]
@@ -157,10 +145,6 @@ class TestTaskiqScheduleConfiguration:
         assert (
             taskiq_worker_module.broker.find_task(constants.taskiq.manual_cache_warm_task_name)
             is cache_warm_tasks_module.manual_cache_warm
-        )
-        assert (
-            taskiq_worker_module.broker.find_task(constants.taskiq.auth_session_prune_task_name)
-            is auth_tasks_module.prune_expired_auth_sessions
         )
         assert (
             taskiq_worker_module.broker.find_task(constants.taskiq.agent_audit_prune_task_name)

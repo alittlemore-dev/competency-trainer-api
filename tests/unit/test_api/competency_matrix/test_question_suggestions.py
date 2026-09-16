@@ -9,9 +9,6 @@ from litestar import Request
 from litestar.datastructures import State
 from openpyxl import Workbook
 
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
-from core.auth.types import Token
 from core.competency_matrix.enums import (
     GradeEnum,
     QuestionQueueImportIssueCodeEnum,
@@ -35,6 +32,7 @@ from core.competency_matrix.schemas import (
     QueuedCompetencyMatrixQuestions,
 )
 from core.enums import PublishStatusEnum
+from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.api.competency_matrix.dependencies import (
     provide_question_suggestion_limit_params,
 )
@@ -44,13 +42,13 @@ from entrypoints.litestar.api.competency_matrix.schemas import (
 )
 from entrypoints.litestar.api.schemas import CamelCaseSchema
 from tests.test_cases import ApiTestCase
-from tests.unit.mocks.providers.auth import test_current_datetime
+from tests.unit.mocks.providers.general import test_current_datetime
 
 
 class TestQuestionSuggestionsApi(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.use_case = await self.container.get_competency_matrix_use_case()
 
     def test_import_request_schemas_are_pydantic_api_schemas(self) -> None:
@@ -127,7 +125,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
 
     def test_question_suggestion_limit_dependency_uses_forwarded_client_identifier(self) -> None:
         request = cast(
-            "Request[JwtUser, Token | None, State]",
+            "Request[UserIdentity, object | None, State]",
             Mock(
                 headers={"x-forwarded-for": "203.0.113.10, 10.0.0.2"},
                 client=Mock(host="198.51.100.4"),
@@ -245,7 +243,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
         )
 
     def test_regular_user_cannot_list_queue(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="user",
             role=RoleEnum.USER,
         )
@@ -475,7 +473,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
         self.use_case.preview_queued_questions_import.assert_called_once_with(preview=ANY)
 
     def test_regular_user_cannot_preview_queued_questions(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="user",
             role=RoleEnum.USER,
         )
@@ -608,7 +606,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
         ]
 
     def test_regular_user_cannot_import_queued_questions(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="user",
             role=RoleEnum.USER,
         )
@@ -694,7 +692,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
         self.use_case.import_queued_questions.assert_not_called()
 
     def test_regular_user_cannot_create_queued_question(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="user",
             role=RoleEnum.USER,
         )

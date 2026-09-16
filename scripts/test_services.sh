@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_services_script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-test_services_repo_dir="$(cd -- "${test_services_script_dir}/../.." && pwd)"
+test_services_repo_dir="$(cd -- "${test_services_script_dir}/.." && pwd)"
 
 TEST_DB_OWNED="${TEST_DB_OWNED:-0}"
 TEST_DB_ENV_FILE=""
@@ -44,8 +44,6 @@ load_env_file() {
         set +a
     fi
 
-    normalize_multiline_env_var AUTH_PUBLIC_KEY
-    normalize_multiline_env_var AUTH_PRIVATE_KEY
 }
 
 tcp_port_open() {

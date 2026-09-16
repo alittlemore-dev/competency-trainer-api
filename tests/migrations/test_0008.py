@@ -1,11 +1,9 @@
 from datetime import UTC, datetime, timedelta
 
-import pytest
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from infra.config.settings import Settings
 from infra.postgresql.utils import downgrade, migrate
 
 role_enum = postgresql.ENUM(
@@ -69,16 +67,9 @@ class TestMigration0008:
         self,
         engine: AsyncEngine,
         migrated_to_0007: None,
-        monkeypatch: pytest.MonkeyPatch,
-        test_settings: Settings,
     ) -> None:
         _ = migrated_to_0007
-        absolute_ttl_seconds = 7_200
-        monkeypatch.setattr(
-            test_settings.auth,
-            "session_absolute_expire_seconds",
-            absolute_ttl_seconds,
-        )
+        absolute_ttl_seconds = 2_592_000
         created_at = datetime(2026, 7, 8, 11, 30, tzinfo=UTC)
         async with engine.begin() as connection:
             await connection.execute(

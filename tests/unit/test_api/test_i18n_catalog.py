@@ -1,8 +1,8 @@
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
-from core.auth.enums import RoleEnum
 from core.competency_matrix.enums import GradeEnum, InterviewFrequencyEnum
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum
 from entrypoints.litestar.api.i18n.catalog import get_i18n_messages
 
 

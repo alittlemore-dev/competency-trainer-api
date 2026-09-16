@@ -8,6 +8,7 @@ from infra.postgresql.utils import downgrade, migrate
 
 ITEM_TABLE = "competency_matrix__competency_matrix_item_model"
 MISSING_FIELDS_INDEX = "cmi_workspace_missing_fields_idx"
+LEGACY_STORED_HASH = "legacy-hash"
 
 role_enum = postgresql.ENUM(
     "ANON",
@@ -28,7 +29,9 @@ publish_status_enum = postgresql.ENUM(
 users = sa.table(
     "auth__user_model",
     sa.column("username", sa.String()),
+    sa.column("password_hash", sa.String()),
     sa.column("role", role_enum),
+    sa.column("is_active", sa.Boolean()),
 )
 sheets = sa.table(
     "competency_matrix__competency_matrix_sheet_model",
@@ -84,10 +87,15 @@ async def insert_matrix_item(engine: AsyncEngine) -> str:
     subsection_id = "10000000000040008000000000000003"
     item_id = "10000000000040008000000000000004"
     async with engine.begin() as connection:
-        owner_username = await connection.scalar(
-            sa.select(users.c.username).where(users.c.role == "OWNER"),
+        owner_username = "owner"
+        await connection.execute(
+            users.insert().values(
+                username=owner_username,
+                password_hash=LEGACY_STORED_HASH,
+                role="OWNER",
+                is_active=True,
+            ),
         )
-        assert owner_username is not None
         await connection.execute(
             sheets.insert().values(
                 id=sheet_id,

@@ -402,7 +402,6 @@ class TestResponseCacheCli:
         CLIPlugin().on_cli_init(cli)
 
         assert "invalidatecache" in cli.commands
-        assert "createsuperuser" in cli.commands
         assert "initbuckets" in cli.commands
 
     def test_initbuckets_delegates_to_storage_command(self) -> None:

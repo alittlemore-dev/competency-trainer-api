@@ -64,11 +64,6 @@ INDEX_RELATION_NAMES: Mapping[str, str] = {
     "articles_tag_name_en_trgm_idx": "articles__tag_model",
     "articles_tag_name_ru_trgm_idx": "articles__tag_model",
     "articles_tag_slug_trgm_idx": "articles__tag_model",
-    "auth__auth_session_model_pkey": "auth__auth_session_model",
-    "auth_sessions_expiry_idx": "auth__auth_session_model",
-    "auth_sessions_secret_hash_uniq": "auth__auth_session_model",
-    "auth_sessions_username_lower_active_expiry_idx": "auth__auth_session_model",
-    "auth_sessions_username_lower_active_last_used_idx": "auth__auth_session_model",
     "cm_external_resource_name_en_trgm_idx": "competency_matrix__external_resource_model",
     "cm_external_resource_name_ru_trgm_idx": "competency_matrix__external_resource_model",
     "cm_external_resource_url_trgm_idx": "competency_matrix__external_resource_model",
@@ -83,9 +78,6 @@ INDEX_RELATION_NAMES: Mapping[str, str] = {
         "competency_matrix__external_resource_model"
     ),
     "competency_matrix__queued_question_model_pkey": ("competency_matrix__queued_question_model"),
-    "users_managed_accounts_list_idx": "auth__user_model",
-    "users_username_idx": "auth__user_model",
-    "users_username_lower_uniq": "auth__user_model",
 }
 
 
@@ -117,42 +109,5 @@ ABSOLUTE_SLA_POLICY = QueryThresholdPolicy(
         "articles_list_en_full_text_tag_date__002": 250.0,
         "articles_list_ru_full_text__002": 250.0,
     },
-    query_expected_indexes={
-        "managed_accounts_list__001": expected_indexes_from_names(
-            names=("users_username_lower_uniq",),
-        ),
-        "managed_accounts_list__002": expected_indexes_from_names(
-            names=("users_managed_accounts_list_idx",),
-        ),
-        "managed_accounts_update_role__001": expected_indexes_from_names(
-            names=("users_username_lower_uniq",),
-        ),
-        "managed_accounts_update_role__002": expected_indexes_from_names(
-            names=("users_username_idx",),
-        ),
-        "managed_accounts_update_password__001": expected_indexes_from_names(
-            names=("users_username_lower_uniq",),
-        ),
-        "managed_accounts_update_password__002": expected_indexes_from_names(
-            names=("users_username_idx",),
-        ),
-        "managed_accounts_activate__001": expected_indexes_from_names(
-            names=("users_username_lower_uniq",),
-        ),
-        "managed_accounts_activate__002": expected_indexes_from_names(
-            names=("users_username_idx",),
-        ),
-        "managed_accounts_deactivate__001": expected_indexes_from_names(
-            names=("users_username_lower_uniq",),
-        ),
-        "managed_accounts_deactivate__002": expected_indexes_from_names(
-            names=("users_username_idx",),
-        ),
-        "managed_accounts_delete__001": expected_indexes_from_names(
-            names=("users_username_lower_uniq",),
-        ),
-        "managed_accounts_delete__002": expected_indexes_from_names(
-            names=("users_username_idx",),
-        ),
-    },
+    query_expected_indexes={},
 )

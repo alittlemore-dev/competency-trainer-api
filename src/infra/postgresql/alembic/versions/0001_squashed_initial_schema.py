@@ -70,6 +70,10 @@ def _enum_types_by_name() -> dict[str, postgresql.ENUM]:
 
 
 def _create_initial_owner(role_type: postgresql.ENUM) -> None:
+    username = os.environ.get("OWNER_INIT_LOGIN")
+    password = os.environ.get("OWNER_INIT_PASSWORD")
+    if username is None or password is None:
+        return
     owner_table = sa.table(
         "auth__user_model",
         sa.column("username", sa.String(255)),
@@ -80,8 +84,8 @@ def _create_initial_owner(role_type: postgresql.ENUM) -> None:
     statement = (
         postgresql.insert(owner_table)
         .values(
-            username=os.environ["OWNER_INIT_LOGIN"],
-            password_hash=PasswordHasher().hash(os.environ["OWNER_INIT_PASSWORD"]),
+            username=username,
+            password_hash=PasswordHasher().hash(password),
             role="OWNER",
             is_active=True,
         )

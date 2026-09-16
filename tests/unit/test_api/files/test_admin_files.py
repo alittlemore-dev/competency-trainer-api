@@ -1,22 +1,21 @@
 import pytest_asyncio
 from httpx import codes
 
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
 from core.files.enums import FilePurpose
 from core.files.schemas import FileUpdateParams, FileUploadParams
+from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.api.files.schemas import FileUploadRequestSchema
 from entrypoints.litestar.api.schemas import CamelCaseSchema
 from tests.test_cases import ApiTestCase
-from tests.unit.mocks.providers.auth import test_current_datetime
+from tests.unit.mocks.providers.general import test_current_datetime
 
 
 class TestAdminFilesAPI(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, jwt_user: JwtUser, jwt_admin: JwtUser) -> None:
-        self.user = jwt_user
-        self.admin = jwt_admin
-        self.authentication_use_case = await self.container.get_auth_use_case()
+    async def setup(self, user_identity: UserIdentity, admin_identity: UserIdentity) -> None:
+        self.user = user_identity
+        self.admin = admin_identity
+        self.identity_controller = await self.container.get_identity_controller()
         self.use_case = await self.container.get_file_service()
         self.id_generator = await self.container.get_hex_uuid_id_generator()
         self.file_id = self.id_generator.get_next()
@@ -41,7 +40,7 @@ class TestAdminFilesAPI(ApiTestCase):
         assert set(FileUploadRequestSchema.model_fields) == {"purpose", "name", "file"}
 
     def test_upload_file_requires_content_manager_permission(self) -> None:
-        self.authentication_use_case.authenticate.return_value = self.user
+        self.identity_controller.authenticate.return_value = self.user
 
         response = self.api.post_admin_file(
             purpose=FilePurpose.ARTICLE_COVER_IMAGE.value,
@@ -54,7 +53,7 @@ class TestAdminFilesAPI(ApiTestCase):
         assert response.status_code == codes.UNAUTHORIZED
 
     def test_upload_file_allows_moderator(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )
@@ -71,7 +70,7 @@ class TestAdminFilesAPI(ApiTestCase):
         assert response.status_code == codes.CREATED, response.content
 
     def test_upload_file_maps_multipart_request_and_response(self) -> None:
-        self.authentication_use_case.authenticate.return_value = self.admin
+        self.identity_controller.authenticate.return_value = self.admin
         self.use_case.upload_file.return_value = self.file_read
 
         response = self.api.post_admin_file(
@@ -113,7 +112,7 @@ class TestAdminFilesAPI(ApiTestCase):
         )
 
     def test_list_files_maps_purpose_filter(self) -> None:
-        self.authentication_use_case.authenticate.return_value = self.admin
+        self.identity_controller.authenticate.return_value = self.admin
         self.use_case.list_files.return_value = [self.file_read]
 
         response = self.api.get_admin_files(purpose=FilePurpose.ARTICLE_COVER_IMAGE.value)
@@ -125,7 +124,7 @@ class TestAdminFilesAPI(ApiTestCase):
         )
 
     def test_get_file_maps_file_id(self) -> None:
-        self.authentication_use_case.authenticate.return_value = self.admin
+        self.identity_controller.authenticate.return_value = self.admin
         self.use_case.get_file.return_value = self.file_read
 
         response = self.api.get_admin_file(file_id=self.file_id)
@@ -135,7 +134,7 @@ class TestAdminFilesAPI(ApiTestCase):
         self.use_case.get_file.assert_called_once_with(file_id=self.file_id)
 
     def test_update_file_maps_request(self) -> None:
-        self.authentication_use_case.authenticate.return_value = self.admin
+        self.identity_controller.authenticate.return_value = self.admin
         self.use_case.update_file.return_value = self.file_read
 
         response = self.api.put_admin_file(file_id=self.file_id, name="Updated cover")
@@ -148,7 +147,7 @@ class TestAdminFilesAPI(ApiTestCase):
         )
 
     def test_delete_file_maps_file_id(self) -> None:
-        self.authentication_use_case.authenticate.return_value = self.admin
+        self.identity_controller.authenticate.return_value = self.admin
 
         response = self.api.delete_admin_file(file_id=self.file_id)
 

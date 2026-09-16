@@ -15,8 +15,6 @@ class TestQueryPlanProfileSeed:
     @pytest.mark.parametrize(
         ("seed_function", "expected_count"),
         [
-            (query_plan_seed.insert_users, 100),
-            (query_plan_seed.insert_auth_sessions, 500),
             (query_plan_seed.insert_article_folders, 20),
             (query_plan_seed.insert_article_analytics, 100_000),
             (query_plan_seed.insert_competency_matrix_resource_links, 24_996),
@@ -80,8 +78,6 @@ class TestQueryPlanProfileSeed:
     ) -> None:
         calls: list[tuple[str, QueryPlanProfile]] = []
         volume_seed_names = (
-            "insert_users",
-            "insert_auth_sessions",
             "insert_tags",
             "insert_article_folders",
             "insert_articles",

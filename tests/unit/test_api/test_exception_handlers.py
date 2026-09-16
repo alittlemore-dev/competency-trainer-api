@@ -14,12 +14,6 @@ from verbose_http_exceptions import (
     UnauthorizedHTTPException,
 )
 
-from core.account.exceptions import (
-    AccountUsernameAlreadyExistsError,
-    InvalidManagedAccountRoleError,
-    ManagedAccountActionForbiddenError,
-    SelfAccountActionForbiddenError,
-)
 from core.agent_access.exceptions import (
     AgentAuditPaginationError,
     AgentAuthenticationError,
@@ -33,7 +27,6 @@ from core.articles.exceptions import (
     ArticleFolderAlreadyExistsError,
     ArticleFolderPriorityInvalidError,
 )
-from core.auth.exceptions import ForbiddenError, UnauthorizedError
 from core.competency_matrix.exceptions import (
     CompetencyMatrixItemNotPublicReadyError,
     CompetencyMatrixStructureAlreadyExistsError,
@@ -47,6 +40,7 @@ from core.competency_matrix.exceptions import (
 )
 from core.exceptions import DomainError, EntryNotFoundError
 from core.files.exceptions import FileClientInternalError, FileInUseError, InvalidFileDataError
+from core.identity import ForbiddenError, UnauthorizedError
 from entrypoints.litestar import exception_handlers
 from entrypoints.litestar.exception_handlers import get_litestar_exception_handlers
 from infra.healthcheck import ReadinessCheckError
@@ -220,10 +214,6 @@ def test_domain_error_verbose_exception_mapping() -> None:
         QuestionSuggestionAlreadyExistsError: ConflictHTTPException,
         QuestionSuggestionSheetUnavailableError: BadRequestHTTPException,
         QuestionQueueImportInvalidError: BadRequestHTTPException,
-        AccountUsernameAlreadyExistsError: BadRequestHTTPException,
-        InvalidManagedAccountRoleError: BadRequestHTTPException,
-        SelfAccountActionForbiddenError: ForbiddenHTTPException,
-        ManagedAccountActionForbiddenError: ForbiddenHTTPException,
         ArticleFolderAlreadyExistsError: BadRequestHTTPException,
         ArticleFolderPriorityInvalidError: BadRequestHTTPException,
     }

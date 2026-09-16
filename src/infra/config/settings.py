@@ -82,25 +82,6 @@ class AppSettings(ProjectBaseSettings):
         return 0
 
 
-class OwnerSettings(ProjectBaseSettings):
-    model_config = SettingsConfigDict(env_prefix="OWNER_")
-
-    init_login: str
-    init_password: SecretStrExtended
-
-
-class AuthSettings(ProjectBaseSettings):
-    model_config = SettingsConfigDict(env_prefix="AUTH_")
-
-    public_key: SecretStrExtended
-    private_key: SecretStrExtended
-    token_expire_seconds: int
-    session_expire_seconds: int
-    session_absolute_expire_seconds: int
-    token_header_name: str
-    token_prefix: str
-
-
 class MinioSettings(ProjectBaseSettings):
     model_config = SettingsConfigDict(env_prefix="MINIO_")
 
@@ -192,7 +173,6 @@ class AgentAccessSettings(ProjectBaseSettings):
 class TaskiqSettings(ProjectBaseSettings):
     model_config = SettingsConfigDict(env_prefix="TASKIQ_")
 
-    auth_session_prune_interval_seconds: PositiveInt
     agent_audit_prune_interval_seconds: PositiveInt
     cache_warm_interval_seconds: PositiveInt
     file_orphan_prune_interval_seconds: PositiveInt
@@ -208,14 +188,12 @@ class CacheWarmSettings(ProjectBaseSettings):
 class Settings:
     agent_access: AgentAccessSettings
     app: AppSettings
-    auth: AuthSettings
     cache_warm: CacheWarmSettings
     competency_matrix: CompetencyMatrixSettings
     database: DatabaseSettings
     files: FilesSettings
     i18n: I18nSettings
     minio: MinioSettings
-    owner: OwnerSettings
     sentry: SentrySettings
     taskiq: TaskiqSettings
     valkey: ValkeySettings
@@ -223,14 +201,12 @@ class Settings:
     def __init__(self) -> None:
         self.agent_access = AgentAccessSettings()
         self.app = AppSettings()
-        self.auth = AuthSettings()
         self.cache_warm = CacheWarmSettings()
         self.competency_matrix = CompetencyMatrixSettings()
         self.database = DatabaseSettings()
         self.files = FilesSettings()
         self.i18n = I18nSettings()
         self.minio = MinioSettings()
-        self.owner = OwnerSettings()
         self.sentry = SentrySettings()
         self.taskiq = TaskiqSettings()
         self.valkey = ValkeySettings()

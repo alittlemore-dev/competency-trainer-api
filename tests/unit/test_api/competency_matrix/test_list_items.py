@@ -1,18 +1,17 @@
 import pytest_asyncio
 from httpx import codes
 
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
 from core.competency_matrix.enums import GradeEnum, InterviewFrequencyEnum
 from core.competency_matrix.schemas import CompetencyMatrixItemFilters
 from core.enums import PublishStatusEnum
+from core.identity import RoleEnum, UserIdentity
 from tests.test_cases import ApiTestCase
 
 
 class TestItemsAPI(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.use_case = await self.container.get_competency_matrix_use_case()
 
     def test_list_not_correct_sheet_key(self) -> None:
@@ -112,7 +111,7 @@ class TestItemsAPI(ApiTestCase):
         self.use_case.list_items.assert_not_called()
 
     def test_moderator_can_request_all_items(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )

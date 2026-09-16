@@ -5,15 +5,9 @@ from unittest.mock import Mock
 
 from dishka import AsyncContainer
 
-from core.account.storages import UserAccountStorage
-from core.account.use_cases import AccountsUseCase
 from core.agent_access.use_cases import AgentAdminUseCase
 from core.articles.schemas import ArticleAnalyticsConfig
 from core.articles.use_cases import ArticleAnalyticsUseCase, ArticlesUseCase
-from core.auth.password_hashers import PasswordHasher
-from core.auth.storages import AuthSessionStorage, AuthStorage
-from core.auth.token_handlers import TokenHandler
-from core.auth.use_cases import AuthSessionCleanupUseCase, AuthUseCase
 from core.cache_tools.schemas import CacheToolsPolicy
 from core.cache_tools.use_cases import CacheToolsUseCase
 from core.competency_matrix.generators import ItemIdGenerator, ResourceIdGenerator
@@ -25,6 +19,7 @@ from core.generators import HexUuidIdGenerator
 from core.types import IntId
 from core.wiki_links.use_cases import WikiLinksUseCase
 from infra.healthcheck import ReadinessChecker
+from tests.helpers.identity import TestIdentityController
 
 
 @dataclass(kw_only=True)
@@ -73,30 +68,8 @@ class IocContainerHelper:
         use_case = await self.container.get(WikiLinksUseCase)
         return cast("Mock", use_case)
 
-    # AUTH
-    async def get_hasher(self) -> Mock:
-        hasher = await self.container.get(PasswordHasher)
-        return cast("Mock", hasher)
-
-    async def get_token_handler(self) -> Mock:
-        handler = await self.container.get(TokenHandler)
-        return cast("Mock", handler)
-
-    async def get_auth_storage(self) -> Mock:
-        storage = await self.container.get(AuthStorage)
-        return cast("Mock", storage)
-
-    async def get_auth_session_storage(self) -> Mock:
-        storage = await self.container.get(AuthSessionStorage)
-        return cast("Mock", storage)
-
-    async def get_auth_use_case(self) -> Mock:
-        use_case = await self.container.get(AuthUseCase)
-        return cast("Mock", use_case)
-
-    async def get_auth_session_cleanup_use_case(self) -> Mock:
-        use_case = await self.container.get(AuthSessionCleanupUseCase)
-        return cast("Mock", use_case)
+    async def get_identity_controller(self) -> TestIdentityController:
+        return await self.container.get(TestIdentityController)
 
     async def get_cache_tools_use_case(self) -> Mock:
         use_case = await self.container.get(CacheToolsUseCase)
@@ -104,15 +77,6 @@ class IocContainerHelper:
 
     async def get_cache_tools_policy(self) -> CacheToolsPolicy:
         return await self.container.get(CacheToolsPolicy)
-
-    # USER
-    async def get_user_storage(self) -> Mock:
-        storage = await self.container.get(UserAccountStorage)
-        return cast("Mock", storage)
-
-    async def get_accounts_use_case(self) -> Mock:
-        use_case = await self.container.get(AccountsUseCase)
-        return cast("Mock", use_case)
 
     async def get_agent_admin_use_case(self) -> Mock:
         use_case = await self.container.get(AgentAdminUseCase)

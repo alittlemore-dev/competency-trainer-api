@@ -16,7 +16,6 @@ class TestNativeEnumColumns(StorageTestCase):
                 "article_reaction_kind_enum",
                 "e",
             ),
-            ("auth__user_model", "role"): ("role_enum", "e"),
             ("competency_matrix__competency_matrix_item_model", "grade"): ("grade_enum", "e"),
             ("competency_matrix__competency_matrix_item_model", "interview_frequency"): (
                 "interview_frequency_enum",
@@ -46,7 +45,6 @@ class TestNativeEnumColumns(StorageTestCase):
                         ('articles__article_file_usage_model', 'usage'),
                         ('articles__article_model', 'publish_status'),
                         ('articles__article_reaction_model', 'reaction_kind'),
-                        ('auth__user_model', 'role'),
                         (
                             'competency_matrix__competency_matrix_item_model',
                             'grade'

@@ -13,7 +13,7 @@ Portfolio and articles site
 - Cache: Valkey
 - Background tasks: TaskIQ + taskiq-redis over Valkey
 - File storage: MinIO through an aiobotocore S3-compatible adapter
-- Auth: PASETO (pyseto) + Argon2 password hashing
+- Human identity boundary: neutral `core.identity` contracts; authentication is owned outside this service
 - Logging: structlog + ECS logging + Sentry SDK
 - Scope: backend service published as a container image for the shared platform runtime
 
@@ -46,7 +46,7 @@ Portfolio and articles site
   functionality or when existing instructions already define the role access.
 - Every new HTTP handler must be explicitly classified as public, admin, or internal before
   implementation. Public API stays under `/api/*`, admin-panel API stays under `/api/admin/*`, and
-  auth/account remain separate cross-cutting contours under `/api/auth/*` and `/api/account/*`.
+  authentication and account management remain outside this service's HTTP surface.
   Admin UI flows must not reuse public routes when they need privileged data, privileged controls,
   or behavior that may diverge later; duplicate the transport handler instead and keep shared
   schemas/use cases below the HTTP boundary.
@@ -54,11 +54,9 @@ Portfolio and articles site
   widgets and business logic remain owned by their source domains.
 - Privileged behavior must be enforced by backend guards and use cases. Cover each protected path
   with an API or use-case test.
-- Authentication uses explicit `Authorization` bearer access tokens plus a Secure, HttpOnly,
-  SameSite session cookie scoped to refresh/logout under `/api/auth/*`. Preserve the required CSRF
-  guard header, Fetch Metadata checks, cookie policy, and server-side verification tests. Before
-  expanding browser-sent credentials to any additional state-changing handler, design and test the
-  matching CSRF boundary in the same backend change.
+- Keep business authorization expressed through the neutral `core.identity` contracts. Do not add
+  service-local login, refresh, logout, password hashing, user/session persistence, or token-key
+  handling; authentication adapters belong at the external identity integration boundary.
 - Do not add default values in real production code. API parameters, schemas, dataclasses, settings, helpers, services, and infrastructure-facing code should require callers or environment configuration to pass values explicitly. Filter dataclasses may define defaults for omitted filters, pagination, relationship-loading switches, and list-mode switches when the default means "do not apply this filter" or preserves the normal list behavior; tests, test helpers, and factories may keep defaults when they make test setup clearer.
 - Avoid `None`/`null` in production schemas, DTOs, and persisted structured content when a truthful
   non-null representation exists. Prefer empty strings for intentionally blank text, empty
@@ -125,7 +123,7 @@ Portfolio and articles site
   as a local stdio bridge. Preserve distinct machine identities, explicit scopes, the closed
   allowlisted REST/tool surface, server-forced Draft behavior, privacy-safe audit, and the isolated
   trusted nginx-to-backend network contour. Never weaken availability with a public/plaintext
-  listener, bearer fallback, shared certificate, human PASETO reuse, generic CRUD/HTTP/SQL/shell
+  listener, bearer fallback, shared certificate, human-identity reuse, generic CRUD/HTTP/SQL/shell
   access, publishing, deletion, structure mutation, or server-side URL fetching. Detailed backend
   rules belong in `AGENTS.md` and `docs/agent-access.md`.
 - More specific instructions live in nested `AGENTS.md` files under `src/core/`, `src/infra/postgresql/`, and `tests/`.
@@ -288,10 +286,10 @@ files at the project root. Shared runtime and deployment infrastructure belongs 
   `src/entrypoints/litestar/api/agent_access/` layout, with authentication/audit middleware
   and composition helpers in the common Litestar packages. Keep Agent authentication, exception
   mapping, request limits, transaction rollback, and audit behavior scoped to that router/path, and
-  exclude it from human PASETO authentication and OpenAPI. nginx may forward only five business
+  exclude it from human authentication and OpenAPI. nginx may forward only five business
   operations plus two certificate-rotation operations through the exact mTLS allowlist. The public
   listener must return `404` for the internal path and strip caller-supplied certificate headers.
-  Do not add a separate Agent process/socket, remote MCP endpoint, human PASETO authentication,
+  Do not add a separate Agent process/socket, remote MCP endpoint, human authentication,
   generic HTTP proxying/CRUD, SQL, shell, publishing, deletion, structure mutation, or server-side
   URL fetch.
 - The local stdio MCP bridge under `src/entrypoints/agent_bridge/` exposes only

@@ -5,7 +5,6 @@ from hashlib import md5
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.account.schemas import ManagedAccountFilters
 from core.agent_access.enums import (
     AgentActionEnum,
     AgentAuditResultEnum,
@@ -23,9 +22,6 @@ from core.agent_access.schemas import (
 )
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.articles.schemas import Article, ArticleFilters, ArticleFolder, ArticleMetadata, Tag, Tags
-from core.auth.enums import AuthSessionAuthMethodEnum, AuthSessionDeviceTypeEnum, RoleEnum
-from core.auth.schemas import AuthSessionClientMetadata, AuthSessionCreate
-from core.auth.types import SessionSecretHash
 from core.competency_matrix.enums import (
     CompetencyMatrixWorkspaceSortEnum,
     GradeEnum,
@@ -56,10 +52,8 @@ from infra.postgresql.storages.articles import (
     ArticleAnalyticsDatabaseStorage,
     ArticlesDatabaseStorage,
 )
-from infra.postgresql.storages.auth import AuthDatabaseStorage, AuthSessionDatabaseStorage
 from infra.postgresql.storages.competency_matrix import CompetencyMatrixDatabaseStorage
 from infra.postgresql.storages.contacts import ContactMeDatabaseStorage
-from infra.postgresql.storages.users import UserAccountDatabaseStorage
 from performance.query_plans.expectations import (
     QueryThresholdPolicy,
     expected_indexes_from_names,
@@ -83,8 +77,6 @@ def hex_id(value: int) -> str:
 
 SEED_NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 SEED_USERNAME = "benchmark"
-NEW_AUTH_HASH = "query-plan-auth-hash"
-NEW_MANAGED_ACCOUNT_USERNAME = "query-plan-admin"
 NEW_ARTICLE_ID = "10000000000040008000000000000001"
 NEW_CONTACT_ID = "10000000000040008000000000000002"
 NEW_ARTICLE_ANALYTICS_VOTER = "query-plan-voter-hash"
@@ -121,12 +113,6 @@ AGENT_COMPLETION_ID = hex_id(63_001)
 SHORT_TRIGRAM_ALLOW_REASON = (
     "short search string has too few extractable trigrams for an index-selective search"
 )
-
-
-def seeded_auth_session_hash(value: int) -> SessionSecretHash:
-    first = md5(f"session-a-{value}".encode(), usedforsecurity=False).hexdigest()
-    second = md5(f"session-b-{value}".encode(), usedforsecurity=False).hexdigest()
-    return SessionSecretHash(f"{first}{second}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,152 +196,6 @@ def coverage_findings(*, coverage: CoverageReport) -> tuple[str, ...]:
             f"{method.storage_class}.{method.method_name}"
             for method in coverage.unexpected_methods
         ),
-    )
-
-
-async def run_user_get_by_username(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).get_user_by_username(SEED_USERNAME)
-
-
-async def run_list_managed_accounts(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).list_managed_accounts(
-        filters=ManagedAccountFilters(page=1, page_size=20),
-    )
-
-
-async def run_get_managed_account(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).get_managed_account(username=SEED_USERNAME)
-
-
-async def run_create_managed_account(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).create_managed_account(
-        username=NEW_MANAGED_ACCOUNT_USERNAME,
-        role=RoleEnum.ADMIN,
-        password_hash=NEW_AUTH_HASH,
-        is_active=True,
-    )
-
-
-async def run_update_managed_account_role(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).update_managed_account_role(
-        username=SEED_USERNAME,
-        role=RoleEnum.MODERATOR,
-    )
-
-
-async def run_update_managed_account_password(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).update_managed_account_password(
-        username=SEED_USERNAME,
-        password_hash=NEW_AUTH_HASH,
-    )
-
-
-async def run_activate_managed_account(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).activate_managed_account(
-        username="benchmark-user-2",
-    )
-
-
-async def run_deactivate_managed_account(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).deactivate_managed_account(
-        username=SEED_USERNAME,
-    )
-
-
-async def run_delete_managed_account(session: AsyncSession) -> None:
-    await UserAccountDatabaseStorage(session=session).delete_managed_account(
-        username="benchmark-user-100",
-    )
-
-
-async def run_update_user_password_hash(session: AsyncSession) -> None:
-    await AuthDatabaseStorage(session=session).update_user_password_hash(
-        SEED_USERNAME,
-        NEW_AUTH_HASH,
-    )
-
-
-async def run_create_auth_session(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).create_session(
-        session=AuthSessionCreate(
-            username=SEED_USERNAME,
-            secret_hash=SessionSecretHash(
-                "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            ),
-            expires_at=SEED_NOW + timedelta(days=30),
-            absolute_expires_at=SEED_NOW + timedelta(days=30),
-            is_revoked=False,
-            last_used_at=SEED_NOW,
-            auth_method=AuthSessionAuthMethodEnum.PASSWORD,
-            client_metadata=AuthSessionClientMetadata(
-                user_agent_display="Chrome on Linux",
-                user_agent_browser="Chrome",
-                user_agent_os="Linux",
-                user_agent_device=AuthSessionDeviceTypeEnum.DESKTOP,
-            ),
-        ),
-    )
-
-
-async def run_get_auth_session_by_secret_hash(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).get_session_by_secret_hash(
-        secret_hash=seeded_auth_session_hash(1),
-    )
-
-
-async def run_get_auth_session_by_id(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).get_session_by_id(session_id=hex_id(1))
-
-
-async def run_list_user_auth_sessions(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).list_user_sessions(
-        username=SEED_USERNAME,
-        active_at=SEED_NOW,
-    )
-
-
-async def run_extend_auth_session_expiry(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).extend_session_expiry(
-        session_id=hex_id(1),
-        expires_at=SEED_NOW + timedelta(days=31),
-        last_used_at=SEED_NOW + timedelta(minutes=1),
-    )
-
-
-async def run_delete_expired_auth_sessions(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).delete_expired_sessions(
-        expires_at=SEED_NOW,
-    )
-
-
-async def run_count_cleanup_auth_sessions(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).count_cleanup_sessions(
-        expired_at=SEED_NOW,
-        expiring_soon_at=SEED_NOW + timedelta(days=7),
-    )
-
-
-async def run_revoke_auth_session_by_secret_hash(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).revoke_session_by_secret_hash(
-        secret_hash=seeded_auth_session_hash(2),
-    )
-
-
-async def run_revoke_user_auth_sessions(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).revoke_user_sessions(username=SEED_USERNAME)
-
-
-async def run_revoke_user_auth_session(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).revoke_user_session(
-        username=SEED_USERNAME,
-        session_id=hex_id(1),
-    )
-
-
-async def run_revoke_other_user_auth_sessions(session: AsyncSession) -> None:
-    await AuthSessionDatabaseStorage(session=session).revoke_user_sessions_except(
-        username=SEED_USERNAME,
-        except_session_id=hex_id(1),
     )
 
 
@@ -1363,216 +1203,6 @@ STORAGE_SCENARIOS = (
                 run_release_agent_matrix_question_claim,
             ),
         )
-    ),
-    scenario(
-        name="user_get_by_username",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="get_user_by_username",
-        group=QueryThresholdGroup.POINT_READ,
-        expected_index_names=("users_username_lower_uniq",),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_user_get_by_username,
-    ),
-    scenario(
-        name="managed_accounts_list",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="list_managed_accounts",
-        group=QueryThresholdGroup.LIST_READ,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_list_managed_accounts,
-    ),
-    scenario(
-        name="managed_accounts_detail",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="get_managed_account",
-        group=QueryThresholdGroup.POINT_READ,
-        expected_index_names=("users_username_lower_uniq",),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_get_managed_account,
-    ),
-    scenario(
-        name="managed_accounts_create",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="create_managed_account",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=(),
-        allow_seq_scan_reason=None,
-        run=run_create_managed_account,
-    ),
-    scenario(
-        name="managed_accounts_update_role",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="update_managed_account_role",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_update_managed_account_role,
-    ),
-    scenario(
-        name="managed_accounts_update_password",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="update_managed_account_password",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_update_managed_account_password,
-    ),
-    scenario(
-        name="managed_accounts_activate",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="activate_managed_account",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_activate_managed_account,
-    ),
-    scenario(
-        name="managed_accounts_deactivate",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="deactivate_managed_account",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_deactivate_managed_account,
-    ),
-    scenario(
-        name="managed_accounts_delete",
-        storage_class="UserAccountDatabaseStorage",
-        method_name="delete_managed_account",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_delete_managed_account,
-    ),
-    scenario(
-        name="auth_update_user_password_hash",
-        storage_class="AuthDatabaseStorage",
-        method_name="update_user_password_hash",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("users_username_lower_uniq",),
-        forbidden_seq_scan_relations=("auth__user_model",),
-        allow_seq_scan_reason=None,
-        run=run_update_user_password_hash,
-    ),
-    scenario(
-        name="auth_session_create",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="create_session",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=(),
-        allow_seq_scan_reason=None,
-        run=run_create_auth_session,
-    ),
-    scenario(
-        name="auth_session_detail_by_secret_hash",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="get_session_by_secret_hash",
-        group=QueryThresholdGroup.POINT_READ,
-        expected_index_names=("auth_sessions_secret_hash_uniq",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_get_auth_session_by_secret_hash,
-    ),
-    scenario(
-        name="auth_session_detail_by_id",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="get_session_by_id",
-        group=QueryThresholdGroup.POINT_READ,
-        expected_index_names=("auth__auth_session_model_pkey",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_get_auth_session_by_id,
-    ),
-    scenario(
-        name="auth_session_list_user_sessions",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="list_user_sessions",
-        group=QueryThresholdGroup.LIST_READ,
-        expected_index_names=("auth_sessions_username_lower_active_expiry_idx",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_list_user_auth_sessions,
-    ),
-    scenario(
-        name="auth_session_extend_expiry",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="extend_session_expiry",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("auth__auth_session_model_pkey",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_extend_auth_session_expiry,
-    ),
-    scenario(
-        name="auth_session_delete_expired",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="delete_expired_sessions",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("auth_sessions_expiry_idx",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_delete_expired_auth_sessions,
-    ),
-    scenario(
-        name="auth_session_count_cleanup",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="count_cleanup_sessions",
-        group=QueryThresholdGroup.AGGREGATE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=(),
-        allow_seq_scan_reason=None,
-        run=run_count_cleanup_auth_sessions,
-    ),
-    scenario(
-        name="auth_session_revoke_by_secret_hash",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="revoke_session_by_secret_hash",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("auth_sessions_secret_hash_uniq",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_revoke_auth_session_by_secret_hash,
-    ),
-    scenario(
-        name="auth_session_revoke_user_session",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="revoke_user_session",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("auth__auth_session_model_pkey",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_revoke_user_auth_session,
-    ),
-    scenario(
-        name="auth_session_revoke_user_sessions",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="revoke_user_sessions",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("auth_sessions_username_lower_active_expiry_idx",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_revoke_user_auth_sessions,
-    ),
-    scenario(
-        name="auth_session_revoke_user_sessions_except",
-        storage_class="AuthSessionDatabaseStorage",
-        method_name="revoke_user_sessions_except",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=("auth_sessions_username_lower_active_expiry_idx",),
-        forbidden_seq_scan_relations=("auth__auth_session_model",),
-        allow_seq_scan_reason=None,
-        run=run_revoke_other_user_auth_sessions,
     ),
     scenario(
         name="contact_create_request",

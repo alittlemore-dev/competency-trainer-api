@@ -24,10 +24,6 @@ class ApiFactoryHelper:
         }
 
     @classmethod
-    def login_request(cls, username: str = "TEST", password: str | None = None) -> dict[str, Any]:
-        return {"username": username, "password": password or "TEST"}
-
-    @classmethod
     def article_request(
         cls,
         title_ru: str = "Статья",

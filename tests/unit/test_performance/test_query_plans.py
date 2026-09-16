@@ -156,12 +156,6 @@ class TestQueryCapture:
             tuple[Callable[..., Awaitable[None]], Mapping[str, object], tuple[str, ...]],
             ...,
         ] = (
-            (query_plan_seed.insert_users, {"profile": profile}, ("role_enum",)),
-            (
-                query_plan_seed.insert_auth_sessions,
-                {"profile": profile},
-                ("auth_session_auth_method_enum", "auth_session_device_type_enum"),
-            ),
             (query_plan_seed.insert_article_folders, {"profile": profile}, ()),
             (query_plan_seed.insert_articles, {"profile": profile}, ("publish_status_enum",)),
             (
@@ -211,7 +205,6 @@ class TestQueryCapture:
         assert "articles__article_model" in sql
         assert "competency_matrix__competency_matrix_item_model" in sql
         assert "competency_matrix__external_resource_model" in sql
-        assert "auth__user_model" in sql
         assert sql.endswith(" RESTART IDENTITY CASCADE")
 
     async def test_explain_session_uses_profile_work_mem_budget(self) -> None:
@@ -238,8 +231,6 @@ class TestQueryCapture:
         assert ("CompetencyMatrixDatabaseStorage", "search_competency_matrix_resources") in (
             identifiers
         )
-        assert ("AuthDatabaseStorage", "update_user_password_hash") in identifiers
-        assert ("UserAccountDatabaseStorage", "get_user_by_username") in identifiers
         assert ("ContactMeDatabaseStorage", "create_contact_me_request") in identifiers
         assert ("ArticlesDatabaseStorage", "_get_article_model") not in identifiers
 
@@ -630,7 +621,6 @@ class TestQueryCapture:
             "explainRuns": 3,
             "explainWorkMemMb": 16,
             "cardinalities": {
-                "auth": {"users": 100, "sessions": 500},
                 "articles": {
                     "folders": 20,
                     "articles": 5_000,
@@ -729,7 +719,6 @@ def make_query_plan_profile() -> query_plan_models.QueryPlanProfile:
     return query_plan_models.QueryPlanProfile(
         name="unit",
         cardinalities=query_plan_models.ProfileCardinalities(
-            auth=query_plan_models.AuthCardinalities(users=10, sessions=10),
             articles=query_plan_models.ArticleCardinalities(
                 folders=1,
                 articles=10,

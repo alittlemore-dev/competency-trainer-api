@@ -10,18 +10,16 @@ from core.articles.schemas import (
     ArticleTreeFolder,
     ArticleTreeItem,
 )
-from core.auth.enums import RoleEnum
-from core.auth.exceptions import UnauthorizedError
-from core.auth.schemas import JwtUser
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum, UnauthorizedError, UserIdentity
 from tests.test_cases import ApiTestCase
 
 
 class TestArticleDetailAndTreeAPI(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.use_case = await self.container.get_articles_use_case()
         self.analytics_use_case = await self.container.get_article_analytics_use_case()
         self.analytics_use_case.get_public_stats.return_value = ArticlePublicStatsCollection(
@@ -144,7 +142,7 @@ class TestArticleDetailAndTreeAPI(ApiTestCase):
         self.use_case.get_article.assert_not_called()
 
     def test_moderator_can_request_draft_article(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )
@@ -211,7 +209,7 @@ class TestArticleDetailAndTreeAPI(ApiTestCase):
         )
 
     def test_tree_uses_all_visibility_for_moderator(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )

@@ -190,10 +190,6 @@ def serialize_profile(*, profile: QueryPlanProfile) -> Mapping[str, object]:
         "explainRuns": profile.explain_runs,
         "explainWorkMemMb": profile.explain_work_mem_mb,
         "cardinalities": {
-            "auth": {
-                "users": cardinalities.auth.users,
-                "sessions": cardinalities.auth.sessions,
-            },
             "articles": {
                 "folders": cardinalities.articles.folders,
                 "articles": cardinalities.articles.articles,

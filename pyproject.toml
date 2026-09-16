@@ -16,14 +16,11 @@ dependencies = [
     "sqlalchemy[asyncio,mypy]>=2.0.52",
     "sqlalchemy-dev-utils>=1.4.0",
     "alembic>=1.19.1",
-    "pyseto>=1.10.0",
-    "itsdangerous>=2.2.0",
     "structlog>=26.1.0",
     "aiobotocore>=3.9.0",
     "litestar[cli,pydantic,valkey]>=2.24.0",
     "ecs-logging>=2.3.0",
     "sentry-sdk[litestar]>=2.68.0",
-    "pem>=23.1.0",
     "argon2-cffi>=25.1.0",
     "dishka>=1.10.1",
     "sniffio>=1.3.1",
@@ -34,7 +31,6 @@ dependencies = [
     "msgpack>=1.2.1",
     "mcp>=2.0.0,<3",
     "pillow>=12.3.0",
-    "ua-parser[regex]>=1.0.2",
 ]
 
 [dependency-groups]

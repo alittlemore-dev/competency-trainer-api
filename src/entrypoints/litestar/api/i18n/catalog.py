@@ -1,10 +1,10 @@
 from collections.abc import Mapping
 
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
-from core.auth.enums import RoleEnum
 from core.competency_matrix.enums import GradeEnum, InterviewFrequencyEnum
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum
 
 LanguageMessages = Mapping[str, str]
 
@@ -37,10 +37,14 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "shell.services.articles": "Статьи",
         "shell.services.admin": "Админ-панель",
         "shell.account": "Меню аккаунта",
-        "auth.login.sessionExpired": "Сессия истекла. Войдите снова, чтобы продолжить работу.",
-        "auth.login.identityChanged": "Вход выполнен под другим аккаунтом. Предыдущая рабочая область закрыта.",
+        "auth.login.sessionExpired": ("Сессия истекла. Войдите снова, чтобы продолжить работу."),
+        "auth.login.identityChanged": (
+            "Вход выполнен под другим аккаунтом. Предыдущая рабочая область закрыта."
+        ),
         "shell.settings": "Настройки",
-        "shell.auth.logoutFailed": "Не удалось завершить сессию на сервере. Локальный вход сброшен.",
+        "shell.auth.logoutFailed": (
+            "Не удалось завершить сессию на сервере. Локальный вход сброшен."
+        ),
         "shell.language.failed": "Не удалось загрузить выбранный язык. Попробуйте ещё раз.",
         "shell.theme.light": "Light",
         "shell.theme.dark": "Dark",
@@ -1228,10 +1232,14 @@ MESSAGES: Mapping[LanguageEnum, LanguageMessages] = {
         "shell.services.articles": "Articles",
         "shell.services.admin": "Admin panel",
         "shell.account": "Account menu",
-        "auth.login.sessionExpired": "Your session expired. Sign in again to continue.",
-        "auth.login.identityChanged": "Signed in with a different account. The previous workspace has been closed.",
+        "auth.login.sessionExpired": ("Your session expired. Sign in again to continue."),
+        "auth.login.identityChanged": (
+            "Signed in with a different account. The previous workspace has been closed."
+        ),
         "shell.settings": "Settings",
-        "shell.auth.logoutFailed": "Could not end the server session. You have been signed out locally.",
+        "shell.auth.logoutFailed": (
+            "Could not end the server session. You have been signed out locally."
+        ),
         "shell.language.failed": "Could not load the selected language. Please try again.",
         "shell.theme.light": "Light",
         "shell.theme.dark": "Dark",

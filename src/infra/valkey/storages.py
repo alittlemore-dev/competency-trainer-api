@@ -1,4 +1,3 @@
-import hashlib
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -8,8 +7,6 @@ from typing import TypedDict, cast
 from litestar.stores.base import Store
 from valkey.asyncio import Valkey
 
-from core.auth.storages import TokenRevocationStorage
-from core.auth.types import Token
 from core.cache_tools.enums import CacheDomainEnum, CacheWarmOperationStatusEnum
 from core.cache_tools.schemas import CacheDomainStatus, CacheWarmOperation, CacheWarmSummary
 from core.cache_tools.storages import CacheWarmOperationStorage, ResponseCacheStatusStorage
@@ -31,24 +28,6 @@ class CacheWarmOperationPayload(TypedDict):
     status: str
     queued_at: str
     summary: CacheWarmSummaryPayload | None
-
-
-@dataclass(kw_only=True, slots=True, frozen=True)
-class ValkeyTokenRevocationStorage(TokenRevocationStorage):
-    store: Store
-
-    async def revoke_token(self, token: Token, expires_in_seconds: int) -> None:
-        await self.store.set(
-            key=self._token_key(token),
-            value=b"revoked",
-            expires_in=expires_in_seconds,
-        )
-
-    async def is_token_revoked(self, token: Token) -> bool:
-        return await self.store.exists(key=self._token_key(token))
-
-    def _token_key(self, token: Token) -> str:
-        return hashlib.sha256(token).hexdigest()
 
 
 @dataclass(kw_only=True, slots=True)

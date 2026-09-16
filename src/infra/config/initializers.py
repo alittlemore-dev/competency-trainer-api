@@ -1,6 +1,5 @@
 import asyncio
 
-import pem
 import sentry_sdk
 from sentry_sdk.integrations.litestar import LitestarIntegration
 
@@ -23,15 +22,6 @@ def init_sentry() -> None:
         profile_lifecycle="trace",
         integrations=[LitestarIntegration()],
     )
-
-
-def check_certs_exists() -> None:
-    if not pem.parse(settings.auth.public_key.get_secret_value()):
-        msg = "Public key certificate is not valid. Check your .env file or environment variables."
-        raise RuntimeError(msg)
-    if not pem.parse(settings.auth.private_key.get_secret_value()):
-        msg = "Private key certificate is not valid. Check your .env file or environment variables."
-        raise RuntimeError(msg)
 
 
 async def monitor_event_loop_lag(loop: asyncio.AbstractEventLoop) -> None:
@@ -75,7 +65,6 @@ async def monitor_event_loop_lag(loop: asyncio.AbstractEventLoop) -> None:
 def before_app_create() -> None:
     loop = asyncio.get_running_loop()
     init_sentry()
-    check_certs_exists()
     # TODO: move migrate to separated task in docker-compose
     migrate("head")
     loop.create_task(monitor_event_loop_lag(loop))  # noqa: RUF006

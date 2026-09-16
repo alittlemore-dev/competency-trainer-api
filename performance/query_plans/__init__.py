@@ -6,7 +6,6 @@ from performance.query_plans.analysis import analyze_explain_result
 from performance.query_plans.models import (
     AgentAccessCardinalities,
     ArticleCardinalities,
-    AuthCardinalities,
     BenchmarkResult,
     CapturedQuery,
     CliArgs,
@@ -40,7 +39,6 @@ async def run_query_plan_profile(args: CliArgs) -> int:
 __all__ = (
     "AgentAccessCardinalities",
     "ArticleCardinalities",
-    "AuthCardinalities",
     "BenchmarkResult",
     "CapturedQuery",
     "CliArgs",

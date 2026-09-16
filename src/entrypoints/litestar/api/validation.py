@@ -22,14 +22,6 @@ def validate_slug(value: str) -> str:
     return trimmed_value
 
 
-def validate_account_username(value: str) -> str:
-    trimmed_value = trim_required(value)
-    if re.fullmatch(constants.admin_validation.account_username_pattern, trimmed_value) is None:
-        msg = "value must contain Latin letters, digits, dots, or underscores only"
-        raise ValueError(msg)
-    return trimmed_value
-
-
 def validate_required_http_url(value: str) -> str:
     trimmed_value = trim_required(value)
     validate_http_url_format(trimmed_value)
@@ -107,21 +99,6 @@ SlugString = Annotated[
         max_length=constants.admin_validation.short_text_max_length,
     ),
     AfterValidator(validate_slug),
-]
-AccountUsernameString = Annotated[
-    str,
-    Field(
-        min_length=constants.admin_validation.account_username_min_length,
-        max_length=constants.admin_validation.short_text_max_length,
-    ),
-    AfterValidator(validate_account_username),
-]
-AccountPasswordString = Annotated[
-    str,
-    Field(
-        min_length=constants.admin_validation.account_password_min_length,
-        max_length=constants.admin_validation.short_text_max_length,
-    ),
 ]
 ArticleContentText = Annotated[
     str,

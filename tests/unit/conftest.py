@@ -6,18 +6,20 @@ import pytest_asyncio
 from dishka import AsyncContainer, make_async_container
 from dishka.integrations.litestar import LitestarProvider, setup_dishka
 from litestar import Litestar
+from litestar.middleware import DefineMiddleware
 from litestar.testing import TestClient
 
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
-from core.auth.types import RawToken
+from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.initializers.main import create_litestar_app
 from infra.config.settings import Settings
 from infra.ioc.prodivers.database_provider import DatabaseProvider
-from tests.unit.mocks.providers.account import MockUserAccountProvider
+from tests.helpers.identity import (
+    TestIdentityController,
+    TestIdentityMiddleware,
+    TestIdentityProvider,
+)
 from tests.unit.mocks.providers.agent_access import MockAgentAccessProvider
 from tests.unit.mocks.providers.articles import MockArticlesProvider
-from tests.unit.mocks.providers.auth import MockAuthProvider
 from tests.unit.mocks.providers.cache_tools import MockCacheToolsProvider
 from tests.unit.mocks.providers.competency_matrix import MockCompetencyMatrixProvider
 from tests.unit.mocks.providers.contacts import MockContactsProvider
@@ -33,25 +35,24 @@ def random_suffix(global_random_uuid: uuid.UUID) -> str:
 
 
 @pytest.fixture
-def jwt_user() -> JwtUser:
-    return JwtUser(username="test", role=RoleEnum.USER)
+def user_identity() -> UserIdentity:
+    return UserIdentity(username="test", role=RoleEnum.USER)
 
 
 @pytest.fixture
-def jwt_admin() -> JwtUser:
-    return JwtUser(username="test", role=RoleEnum.ADMIN)
+def admin_identity() -> UserIdentity:
+    return UserIdentity(username="test", role=RoleEnum.ADMIN)
 
 
 @pytest.fixture
-def raw_token() -> RawToken:
-    return RawToken("Bearer token")
+def identity_controller(admin_identity: UserIdentity) -> TestIdentityController:
+    return TestIdentityController(user=admin_identity)
 
 
 @pytest_asyncio.fixture(loop_scope="function")
-async def container(  # noqa: PLR0913
+async def container(
     test_settings: Settings,
-    jwt_admin: JwtUser,
-    raw_token: RawToken,
+    identity_controller: TestIdentityController,
     global_random_uuid: uuid.UUID,
     global_random_hex_uuid: str,
     random_suffix: str,
@@ -64,9 +65,8 @@ async def container(  # noqa: PLR0913
         MockCompetencyMatrixProvider(),
         MockArticlesProvider(),
         MockContactsProvider(),
-        MockUserAccountProvider(),
         MockAgentAccessProvider(),
-        MockAuthProvider(settings=test_settings, user=jwt_admin, raw_token=raw_token),
+        TestIdentityProvider(controller=identity_controller),
         MockCacheToolsProvider(),
         MockWikiLinksProvider(),
         MockHealthcheckProvider(),
@@ -76,21 +76,29 @@ async def container(  # noqa: PLR0913
 
 
 @pytest.fixture
-def app(container: AsyncContainer) -> Litestar:
-    return build_test_app(container=container)
+def app(container: AsyncContainer, identity_controller: TestIdentityController) -> Litestar:
+    return build_test_app(container=container, identity_controller=identity_controller)
 
 
 @pytest.fixture
 def no_auth_app(container: AsyncContainer) -> Litestar:
-    return build_test_app(container=container)
+    return build_test_app(
+        container=container,
+        identity_controller=TestIdentityController(user=UserIdentity.anonymous()),
+    )
 
 
-def build_test_app(container: AsyncContainer) -> Litestar:
+def build_test_app(
+    container: AsyncContainer,
+    identity_controller: TestIdentityController,
+) -> Litestar:
     test_app = create_litestar_app(
         lifespan=[],
         container=container,
         extra_plugins=[],
-        extra_middlewares=[],
+        extra_middlewares=[
+            DefineMiddleware(TestIdentityMiddleware, controller=identity_controller),
+        ],
     )
     setup_dishka(container=container, app=test_app)
     return test_app
@@ -105,5 +113,4 @@ def no_auth_client(no_auth_app: Litestar) -> Generator[TestClient]:
 @pytest.fixture
 def client(app: Litestar) -> Generator[TestClient]:
     with TestClient(app) as client:
-        client.headers["Authorization"] = "Bearer ANY"
         yield client

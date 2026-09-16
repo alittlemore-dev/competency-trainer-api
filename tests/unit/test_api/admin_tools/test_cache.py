@@ -4,8 +4,6 @@ import pytest
 import pytest_asyncio
 from httpx import codes
 
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
 from core.cache_tools.enums import CacheDomainEnum, CacheWarmOperationStatusEnum
 from core.cache_tools.exceptions import CacheWarmOperationNotFoundError
 from core.cache_tools.schemas import (
@@ -14,6 +12,7 @@ from core.cache_tools.schemas import (
     CacheWarmOperation,
     CacheWarmSummary,
 )
+from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.api.admin_tools.endpoints import AdminToolsApiController
 from tests.test_cases import ApiTestCase
 
@@ -157,8 +156,8 @@ class TestAdminToolsCacheAPI(ApiTestCase):
 
 class TestAdminToolsCacheAccess(ApiTestCase):
     @pytest.fixture
-    def jwt_admin(self) -> JwtUser:
-        return JwtUser(username="moderator", role=RoleEnum.MODERATOR)
+    def admin_identity(self) -> UserIdentity:
+        return UserIdentity(username="moderator", role=RoleEnum.MODERATOR)
 
     def test_moderator_cannot_clear_or_warm_cache(self) -> None:
         clear_response = self.api.post_admin_tools_cache_clear()

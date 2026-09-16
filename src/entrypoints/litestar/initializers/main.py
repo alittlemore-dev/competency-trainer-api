@@ -6,7 +6,6 @@ from dishka.integrations.litestar import setup_dishka
 from litestar import Litestar, Router
 from litestar.config.response_cache import ResponseCacheConfig
 from litestar.logging import StructLoggingConfig
-from litestar.middleware import DefineMiddleware
 from litestar.middleware.logging import LoggingMiddleware, LoggingMiddlewareConfig
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.plugins import SwaggerRenderPlugin
@@ -22,7 +21,6 @@ from entrypoints.litestar.api.routers import api_router
 from entrypoints.litestar.cli.plugins import CLIPlugin
 from entrypoints.litestar.exception_handlers import get_litestar_exception_handlers
 from entrypoints.litestar.middlewares.agent_audit import AgentOutcomeAuditMiddleware
-from entrypoints.litestar.middlewares.auth import AuthenticationMiddleware
 from entrypoints.litestar.middlewares.logging import (
     LogExceptionMiddleware,
     RequestIdLoggingMiddleware,
@@ -108,20 +106,10 @@ def create_plugins() -> list[PluginProtocol]:
     ]
 
 
-def create_middlewares(container: AsyncContainer) -> list[Middleware]:
+def create_middlewares(_container: AsyncContainer) -> list[Middleware]:
     return [
         RequestIdLoggingMiddleware(),
         LogExceptionMiddleware(),
-        DefineMiddleware(
-            AuthenticationMiddleware,
-            token_header_name=settings.auth.token_header_name,
-            token_prefix=settings.auth.token_prefix,
-            container=container,
-            exclude=["/api/docs"],
-            exclude_from_auth_key="exclude_from_auth",
-            exclude_http_methods=None,
-            scopes=None,
-        ),
     ]
 
 

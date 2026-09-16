@@ -9,10 +9,9 @@ from litestar.di import NamedDependency, Provide
 from core.articles.enums import ArticleViewSourceCategory
 from core.articles.schemas import ArticleAnalyticsConfig, ArticleFilters
 from core.articles.use_cases import ArticleAnalyticsUseCase, ArticlesUseCase
-from core.auth.schemas import JwtUser
-from core.auth.types import Token
 from core.enums import PublishStatusEnum
 from core.generators import HexUuidIdGenerator
+from core.identity import UserIdentity
 from entrypoints.litestar.api.articles.dependencies import (
     provide_article_filters,
     provide_public_article_filters,
@@ -138,7 +137,7 @@ class PublicArticlesApiController(Controller):
     async def track_public_view(
         self,
         slug: ArticleSlugPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
         config: FromDishka[ArticleAnalyticsConfig],
@@ -162,7 +161,7 @@ class PublicArticlesApiController(Controller):
     async def track_engaged_view(
         self,
         slug: ArticleSlugPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
         _language: LanguageQuery,
     ) -> None:
@@ -253,7 +252,7 @@ class AdminArticlesApiController(Controller):
     async def create_article(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             ArticleRequestSchema,
@@ -346,7 +345,7 @@ class AdminArticlesApiController(Controller):
     async def create_folder(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             ArticleFolderRequestSchema,
@@ -388,7 +387,7 @@ class AdminArticlesApiController(Controller):
     )
     async def update_folder_priorities(
         self,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             ArticleFolderPriorityUpdateRequestSchema,
             api_json_body(
@@ -455,7 +454,7 @@ class AdminArticlesApiController(Controller):
     async def update_article(  # noqa: PLR0913
         self,
         slug: ArticleSlugPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         data: Annotated[
             ArticleRequestSchema,
             api_json_body(
@@ -515,7 +514,7 @@ class AdminArticlesApiController(Controller):
     async def delete_article(
         self,
         slug: ArticleSlugPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
         current_datetime: FromDishka[datetime],
@@ -539,7 +538,7 @@ class AdminArticlesApiController(Controller):
     async def set_draft_status_to_article(
         self,
         slug: ArticleSlugPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -562,7 +561,7 @@ class AdminArticlesApiController(Controller):
     async def set_published_status_to_article(
         self,
         slug: ArticleSlugPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -622,7 +621,7 @@ class AdminArticlesApiController(Controller):
     async def create_tag(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             TagRequestSchema,
@@ -662,7 +661,7 @@ class AdminArticlesApiController(Controller):
     async def update_tag(  # noqa: PLR0913
         self,
         tag_id: TagIdPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             TagRequestSchema,
@@ -703,7 +702,7 @@ class AdminArticlesApiController(Controller):
     async def delete_tag(
         self,
         tag_id: TagIdPath,
-        request: Request[JwtUser, Token | None, State],
+        request: Request[UserIdentity, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:

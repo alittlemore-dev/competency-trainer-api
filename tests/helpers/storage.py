@@ -4,7 +4,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.articles.schemas import Article, ArticleFolder, Tag
-from core.auth.schemas import User
 from core.competency_matrix.schemas import (
     CompetencyMatrixItem,
     CompetencyMatrixItemStructure,
@@ -27,7 +26,6 @@ from infra.postgresql.models import (
     FileModel,
     QueuedQuestionModel,
     TagModel,
-    UserModel,
 )
 
 
@@ -173,18 +171,6 @@ class StorageHelper:
         self.session.add_all(db_questions)
         await self.session.flush()
         return db_questions
-
-    async def create_user(self, user: User) -> UserModel:
-        model = UserModel.from_domain_schema(schema=user)
-        await self.session.merge(model)
-        await self.session.flush()
-        return model
-
-    async def create_users(self, users: list[User]) -> list[UserModel]:
-        db_users = [UserModel.from_domain_schema(schema=user) for user in users]
-        self.session.add_all(db_users)
-        await self.session.flush()
-        return db_users
 
     async def create_file(self, file: StoredFile) -> FileModel:
         model = FileModel.from_domain_schema(file)

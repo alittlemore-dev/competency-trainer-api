@@ -10,7 +10,7 @@ class TestOpenApiMetadata:
         admin_paths = sorted(path for path in schema["paths"] if path.startswith("/api/admin"))
 
         assert admin_paths == []
-        assert "/api/auth/login" in schema["paths"]
+        assert not any(path.startswith(("/api/auth", "/api/account")) for path in schema["paths"])
 
     def test_visible_parameters_include_descriptions_and_examples(self, app: Litestar) -> None:
         schema = app.openapi_schema.to_schema()

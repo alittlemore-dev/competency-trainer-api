@@ -25,8 +25,7 @@ from core.agent_access.schemas import (
     AgentClientRegistrationResult,
     AgentClientRevokeParams,
 )
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
+from core.identity import RoleEnum, UserIdentity
 from tests.test_cases import ApiTestCase
 
 NOW = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
@@ -36,8 +35,8 @@ CERTIFICATE_ID = "00000000000000000000000000000002"
 
 class TestOwnerAgentClientsAPI(ApiTestCase):
     @pytest.fixture
-    def jwt_admin(self) -> JwtUser:
-        return JwtUser(username="owner", role=RoleEnum.OWNER)
+    def admin_identity(self) -> UserIdentity:
+        return UserIdentity(username="owner", role=RoleEnum.OWNER)
 
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
@@ -219,9 +218,9 @@ class TestOwnerAgentClientsAPI(ApiTestCase):
 
 class TestNonOwnerAgentClientsAPI(ApiTestCase):
     @pytest.fixture(params=[RoleEnum.ADMIN, RoleEnum.MODERATOR])
-    def jwt_admin(self, request: pytest.FixtureRequest) -> JwtUser:
+    def admin_identity(self, request: pytest.FixtureRequest) -> UserIdentity:
         role = request.param
-        return JwtUser(username=role.value, role=role)
+        return UserIdentity(username=role.value, role=role)
 
     def test_non_owner_cannot_list_clients(self) -> None:
         response = self.api.get_admin_agent_clients()

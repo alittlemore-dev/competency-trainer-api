@@ -17,6 +17,7 @@ RELATIONSHIP_TABLE = "knowledge__person_relationship_model"
 FILE_TABLE = "knowledge__knowledge_file_model"
 KNOWLEDGE_ENUM = "knowledge_item_kind_enum"
 FILE_ENUM = "knowledge_file_kind_enum"
+LEGACY_STORED_HASH = "legacy-hash"
 
 
 class ReflectedEnum(TypedDict):
@@ -51,7 +52,9 @@ knowledge_file_kind_enum = postgresql.ENUM(
 users = sa.table(
     "auth__user_model",
     sa.column("username", sa.String()),
+    sa.column("password_hash", sa.String()),
     sa.column("role", role_enum),
+    sa.column("is_active", sa.Boolean()),
 )
 items = sa.table(
     ITEM_TABLE,
@@ -108,11 +111,20 @@ knowledge_files = sa.table(
 
 
 async def get_owner_username(engine: AsyncEngine) -> str:
-    async with engine.connect() as connection:
+    async with engine.begin() as connection:
         username = await connection.scalar(
             sa.select(users.c.username).where(users.c.role == "OWNER"),
         )
-    assert username is not None
+        if username is None:
+            username = "owner"
+            await connection.execute(
+                users.insert().values(
+                    username=username,
+                    password_hash=LEGACY_STORED_HASH,
+                    role="OWNER",
+                    is_active=True,
+                ),
+            )
     return cast("str", username)
 
 

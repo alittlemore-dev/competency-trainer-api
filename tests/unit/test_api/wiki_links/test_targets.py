@@ -1,10 +1,9 @@
 import pytest_asyncio
 from httpx import codes
 
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum, UserIdentity
 from core.wiki_links.enums import WikiLinkTargetTypeEnum
 from core.wiki_links.schemas import WikiLinkTarget, WikiLinkTargetGroup, WikiLinkTargets
 from tests.test_cases import ApiTestCase
@@ -13,7 +12,7 @@ from tests.test_cases import ApiTestCase
 class TestWikiLinkTargetsAPI(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.use_case = await self.container.get_wiki_links_use_case()
 
     def test_list_targets(self) -> None:
@@ -84,7 +83,7 @@ class TestWikiLinkTargetsAPI(ApiTestCase):
         self.use_case.list_targets.assert_not_called()
 
     def test_allows_moderator(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )

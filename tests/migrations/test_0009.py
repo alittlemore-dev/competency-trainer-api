@@ -89,18 +89,24 @@ class TestMigration0009:
     ) -> None:
         _ = migrated_to_0008
         now = datetime(2026, 7, 12, 12, 0, tzinfo=UTC)
+        owner_username = "owner"
         async with engine.begin() as connection:
-            owner_username = await connection.scalar(
-                sa.select(users.c.username).where(users.c.role == "OWNER"),
-            )
-            assert owner_username is not None
             await connection.execute(
-                users.insert().values(
-                    username="alice",
-                    password_hash=stored_hash_value,
-                    role="USER",
-                    is_active=True,
-                ),
+                users.insert(),
+                [
+                    {
+                        "username": owner_username,
+                        "password_hash": stored_hash_value,
+                        "role": "OWNER",
+                        "is_active": True,
+                    },
+                    {
+                        "username": "alice",
+                        "password_hash": stored_hash_value,
+                        "role": "USER",
+                        "is_active": True,
+                    },
+                ],
             )
             await connection.execute(
                 sheets.insert().values(

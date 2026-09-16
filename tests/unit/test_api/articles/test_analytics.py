@@ -13,16 +13,15 @@ from core.articles.schemas import (
     ArticlePublicStatsCollection,
     ArticleReactionCounts,
 )
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum, UserIdentity
 from tests.test_cases import ApiTestCase
 
 
 class TestArticleAnalyticsAPI(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.articles_use_case = await self.container.get_articles_use_case()
         self.analytics_use_case = await self.container.get_article_analytics_use_case()
         self.config = await self.container.get_article_analytics_config()
@@ -49,7 +48,7 @@ class TestArticleAnalyticsAPI(ApiTestCase):
         )
 
     def test_moderator_public_view_is_not_tracked(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )
@@ -70,7 +69,7 @@ class TestArticleAnalyticsAPI(ApiTestCase):
         )
 
     def test_moderator_engaged_view_is_not_tracked(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )
@@ -159,7 +158,7 @@ class TestArticleAnalyticsAPI(ApiTestCase):
         self.analytics_use_case.get_stats.assert_not_called()
 
     def test_get_stats_allows_moderator(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )

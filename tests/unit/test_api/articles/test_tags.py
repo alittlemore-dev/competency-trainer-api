@@ -3,8 +3,8 @@ import pytest_asyncio
 from httpx import codes
 
 from core.articles.schemas import TagCreateParams, TagUpdateParams
-from core.auth.exceptions import UnauthorizedError
 from core.i18n.enums import LanguageEnum
+from core.identity import UnauthorizedError
 from entrypoints.litestar.response_cache import ResponseCacheDomain
 from tests.test_cases import ApiTestCase
 

@@ -25,7 +25,6 @@ from core.agent_access.enums import (
     AgentScopeEnum,
 )
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
-from core.auth.enums import AuthSessionAuthMethodEnum, AuthSessionDeviceTypeEnum, RoleEnum
 from core.competency_matrix.schemas import CompetencyMatrixQuestionFingerprint
 from core.files.enums import FilePurpose
 from infra.postgresql.models import (
@@ -39,7 +38,6 @@ from infra.postgresql.models import (
     ArticleModel,
     ArticleReactionModel,
     ArticleToTagSecondaryModel,
-    AuthSessionModel,
     CompetencyMatrixItemModel,
     CompetencyMatrixSectionModel,
     CompetencyMatrixSheetModel,
@@ -51,7 +49,6 @@ from infra.postgresql.models import (
     MatrixQuestionDraftCompletionModel,
     QueuedQuestionModel,
     TagModel,
-    UserModel,
 )
 from infra.postgresql.models.competency_matrix import ResourceToItemSecondaryModel
 from performance.query_plans.models import QueryPlanProfile
@@ -69,10 +66,6 @@ MATRIX_GRADE_BUCKET_MIDDLE = 2
 MATRIX_GRADE_BUCKET_MIDDLE_PLUS = 3
 MATRIX_FREQUENCY_BUCKET_RARELY = 2
 MATRIX_FREQUENCY_BUCKET_NEVER_SEEN = 3
-INACTIVE_MODERATOR_SEED_INDEX = 2
-OWNER_SEED_INDEX = 3
-MANAGED_ACCOUNT_ROLE_BUCKET_DIVISOR = 100
-MANAGED_ACCOUNT_MODERATOR_BUCKET_REMAINDER = 50
 PERCENTAGE_BASE = 100
 TARGET_RESOURCE_LINK_COUNT = 4
 EXISTING_MATRIX_ITEM_SEED_INDEX = 100
@@ -101,8 +94,6 @@ QUERY_PLAN_SEEDED_MODELS = (
     ArticleFolderModel,
     TagModel,
     ContactMeModel,
-    AuthSessionModel,
-    UserModel,
 )
 QUERY_PLAN_RESET_SQL = (
     "TRUNCATE TABLE "
@@ -123,8 +114,6 @@ async def seed_profile(*, connection: AsyncConnection, profile: QueryPlanProfile
     )
     await connection.execute(text("SET LOCAL synchronous_commit = off"))
     await clear_seeded_tables(connection=connection)
-    await insert_users(connection=connection, profile=profile)
-    await insert_auth_sessions(connection=connection, profile=profile)
     await insert_tags(connection=connection, profile=profile)
     await insert_article_folders(connection=connection, profile=profile)
     await insert_articles(connection=connection, profile=profile)
@@ -142,104 +131,6 @@ async def seed_profile(*, connection: AsyncConnection, profile: QueryPlanProfile
 
 async def clear_seeded_tables(*, connection: AsyncConnection) -> None:
     await connection.execute(text(QUERY_PLAN_RESET_SQL))
-
-
-async def insert_users(*, connection: AsyncConnection, profile: QueryPlanProfile) -> None:
-    series = generate_series_subquery(
-        end=profile.cardinalities.auth.users,
-        name="user_series",
-    )
-    value = sql_cast(series.c.value, Integer)
-    await connection.execute(
-        insert(UserModel.__table__).from_select(
-            ["username", "password_hash", "role", "is_active"],
-            select(
-                case(
-                    (value == 1, literal(SEED_USERNAME)),
-                    else_=func.concat(literal("benchmark-user-"), value),
-                ),
-                func.concat(literal("query-plan-seed-password-hash-"), value),
-                sql_cast(
-                    case(
-                        (value == 1, literal(RoleEnum.ADMIN.name)),
-                        (value == INACTIVE_MODERATOR_SEED_INDEX, literal(RoleEnum.MODERATOR.name)),
-                        (value == OWNER_SEED_INDEX, literal(RoleEnum.OWNER.name)),
-                        (
-                            value % MANAGED_ACCOUNT_ROLE_BUCKET_DIVISOR == 0,
-                            literal(RoleEnum.ADMIN.name),
-                        ),
-                        (
-                            value % MANAGED_ACCOUNT_ROLE_BUCKET_DIVISOR
-                            == MANAGED_ACCOUNT_MODERATOR_BUCKET_REMAINDER,
-                            literal(RoleEnum.MODERATOR.name),
-                        ),
-                        else_=literal(RoleEnum.USER.name),
-                    ),
-                    UserModel.__table__.c.role.type,
-                ),
-                case(
-                    (value == INACTIVE_MODERATOR_SEED_INDEX, literal(value=False)),
-                    else_=literal(value=True),
-                ),
-            ).select_from(series),
-        ),
-    )
-
-
-async def insert_auth_sessions(*, connection: AsyncConnection, profile: QueryPlanProfile) -> None:
-    series = generate_series_subquery(
-        end=profile.cardinalities.auth.sessions,
-        name="auth_session_series",
-    )
-    value = sql_cast(series.c.value, Integer)
-    user_number = func.mod(value - 1, profile.cardinalities.auth.users) + 1
-    await connection.execute(
-        insert(AuthSessionModel.__table__).from_select(
-            [
-                "id",
-                "username",
-                "secret_hash",
-                "expires_at",
-                "absolute_expires_at",
-                "is_revoked",
-                "last_used_at",
-                "auth_method",
-                "user_agent_display",
-                "user_agent_browser",
-                "user_agent_os",
-                "user_agent_device",
-            ],
-            select(
-                hex_id_expr(value=value),
-                case(
-                    (user_number == 1, literal(SEED_USERNAME)),
-                    else_=func.concat(literal("benchmark-user-"), user_number),
-                ),
-                func.concat(
-                    deterministic_hex_from_int(value=func.concat(literal("session-a-"), value)),
-                    deterministic_hex_from_int(value=func.concat(literal("session-b-"), value)),
-                ),
-                case(
-                    (value % 10 == 0, literal(SEED_NOW - timedelta(days=1))),
-                    else_=literal(SEED_NOW + timedelta(days=30)),
-                ),
-                literal(SEED_NOW + timedelta(days=30)),
-                literal(value=False),
-                literal(SEED_NOW),
-                sql_cast(
-                    literal(AuthSessionAuthMethodEnum.PASSWORD.name),
-                    AuthSessionModel.__table__.c.auth_method.type,
-                ),
-                literal("Chrome on Linux"),
-                literal("Chrome"),
-                literal("Linux"),
-                sql_cast(
-                    literal(AuthSessionDeviceTypeEnum.DESKTOP.name),
-                    AuthSessionModel.__table__.c.user_agent_device.type,
-                ),
-            ).select_from(series),
-        ),
-    )
 
 
 async def insert_tags(*, connection: AsyncConnection, profile: QueryPlanProfile) -> None:
@@ -1058,7 +949,6 @@ async def vacuum_analyze_seeded_tables(*, connection: AsyncConnection) -> None:
         "articles__article_daily_analytics_model",
         "articles__article_reaction_model",
         "files__file_model",
-        "auth__auth_session_model",
         "competency_matrix__external_resource_model",
         "competency_matrix__competency_matrix_item_model",
         "competency_matrix__resource_to_item_secondary_model",
@@ -1069,6 +959,5 @@ async def vacuum_analyze_seeded_tables(*, connection: AsyncConnection) -> None:
         "agent_access__matrix_question_claim_model",
         "agent_access__matrix_question_draft_completion_model",
         "agent_access__agent_audit_event_model",
-        "auth__user_model",
     ):
         await connection.execute(text(f"VACUUM ANALYZE {table_name}"))

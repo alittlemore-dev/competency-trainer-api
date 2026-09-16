@@ -4,11 +4,9 @@ import pytest_asyncio
 from httpx import codes
 
 from core.articles.schemas import ArticleFilters, ArticlePublicStatsCollection
-from core.auth.enums import RoleEnum
-from core.auth.exceptions import UnauthorizedError
-from core.auth.schemas import JwtUser
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.identity import RoleEnum, UnauthorizedError, UserIdentity
 from entrypoints.litestar.api.articles.dependencies import (
     provide_article_filters,
     provide_public_article_filters,
@@ -19,7 +17,7 @@ from tests.test_cases import ApiTestCase
 class TestListArticlesAPI(ApiTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
-        self.authentication_use_case = await self.container.get_auth_use_case()
+        self.identity_controller = await self.container.get_identity_controller()
         self.use_case = await self.container.get_articles_use_case()
         self.analytics_use_case = await self.container.get_article_analytics_use_case()
         self.analytics_use_case.get_public_stats.return_value = ArticlePublicStatsCollection(
@@ -245,7 +243,7 @@ class TestListArticlesAPI(ApiTestCase):
         self.use_case.list_articles.assert_not_called()
 
     def test_moderator_can_filter_draft_articles_from_admin_api(self) -> None:
-        self.authentication_use_case.authenticate.return_value = JwtUser(
+        self.identity_controller.authenticate.return_value = UserIdentity(
             username="moderator",
             role=RoleEnum.MODERATOR,
         )

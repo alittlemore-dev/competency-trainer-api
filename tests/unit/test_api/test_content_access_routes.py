@@ -1,9 +1,8 @@
-from entrypoints.litestar.api.accounts.endpoints import AdminAccountsApiController
 from entrypoints.litestar.api.articles.endpoints import AdminArticlesApiController
 from entrypoints.litestar.api.competency_matrix.endpoints import AdminCompetencyMatrixApiController
 from entrypoints.litestar.api.files.endpoints import FilesApiController
 from entrypoints.litestar.api.wiki_links.endpoints import WikiLinksApiController
-from entrypoints.litestar.guards import content_manager_guard, team_manager_guard
+from entrypoints.litestar.guards import content_manager_guard
 
 
 class TestContentAccessRoutes:
@@ -18,6 +17,3 @@ class TestContentAccessRoutes:
 
     def test_wiki_link_targets_handler_uses_content_manager_guard(self) -> None:
         assert WikiLinksApiController.guards == [content_manager_guard]
-
-    def test_admin_accounts_controller_uses_team_manager_guard(self) -> None:
-        assert AdminAccountsApiController.guards == [team_manager_guard]

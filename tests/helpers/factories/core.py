@@ -3,7 +3,6 @@ import re
 from datetime import UTC, datetime
 from typing import Any
 
-from core.account.schemas import ManagedAccount, ManagedAccounts
 from core.articles.schemas import (
     Article,
     ArticleFolder,
@@ -14,9 +13,6 @@ from core.articles.schemas import (
     Tag,
     Tags,
 )
-from core.auth.enums import RoleEnum
-from core.auth.schemas import JwtUser, User
-from core.auth.types import Token
 from core.competency_matrix.enums import GradeEnum, InterviewFrequencyEnum
 from core.competency_matrix.schemas import (
     AttachedExternalResource,
@@ -45,7 +41,7 @@ from core.files.schemas import (
     StoredFile,
 )
 from core.files.types import Namespace
-from core.schemas import Secret
+from core.identity import RoleEnum, UserIdentity
 from core.types import SearchName
 
 
@@ -463,34 +459,6 @@ class CoreFactoryHelper:
         )
 
     @classmethod
-    def user(
-        cls,
-        username: str = "",
-        password_hash: str = "",
-        role: RoleEnum = RoleEnum.USER,
-        is_active: bool = True,
-    ) -> User:
-        return User(
-            username=username,
-            password_hash=Secret(password_hash),
-            role=role,
-            is_active=is_active,
-        )
-
-    @classmethod
-    def managed_accounts(
-        cls,
-        values: list[ManagedAccount] | None = None,
-        total_count: int = 0,
-        total_pages: int = 0,
-    ) -> ManagedAccounts:
-        return ManagedAccounts(
-            values=values or [],
-            total_count=total_count,
-            total_pages=total_pages,
-        )
-
-    @classmethod
     def competency_matrix_items(
         cls,
         values: list[CompetencyMatrixItem] | None = None,
@@ -666,12 +634,12 @@ class CoreFactoryHelper:
         )
 
     @classmethod
-    def jwt_user(
+    def user_identity(
         cls,
         username: str = "test",
         role: RoleEnum = RoleEnum.ADMIN,
-    ) -> JwtUser:
-        return JwtUser(username=username, role=role)
+    ) -> UserIdentity:
+        return UserIdentity(username=username, role=role)
 
     @classmethod
     def stored_file(
@@ -717,10 +685,6 @@ class CoreFactoryHelper:
             access_url=access_url,
             markdown_url=markdown_url,
         )
-
-    @classmethod
-    def token(cls, value: bytes) -> Token:
-        return Token(value)
 
     @classmethod
     def search_name(cls, value: Any) -> SearchName:
