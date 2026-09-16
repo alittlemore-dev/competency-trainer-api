@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := help
+
 TEST_ENV_FILE ?= .env.test
 TEST_ENV_OVERRIDES ?=
 QUERY_PLANS_ENV_FILE ?= .env.test
@@ -154,3 +156,27 @@ test-backend-fast test-backend-unit test-backend-unit-fast: test-unit
 test-backend-integration test-backend-integration-fast: test-integration
 quality-backend: quality
 security-backend: security
+
+.PHONY: help
+help:
+	bash scripts/help.sh
+
+.PHONY: tests tests-fast
+tests: test
+tests-fast: test-unit
+
+.PHONY: build
+build:
+	bash scripts/build.sh
+
+.PHONY: lint-dockerfiles security-trivy-config security-docker-image publish-image
+lint-dockerfiles:
+	bash scripts/docker_lint.sh hadolint
+security-trivy-config:
+	bash scripts/trivy_scan.sh config "$(TRIVY_IMAGE)"
+security-docker-image:
+	bash scripts/docker_image_security.sh competency-trainer "$(IMAGE_TAG)" Dockerfile . "$(TRIVY_IMAGE)" "$(IMAGE_EXPORT_PATH)"
+publish-image:
+	bash scripts/publish_image.sh "$(LOCAL_IMAGE)" "$(IMAGE_NAME)" "$(IMAGE_TAG)"
+
+TRIVY_IMAGE := docker.io/aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e

@@ -1,6 +1,6 @@
 [mcp_servers.competency_trainer_matrix]
 command = "bash"
-args = ["infra/scripts/agent_bridge.sh"]
+args = ["scripts/agent_bridge.sh"]
 enabled_tools = [
   "claim_next_matrix_question",
   "get_matrix_authoring_context",

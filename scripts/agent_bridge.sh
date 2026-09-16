@@ -2,7 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_dir="$(cd -- "${script_dir}/../.." && pwd)"
+repo_dir="$(cd -- "${script_dir}/.." && pwd)"
 env_file="${repo_dir}/.env.agent-bridge"
 
 if [ ! -f "$env_file" ]; then

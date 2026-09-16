@@ -31,14 +31,14 @@
 
 ```
 competency-trainer/
-├── infra/          # nginx reverse proxy, скрипты запуска
 ├── src/            # Исходный код приложения
 ├── tests/          # Backend-тесты (pytest)
 ├── performance/    # Сценарии и отчёты проверки планов PostgreSQL
+├── scripts/        # Backend quality, test, image и MCP helpers
 ├── .env.example    # Пример переменных окружения
 ├── .env.test       # Безопасные переменные для тестового окружения
 ├── docker-compose.test.yml
-└── docker-compose.yml
+└── Dockerfile
 ```
 
 ## ✨ Возможности
@@ -62,55 +62,23 @@ competency-trainer/
 
 ## 🚀 Запуск
 
-1. Клонировать репозиторий:
-```bash
-git clone git@github.com:alittlemore-dev/competency-trainer.git
-cd competency-trainer
-```
+Создайте локальную конфигурацию, установите зависимости, запустите быстрые тесты и соберите образ
+сервиса:
 
-2. Создать файл `.env`:
 ```bash
 cp .env.example .env
+make install
+make tests-fast
+make build
 ```
 
-3. Сгенерировать сертификаты для `nginx` (опционально для локального запуска):
-
-```bash
-mkcert -install
-mkcert \
-  <your-domain> \
-  s3.<your-domain> \
-  agent.<your-domain>
-mkdir -p ./infra/nginx/certs
-mv <your-domain>.pem ./infra/nginx/certs/fullchain.pem
-mv <your-domain>-key.pem ./infra/nginx/certs/privkey.pem
-```
-
-Контейнер nginx запускается с UID/GID `101:101`, поэтому смонтированные сертификат и приватный ключ
-должны быть читаемы этим пользователем. Для локальных файлов `mkcert`
-достаточно `chmod 644 ./infra/nginx/certs/<file>`; для production лучше настроить
-owner/group-права так, чтобы доступ на чтение был только у nginx.
-Production выпуск и renewal Let's Encrypt сертификатов идут через compose-backed
-targets `make certbot-issue`, `make certbot-renew` и `make certbot-sync`. Подробнее:
-[Production Deploy](../docs/production-deploy.md).
-
-4. Обновить переменные в `.env`.
-
-5. Запустить через `Makefile`:
-```bash
-make run
-```
-
-`make run` заранее проверяет обязательные значения `.env` и материализует runtime secrets как
-локальные файлы `.deploy-state/compose-secrets/`. Затем он поднимает PostgreSQL, Valkey, MinIO,
-Databasus, backend с ограниченным Agent route-контуром и nginx через Docker health checks,
-выполняет одноразовую backend-инициализацию и переключает публичный трафик между blue/green
-backend-слотами с принудительным recreation nginx, чтобы применить Compose-изменения порта,
-secrets, пользователя и image. Скрипт также проверяет фактические runtime restart policies.
+Единый локальный и production runtime находится в соседнем
+[infra-репозитории](https://github.com/alittlemore-dev/infra). При соседнем расположении checkout
+один раз выполните `make -C ../infra dev-trust`, затем запускайте `make -C ../infra dev`.
 
 ## Локальный MCP bridge
 
-1. Запустить сайт через `make run` и один раз зарегистрировать клиентский CSR в
+1. Запустить общий стек через `make -C ../infra dev` и один раз зарегистрировать клиентский CSR в
    `/admin-panel/workspace/agent-clients`.
 2. Скопировать `.env.agent-bridge.example` в `.env.agent-bridge` и указать абсолютные пути к CA,
    выданному сертификату и приватному ключу.
@@ -122,13 +90,13 @@ secrets, пользователя и image. Скрипт также провер
 
 ## ⚙️ Важные ссылки
 
-Локальный edge nginx перенаправляет HTTP на HTTPS, поэтому в браузере используйте HTTPS-ссылки.
+Общий локальный edge создаётся соседним infra-репозиторием.
 
-- API: `https://localhost/api`
-- API liveness: `https://localhost/api/healthcheck`
-- API readiness: `https://localhost/api/healthcheck/ready`
-- Документация API: `https://localhost/api/docs`
-- OpenAPI спецификация: `https://localhost/api/docs/openapi.json`
+- API: `https://alittlemore.localhost/api/competency/`
+- API liveness: `https://alittlemore.localhost/api/competency/healthcheck`
+- API readiness: `https://alittlemore.localhost/api/competency/healthcheck/ready`
+- Документация API: `https://alittlemore.localhost/api/competency/docs`
+- OpenAPI спецификация: `https://alittlemore.localhost/api/competency/docs/openapi.json`
 
 Внутренние web-панели доступны только через host-level WireGuard и nginx-порты,
 привязанные к `VPN_BIND_ADDRESS`:
@@ -138,19 +106,15 @@ secrets, пользователя и image. Скрипт также провер
 - Agent API: `https://agent.<APP_DOMAIN>:18083/internal/agent/v1` (WireGuard и активный клиентский
   сертификат; MCP bridge запускается локально через stdio)
 
-Production firewall baseline: `80/tcp`, `443/tcp` и выбранный WireGuard UDP
-port. Подробнее: [WireGuard internal access](../docs/wireguard-internal-access.md).
-
-Другие сервисы — в [docker-compose.yml](../docker-compose.yml).
+Операционный контракт описан в документации infra-репозитория:
+[WireGuard](https://github.com/alittlemore-dev/infra/blob/main/docs/wireguard-internal-access.md)
+и [production deployment](https://github.com/alittlemore-dev/infra/blob/main/docs/production-deploy.md).
 
 ## 🧪 Тесты
 
 ```bash
-make tests-compose              # запустить/переиспользовать test DB, backend-тесты, очистить своё
 make tests-fast                 # backend unit-тесты; backend test DB не нужна
 make tests                      # полный набор backend-тестов
-make test-env-up                # запустить переиспользуемый test PostgreSQL
-make test-env-down              # остановить test PostgreSQL и удалить данные
 make test-backend               # backend unit + integration + serial migrations
 make test-backend-unit          # unit-тесты backend, DB не нужна
 make test-backend-integration   # интеграционные тесты backend, test DB готовится автоматически

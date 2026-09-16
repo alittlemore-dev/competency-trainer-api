@@ -2,7 +2,7 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-repo_dir="$(cd -- "${script_dir}/../.." && pwd)"
+repo_dir="$(cd -- "${script_dir}/.." && pwd)"
 
 hadolint_image="${HADOLINT_IMAGE:-hadolint/hadolint:v2.14.0}"
 dockle_image="${DOCKLE_IMAGE:-goodwithtech/dockle:v0.4.15}"
@@ -10,11 +10,6 @@ dockle_exit_level="${DOCKLE_EXIT_LEVEL:-warn}"
 dockle_accept_keys="${DOCKLE_ACCEPT_KEYS:-KEY_SHA512}"
 dockle_accept_files="${DOCKLE_ACCEPT_FILES:-settings.py}"
 dockle_ignore_codes="${DOCKLE_IGNORE_CODES:-DKL-DI-0005}"
-dockerfiles=(
-    "Dockerfile"
-    "infra/minio/Dockerfile"
-    "infra/nginx/Dockerfile"
-)
 
 require_command() {
     local command_name="$1"
@@ -34,7 +29,7 @@ run_hadolint() {
         "$hadolint_image" \
         hadolint \
         --failure-threshold error \
-        "${dockerfiles[@]}"
+        Dockerfile
 }
 
 run_dockle() {

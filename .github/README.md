@@ -31,14 +31,14 @@ and protected owner/admin/moderator content workspaces.
 
 ```
 competency-trainer/
-├── infra/          # nginx reverse proxy, run scripts
 ├── src/            # Litestar API + domain logic
 ├── tests/          # Backend tests (pytest)
 ├── performance/    # PostgreSQL query-plan scenarios and reports
+├── scripts/        # Backend quality, test, image, and MCP helpers
 ├── .env.example    # Example environment variables
 ├── .env.test       # Safe test-only environment variables
 ├── docker-compose.test.yml
-└── docker-compose.yml
+└── Dockerfile
 ```
 
 ## ✨ Features
@@ -61,55 +61,23 @@ competency-trainer/
 
 ## 🚀 Quick Start
 
-1. Clone the repository:
-```bash
-git clone git@github.com:alittlemore-dev/competency-trainer.git
-cd competency-trainer
-```
+Create local configuration, install dependencies, run the fast test gate, and build the service
+image:
 
-2. Create `.env` file:
 ```bash
 cp .env.example .env
+make install
+make tests-fast
+make build
 ```
 
-3. Create certs for `nginx` (optional for local development):
-
-```bash
-mkcert -install
-mkcert \
-  <your-domain> \
-  s3.<your-domain> \
-  agent.<your-domain>
-mkdir -p ./infra/nginx/certs
-mv <your-domain>.pem ./infra/nginx/certs/fullchain.pem
-mv <your-domain>-key.pem ./infra/nginx/certs/privkey.pem
-```
-
-The nginx container runs as UID/GID `101:101`, so mounted certificate and private key files must be
-readable by that user. For local `mkcert` files,
-`chmod 644 ./infra/nginx/certs/<file>` is enough; for production, prefer owner/group permissions
-that grant read access only to nginx.
-Production Let's Encrypt issuance and renewal are handled through the compose-backed
-`make certbot-issue`, `make certbot-renew`, and `make certbot-sync` targets. See
-[Production Deploy](../docs/production-deploy.md).
-
-4. Update `.env` with your values.
-
-5. Run via `Makefile`:
-```bash
-make run
-```
-
-`make run` validates the required `.env` values and materializes runtime secrets as local
-`.deploy-state/compose-secrets/` files before Compose starts services. It brings PostgreSQL,
-Valkey, MinIO, Databasus, the backend with the constrained Agent route contour, and nginx up
-through Docker health checks, runs one-shot backend initialization, and switches public traffic
-between blue/green backend slots with a forced nginx recreation so Compose-level port, secret,
-user, and image changes take effect. It also verifies the effective runtime restart policies.
+The integrated local and production runtime is owned by the sibling
+[infra repository](https://github.com/alittlemore-dev/infra). With sibling checkouts, start it via
+`make -C ../infra dev-trust` once and then `make -C ../infra dev`.
 
 ## Local MCP bridge
 
-1. Run the site with `make run` and register a client CSR once in
+1. Run the integrated stack with `make -C ../infra dev` and register a client CSR once in
    `/admin-panel/workspace/agent-clients`.
 2. Copy `.env.agent-bridge.example` to `.env.agent-bridge` and fill the CA, issued certificate, and
    private-key absolute paths.
@@ -121,13 +89,13 @@ For certificate creation, desktop rotation, and the complete security model, see
 
 ## ⚙️ Endpoints
 
-Local edge nginx redirects HTTP to HTTPS, so use the HTTPS URLs in the browser.
+The shared local edge is created by the sibling infra repository.
 
-- API: `https://localhost/api`
-- API liveness: `https://localhost/api/healthcheck`
-- API readiness: `https://localhost/api/healthcheck/ready`
-- API docs: `https://localhost/api/docs`
-- OpenAPI spec: `https://localhost/api/docs/openapi.json`
+- API: `https://alittlemore.localhost/api/competency/`
+- API liveness: `https://alittlemore.localhost/api/competency/healthcheck`
+- API readiness: `https://alittlemore.localhost/api/competency/healthcheck/ready`
+- API docs: `https://alittlemore.localhost/api/competency/docs`
+- OpenAPI spec: `https://alittlemore.localhost/api/competency/docs/openapi.json`
 
 Internal web panels are available only through host-level WireGuard and nginx
 ports bound to `VPN_BIND_ADDRESS`:
@@ -137,19 +105,16 @@ ports bound to `VPN_BIND_ADDRESS`:
 - Agent API: `https://agent.<APP_DOMAIN>:18083/internal/agent/v1` (WireGuard plus an active client
   certificate; the MCP bridge runs locally over stdio)
 
-The production public firewall baseline is `80/tcp`, `443/tcp`, and the chosen
-WireGuard UDP port. See [WireGuard internal access](../docs/wireguard-internal-access.md).
-
-See [docker-compose.yml](../docker-compose.yml) for all services.
+See the infra repository's
+[WireGuard guide](https://github.com/alittlemore-dev/infra/blob/main/docs/wireguard-internal-access.md)
+and [production deployment guide](https://github.com/alittlemore-dev/infra/blob/main/docs/production-deploy.md)
+for the operational contract.
 
 ## 🧪 Tests
 
 ```bash
-make tests-compose              # starts/reuses test DB, backend tests, owned cleanup
 make tests-fast                 # backend unit tests; no backend test DB
 make tests                      # full backend tests
-make test-env-up                # start reusable test PostgreSQL
-make test-env-down              # stop reusable test PostgreSQL and remove data
 make test-backend               # backend unit + integration + serial migrations
 make test-backend-unit          # backend unit tests, no DB required
 make test-backend-integration   # backend integration tests, auto test DB

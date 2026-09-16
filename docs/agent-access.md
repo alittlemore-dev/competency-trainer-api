@@ -140,7 +140,9 @@ or less remain; the normal predecessor overlap during an in-progress rotation is
 Initialize the private hierarchy in absolute directories outside the repository:
 
 ```bash
-infra/scripts/agent_ca.sh init <offline-root-directory> <production-issuing-directory>
+make -C ../infra agent-ca-init \
+  OFFLINE_ROOT_DIR=<offline-root-directory> \
+  ISSUING_DIR=<production-issuing-directory>
 ```
 
 Load the generated issuing certificate, issuing private key, and issuing-plus-root chain into
@@ -152,7 +154,9 @@ their content. Move the root private key offline before deployment.
 Generate each initial client key and CSR locally:
 
 ```bash
-infra/scripts/agent_ca.sh client-csr <agent-id> <absolute-client-output-directory>
+make -C ../infra agent-client-csr \
+  AGENT_ID=<agent-id> \
+  CLIENT_OUTPUT_DIR=<absolute-client-output-directory>
 ```
 
 Submit only the CSR through the owner UI. Never upload or paste the private key into the site,
@@ -166,7 +170,7 @@ The repository's `.codex/config.toml` starts the local stdio module with:
 ```toml
 [mcp_servers.competency_trainer_matrix]
 command = "bash"
-args = ["infra/scripts/agent_bridge.sh"]
+args = ["scripts/agent_bridge.sh"]
 enabled_tools = [
   "claim_next_matrix_question",
   "get_matrix_authoring_context",
@@ -315,8 +319,8 @@ access, or a generic SQL operation.
 
 ## Operational References
 
-- [Agent API WireGuard routing](wireguard-internal-access.md)
-- [Production deployment](production-deploy.md)
+- [Agent API WireGuard routing](https://github.com/alittlemore-dev/infra/blob/main/docs/wireguard-internal-access.md)
+- [Production deployment](https://github.com/alittlemore-dev/infra/blob/main/docs/production-deploy.md)
 - [Security threat model](security-threat-model.md)
 - [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/)
 - [HTTPX SSL configuration](https://www.python-httpx.org/advanced/ssl/)

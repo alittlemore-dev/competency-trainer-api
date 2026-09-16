@@ -9,6 +9,9 @@ on:
       - "docs/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backend-style:
     name: "Backend style"
@@ -76,9 +79,14 @@ jobs:
       - backend-query-plans
     uses: ./.github/workflows/_backend_docker_image_security.yaml
 
-  nginx-docker-image-security:
-    name: "Nginx Docker image security"
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+  publish-image:
+    name: "Publish image"
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     needs:
-      - backend-query-plans
-    uses: ./.github/workflows/_nginx_docker_image_security.yaml
+      - dockerfile-lint
+      - trivy-config-scan
+      - backend-docker-image-security
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/_publish_image.yaml

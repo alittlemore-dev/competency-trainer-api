@@ -178,7 +178,6 @@
     - [x] Dependency versions pinned, including required local runtime image tags
     - [x] Dependencies updated regularly
     - [x] No pip install from untrusted sources
-    - [ ] Refresh nginx Alpine `curl`/`libcurl` pins when the configured repository drops the pinned revision so `make run` remains reproducible.
 
 ### Tracing and Monitoring
 
@@ -867,7 +866,7 @@ Graph views, plugin APIs, and plugin-system support are explicitly out of scope 
 - [ ] Prepare repository split
   - [x] Move Angular serving into a frontend-owned Docker image
   - [x] Keep infrastructure nginx as the edge reverse proxy
-  - [ ] Move root AGENTS.md rules to backend and frontend
-  - [ ] Move backend, frontend, and infrastructure into separate repositories
-  - [ ] Configure independent image publishing for backend and frontend
-  - [ ] Update deployment workflow to consume published images from the infrastructure repository
+  - [x] Move root AGENTS.md rules to backend and frontend
+  - [x] Move backend, frontend, and infrastructure into separate repositories
+  - [x] Configure independent image publishing for backend and frontend
+  - [x] Update deployment workflow to consume published images from the infrastructure repository

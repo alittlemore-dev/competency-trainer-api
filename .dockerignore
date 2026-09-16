@@ -1,4 +1,3 @@
-docker-compose.yml
 pre-commit-config.yaml
 .git
 .gitignore
@@ -7,8 +6,6 @@ pre-commit-config.yaml
 .env.test
 .env.example
 .deploy-state
-.deploy-payload
-infra/nginx/certs
 .coverage
 coverage.xml
 .vscode

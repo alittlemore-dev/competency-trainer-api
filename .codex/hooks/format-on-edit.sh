@@ -36,5 +36,5 @@ while IFS= read -r changed_path; do
 done < <(extract_changed_paths)
 
 if [ "$format_backend" = 1 ]; then
-    UV_CACHE_DIR="${UV_CACHE_DIR:-/tmp/codex-uv-cache}" make -C "$repo/backend" format
+    UV_CACHE_DIR="${UV_CACHE_DIR:-/tmp/codex-uv-cache}" make -C "$repo" format
 fi

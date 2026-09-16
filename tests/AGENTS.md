@@ -54,7 +54,7 @@ on them. Follow the repository root verification policy.
 
 ## Commands
 
-From the project root::
+From the project root:
 
 ```bash
 make test-unit           # unit tests only (fast, run often)
@@ -63,14 +63,8 @@ make tests               # all tests
 make tests-coverage      # all + coverage report
 ```
 
-From the repository root:
-
-```bash
-make tests-fast          # backend unit tests; no backend test PostgreSQL
-make tests-compose       # starts/reuses test PostgreSQL, runs tests, then cleans up owned services
-make test-env-up         # start isolated test PostgreSQL manually
-make test-env-down       # stop isolated test PostgreSQL and remove its data
-```
+`make tests-fast` is the unit-test alias. Integration targets start and clean up an isolated test
+PostgreSQL automatically when the configured test database is not already available.
 
 Backend pytest parallelism is explicit. Do not use `pytest-xdist -n auto`: the Make-backed test
 script computes physical CPU cores and passes `-n <workers>` itself. Override it only with

@@ -2,7 +2,7 @@ version: 2
 
 updates:
   - package-ecosystem: "uv"
-    directory: "/backend"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -29,8 +29,6 @@ updates:
   - package-ecosystem: "docker"
     directories:
       - "/"
-      - "/backend"
-      - "/infra/nginx"
     schedule:
       interval: "weekly"
       day: "monday"
