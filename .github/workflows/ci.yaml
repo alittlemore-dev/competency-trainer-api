@@ -90,3 +90,12 @@ jobs:
       contents: read
       packages: write
     uses: ./.github/workflows/_publish_image.yaml
+
+  publish-coverage-badge:
+    name: "Update coverage badge"
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    needs:
+      - publish-image
+    permissions:
+      contents: write
+    uses: ./.github/workflows/_publish_coverage_badge.yaml
