@@ -9,6 +9,8 @@ from performance.query_plans import models as query_plan_models
 
 
 class BaselineModule(Protocol):
+    COMMITTED_REALISTIC_BASELINE_PATH: Path
+
     def effective_execution_threshold_ms(
         self,
         *,
@@ -177,6 +179,17 @@ class TestQueryPlanBaseline:
             sample_count=5,
             query_warm_execution_ms={"query_a": 11.0, "query_b": 20.0},
         )
+
+    def test_committed_realistic_baseline_is_loadable(self) -> None:
+        baseline_module = load_baseline_module()
+
+        baseline = baseline_module.load_optional_baseline(
+            path=baseline_module.COMMITTED_REALISTIC_BASELINE_PATH,
+            expected_profile_name="realistic",
+        )
+
+        assert baseline is not None
+        assert baseline.sample_count == 5
 
     def test_optional_baseline_rejects_wrong_profile(
         self,
