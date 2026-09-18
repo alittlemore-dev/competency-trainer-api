@@ -89,7 +89,7 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
       - name: "Install UV"
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           cache-suffix: "backend-query-plans-${{ inputs.profile }}"
       - name: "Run storage query-plan profile"
