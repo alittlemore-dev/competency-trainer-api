@@ -126,6 +126,21 @@ wheels = [
 ]
 
 [[package]]
+name = "alittlemore-backend-sdk"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/6a/5ca67b81ff9dbb976950c74fcd9ebb46bbf52c255cd529870b80cd3f17f4/alittlemore_backend_sdk-0.2.0.tar.gz", hash = "sha256:531227edd5fb01eb4919fc47c04d615e94be9c72210e3deb4b8b13a193d033ba", size = 13699, upload-time = "2026-09-17T16:24:43.618Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/e5/b23a2cf01b80b5909e292a5c1b9d8a45c4f16ab27ef67d707dec823b529c/alittlemore_backend_sdk-0.2.0-py3-none-any.whl", hash = "sha256:ea06ecd911857280593f447d610ca99b9a113fbe3e9f1eede11aec0de4710922", size = 10281, upload-time = "2026-09-17T16:24:42.307Z" },
+]
+
+[package.optional-dependencies]
+litestar = [
+    { name = "httpx" },
+    { name = "litestar" },
+]
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -424,6 +439,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiobotocore" },
     { name = "alembic" },
+    { name = "alittlemore-backend-sdk", extra = ["litestar"] },
     { name = "argon2-cffi" },
     { name = "cryptography" },
     { name = "dishka" },
@@ -471,6 +487,7 @@ local = [
 requires-dist = [
     { name = "aiobotocore", specifier = ">=3.9.0" },
     { name = "alembic", specifier = ">=1.19.1" },
+    { name = "alittlemore-backend-sdk", extras = ["litestar"], specifier = ">=0.2.0,<0.3.0" },
     { name = "argon2-cffi", specifier = ">=25.1.0" },
     { name = "cryptography", specifier = ">=50.0.0" },
     { name = "dishka", specifier = ">=1.10.1" },

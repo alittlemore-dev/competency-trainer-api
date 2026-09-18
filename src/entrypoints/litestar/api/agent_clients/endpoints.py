@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Annotated
 
+from backend_sdk import RoleEnum
+from backend_sdk.integrations.litestar import RequireRole
 from dishka import FromDishka
 from dishka.integrations.litestar import DishkaRouter
 from litestar import Controller, get, post, status_codes
@@ -23,13 +25,12 @@ from entrypoints.litestar.api.agent_clients.schemas import (
     AgentClientsResponseSchema,
 )
 from entrypoints.litestar.api.parameters import AgentClientIdPath, api_json_body
-from entrypoints.litestar.guards import owner_guard
 
 
 class AdminAgentClientsApiController(Controller):
     path = "/agent-clients"
     tags = ["admin agent clients"]
-    guards = [owner_guard]
+    guards = [RequireRole(RoleEnum.OWNER)]
 
     @get(
         "",

@@ -53,4 +53,8 @@ class I18nApiController(Controller):
         )
 
 
-api_router = DishkaRouter("", route_handlers=[I18nApiController])
+api_router = DishkaRouter(
+    "",
+    route_handlers=[I18nApiController],
+    opt={"auth_public": True},
+)

@@ -3,6 +3,8 @@ from collections.abc import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
+from backend_sdk.auth.testing import FakeAuthenticationClient
+from backend_sdk.integrations.litestar import AuthPlugin
 from dishka import AsyncContainer, make_async_container
 from dishka.integrations.litestar import LitestarProvider, setup_dishka
 from litestar import Litestar
@@ -13,6 +15,7 @@ from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.initializers.main import create_litestar_app
 from infra.config.settings import Settings
 from infra.ioc.prodivers.database_provider import DatabaseProvider
+from tests.helpers.api import APIHelper
 from tests.helpers.identity import (
     TestIdentityController,
     TestIdentityMiddleware,
@@ -86,6 +89,32 @@ def no_auth_app(container: AsyncContainer) -> Litestar:
         container=container,
         identity_controller=TestIdentityController(user=UserIdentity.anonymous()),
     )
+
+
+@pytest.fixture
+def sdk_authentication_client() -> FakeAuthenticationClient:
+    return FakeAuthenticationClient()
+
+
+@pytest.fixture
+def sdk_auth_app(
+    container: AsyncContainer,
+    sdk_authentication_client: FakeAuthenticationClient,
+) -> Litestar:
+    test_app = create_litestar_app(
+        lifespan=[],
+        container=container,
+        extra_plugins=[AuthPlugin(auth_client=sdk_authentication_client)],
+        extra_middlewares=[],
+    )
+    setup_dishka(container=container, app=test_app)
+    return test_app
+
+
+@pytest.fixture
+def sdk_auth_api(sdk_auth_app: Litestar) -> Generator[APIHelper]:
+    with TestClient(sdk_auth_app) as client:
+        yield APIHelper(client=client)
 
 
 def build_test_app(

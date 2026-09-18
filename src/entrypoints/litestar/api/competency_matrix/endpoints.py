@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Annotated
 
+from backend_sdk import Principal, RoleEnum
+from backend_sdk.integrations.litestar import RequireRole
 from dishka import FromDishka
 from dishka.integrations.litestar import DishkaRouter
 from litestar import Controller, Request, delete, get, post, put, status_codes
@@ -20,7 +22,6 @@ from core.competency_matrix.schemas import (
 )
 from core.competency_matrix.use_cases import CompetencyMatrixUseCase
 from core.generators import HexUuidIdGenerator
-from core.identity import UserIdentity
 from entrypoints.litestar.api.competency_matrix.dependencies import (
     provide_competency_matrix_item_draft_status_params,
     provide_competency_matrix_item_get_params,
@@ -67,7 +68,6 @@ from entrypoints.litestar.api.parameters import (
     api_json_body,
     api_multipart_body,
 )
-from entrypoints.litestar.guards import content_manager_guard
 from entrypoints.litestar.response_cache import (
     ResponseCacheDomain,
     invalidate_response_cache_domain_for_mutation,
@@ -153,6 +153,7 @@ class PublicCompetencyMatrixApiController(Controller):
         description="Suggest a competency matrix question.",
         name="public-competency-matrix-question-suggestion-create-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"auth_optional": True},
         dependencies={
             "limit": Provide(
                 provide_question_suggestion_limit_params,
@@ -193,7 +194,7 @@ class PublicCompetencyMatrixApiController(Controller):
 class AdminCompetencyMatrixApiController(Controller):
     path = "/competency-matrix"
     tags = ["admin competency matrix"]
-    guards = [content_manager_guard]
+    guards = [RequireRole(RoleEnum.MODERATOR)]
 
     @get(
         "/sheets",
@@ -340,7 +341,7 @@ class AdminCompetencyMatrixApiController(Controller):
     )
     async def update_competency_matrix_sheet_priorities(
         self,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             MatrixStructurePriorityUpdateRequestSchema,
             api_json_body(
@@ -368,7 +369,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def update_competency_matrix_section_priorities(
         self,
         sheet_id: SheetIdPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             MatrixStructurePriorityUpdateRequestSchema,
             api_json_body(
@@ -398,7 +399,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def update_competency_matrix_subsection_priorities(
         self,
         section_id: SectionIdPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             MatrixStructurePriorityUpdateRequestSchema,
             api_json_body(
@@ -600,7 +601,7 @@ class AdminCompetencyMatrixApiController(Controller):
         self,
         pk: EntityPkPath,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             CompetencyMatrixItemRequestSchema,
             api_json_body(
@@ -728,7 +729,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def create_competency_matrix_item(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             CompetencyMatrixItemRequestSchema,
             api_json_body(
@@ -816,7 +817,7 @@ class AdminCompetencyMatrixApiController(Controller):
         self,
         pk: EntityPkPath,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             CompetencyMatrixItemRequestSchema,
             api_json_body(
@@ -877,7 +878,7 @@ class AdminCompetencyMatrixApiController(Controller):
     async def delete_competency_matrix_item(
         self,
         pk: EntityPkPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[CompetencyMatrixUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -902,7 +903,7 @@ class AdminCompetencyMatrixApiController(Controller):
     )
     async def set_draft_status_to_competency_matrix_item(
         self,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[CompetencyMatrixUseCase],
         params: NamedDependency[CompetencyMatrixItemPublishStatusSwitchParams],
         post_commit_actions: FromDishka[PostCommitActions],
@@ -928,7 +929,7 @@ class AdminCompetencyMatrixApiController(Controller):
     )
     async def set_published_status_to_competency_matrix_item(
         self,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[CompetencyMatrixUseCase],
         params: NamedDependency[CompetencyMatrixItemPublishStatusSwitchParams],
         post_commit_actions: FromDishka[PostCommitActions],
@@ -941,5 +942,9 @@ class AdminCompetencyMatrixApiController(Controller):
         )
 
 
-api_router = DishkaRouter("", route_handlers=[PublicCompetencyMatrixApiController])
+api_router = DishkaRouter(
+    "",
+    route_handlers=[PublicCompetencyMatrixApiController],
+    opt={"auth_public": True},
+)
 admin_router = DishkaRouter("", route_handlers=[AdminCompetencyMatrixApiController])

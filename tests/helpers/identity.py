@@ -1,6 +1,7 @@
 from typing import cast
 from unittest.mock import AsyncMock
 
+from backend_sdk import Principal, RoleEnum
 from dishka import Provider, Scope, provide
 from litestar.types import ASGIApp, Receive, Send
 from litestar.types import Scope as ASGIScope
@@ -27,7 +28,11 @@ class TestIdentityMiddleware:
         self.controller = controller
 
     async def __call__(self, scope: ASGIScope, receive: Receive, send: Send) -> None:
-        scope["user"] = self.controller.user
+        user = self.controller.user
+        scope["user"] = Principal(
+            username=user.username,
+            role=RoleEnum(user.role.value),
+        )
         scope["auth"] = None
         await self.app(scope, receive, send)
 

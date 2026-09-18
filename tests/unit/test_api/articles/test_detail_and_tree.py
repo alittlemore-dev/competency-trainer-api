@@ -12,7 +12,7 @@ from core.articles.schemas import (
 )
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
-from core.identity import RoleEnum, UnauthorizedError, UserIdentity
+from core.identity import RoleEnum, UserIdentity
 from tests.test_cases import ApiTestCase
 
 
@@ -138,7 +138,6 @@ class TestArticleDetailAndTreeAPI(ApiTestCase):
         response = self.no_auth_api.get_admin_article(slug="draft", only_published=False)
 
         assert response.status_code == codes.UNAUTHORIZED
-        assert response.json()["message"] == UnauthorizedError.message
         self.use_case.get_article.assert_not_called()
 
     def test_moderator_can_request_draft_article(self) -> None:

@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Annotated
 
+from backend_sdk import RoleEnum
+from backend_sdk.integrations.litestar import RequireRole
 from dishka.integrations.litestar import DishkaRouter, FromDishka
 from litestar import Controller, delete, get, post, put, status_codes
 
@@ -20,13 +22,12 @@ from entrypoints.litestar.api.parameters import (
     api_json_body,
     api_multipart_body,
 )
-from entrypoints.litestar.guards import content_manager_guard
 
 
 class FilesApiController(Controller):
     path = "/files"
     tags = ["admin files"]
-    guards = [content_manager_guard]
+    guards = [RequireRole(RoleEnum.MODERATOR)]
 
     @post(
         "",

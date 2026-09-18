@@ -225,7 +225,7 @@ class TestNonOwnerAgentClientsAPI(ApiTestCase):
     def test_non_owner_cannot_list_clients(self) -> None:
         response = self.api.get_admin_agent_clients()
 
-        self.asserts.status(response=response, expected_status=codes.UNAUTHORIZED)
+        self.asserts.status(response=response, expected_status=codes.FORBIDDEN)
 
 
 class TestAnonymousAgentClientsAPI(ApiTestCase):

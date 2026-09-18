@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Annotated
 
+from backend_sdk import Principal, RoleEnum
+from backend_sdk.integrations.litestar import RequireRole
 from dishka.integrations.litestar import DishkaRouter, FromDishka
 from litestar import Controller, Request, delete, get, post, put, status_codes
 from litestar.datastructures import State
@@ -11,7 +13,6 @@ from core.articles.schemas import ArticleAnalyticsConfig, ArticleFilters
 from core.articles.use_cases import ArticleAnalyticsUseCase, ArticlesUseCase
 from core.enums import PublishStatusEnum
 from core.generators import HexUuidIdGenerator
-from core.identity import UserIdentity
 from entrypoints.litestar.api.articles.dependencies import (
     provide_article_filters,
     provide_public_article_filters,
@@ -44,7 +45,6 @@ from entrypoints.litestar.api.parameters import (
     TagIdPath,
     api_json_body,
 )
-from entrypoints.litestar.guards import content_manager_guard
 from entrypoints.litestar.response_cache import (
     ResponseCacheDomain,
     invalidate_response_cache_domain_for_mutation,
@@ -133,11 +133,12 @@ class PublicArticlesApiController(Controller):
         description="Track a public article view.",
         name="public-articles-track-public-view-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"auth_optional": True},
     )
     async def track_public_view(
         self,
         slug: ArticleSlugPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
         config: FromDishka[ArticleAnalyticsConfig],
@@ -157,11 +158,12 @@ class PublicArticlesApiController(Controller):
         description="Track an engaged article view.",
         name="public-articles-track-engaged-view-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"auth_optional": True},
     )
     async def track_engaged_view(
         self,
         slug: ArticleSlugPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
         _language: LanguageQuery,
     ) -> None:
@@ -223,7 +225,7 @@ class PublicArticlesApiController(Controller):
 class AdminArticlesApiController(Controller):
     path = "/articles"
     tags = ["admin articles"]
-    guards = [content_manager_guard]
+    guards = [RequireRole(RoleEnum.MODERATOR)]
 
     @get(
         "",
@@ -252,7 +254,7 @@ class AdminArticlesApiController(Controller):
     async def create_article(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             ArticleRequestSchema,
@@ -345,7 +347,7 @@ class AdminArticlesApiController(Controller):
     async def create_folder(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             ArticleFolderRequestSchema,
@@ -387,7 +389,7 @@ class AdminArticlesApiController(Controller):
     )
     async def update_folder_priorities(
         self,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             ArticleFolderPriorityUpdateRequestSchema,
             api_json_body(
@@ -454,7 +456,7 @@ class AdminArticlesApiController(Controller):
     async def update_article(  # noqa: PLR0913
         self,
         slug: ArticleSlugPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         data: Annotated[
             ArticleRequestSchema,
             api_json_body(
@@ -514,7 +516,7 @@ class AdminArticlesApiController(Controller):
     async def delete_article(
         self,
         slug: ArticleSlugPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
         current_datetime: FromDishka[datetime],
@@ -538,7 +540,7 @@ class AdminArticlesApiController(Controller):
     async def set_draft_status_to_article(
         self,
         slug: ArticleSlugPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -561,7 +563,7 @@ class AdminArticlesApiController(Controller):
     async def set_published_status_to_article(
         self,
         slug: ArticleSlugPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -621,7 +623,7 @@ class AdminArticlesApiController(Controller):
     async def create_tag(  # noqa: PLR0913
         self,
         id_generator: FromDishka[HexUuidIdGenerator],
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             TagRequestSchema,
@@ -661,7 +663,7 @@ class AdminArticlesApiController(Controller):
     async def update_tag(  # noqa: PLR0913
         self,
         tag_id: TagIdPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         language: LanguageQuery,
         data: Annotated[
             TagRequestSchema,
@@ -702,7 +704,7 @@ class AdminArticlesApiController(Controller):
     async def delete_tag(
         self,
         tag_id: TagIdPath,
-        request: Request[UserIdentity, object | None, State],
+        request: Request[Principal, object | None, State],
         use_case: FromDishka[ArticlesUseCase],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> None:
@@ -714,5 +716,9 @@ class AdminArticlesApiController(Controller):
         )
 
 
-api_router = DishkaRouter("", route_handlers=[PublicArticlesApiController])
+api_router = DishkaRouter(
+    "",
+    route_handlers=[PublicArticlesApiController],
+    opt={"auth_public": True},
+)
 admin_router = DishkaRouter("", route_handlers=[AdminArticlesApiController])

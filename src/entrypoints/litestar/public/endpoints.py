@@ -40,4 +40,5 @@ public_router = DishkaRouter(
     "",
     route_handlers=[PublicDiscoveryController],
     include_in_schema=False,
+    opt={"auth_public": True},
 )

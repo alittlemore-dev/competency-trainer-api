@@ -1,16 +1,19 @@
 from datetime import date
 
 import pytest_asyncio
+from backend_sdk.auth import RoleEnum as SdkRoleEnum
+from backend_sdk.auth.testing import FakeAuthenticationClient
 from httpx import codes
 
 from core.articles.schemas import ArticleFilters, ArticlePublicStatsCollection
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
-from core.identity import RoleEnum, UnauthorizedError, UserIdentity
+from core.identity import RoleEnum, UserIdentity
 from entrypoints.litestar.api.articles.dependencies import (
     provide_article_filters,
     provide_public_article_filters,
 )
+from tests.helpers.api import APIHelper
 from tests.test_cases import ApiTestCase
 
 
@@ -23,6 +26,58 @@ class TestListArticlesAPI(ApiTestCase):
         self.analytics_use_case.get_public_stats.return_value = ArticlePublicStatsCollection(
             values=[],
         )
+
+    def test_public_articles_allow_anonymous_sdk_request(self, sdk_auth_api: APIHelper) -> None:
+        self.use_case.list_articles.return_value = self.factory.core.article_list(
+            articles=[],
+            total_count=0,
+            total_pages=0,
+        )
+
+        response = sdk_auth_api.get_articles()
+
+        assert response.status_code == codes.OK, response.content
+        assert response.json() == {"totalCount": 0, "totalPages": 0, "articles": []}
+
+    def test_admin_articles_reject_anonymous_sdk_request(self, sdk_auth_api: APIHelper) -> None:
+        response = sdk_auth_api.get_admin_articles()
+
+        assert response.status_code == codes.UNAUTHORIZED, response.content
+        self.use_case.list_articles.assert_not_called()
+
+    def test_admin_articles_reject_authenticated_user_without_content_role(
+        self,
+        sdk_auth_api: APIHelper,
+        sdk_authentication_client: FakeAuthenticationClient,
+    ) -> None:
+        sdk_authentication_client.set_authenticated(username="user", role=SdkRoleEnum.USER)
+        sdk_auth_api.client.headers["Authorization"] = "Bearer user-token"
+
+        response = sdk_auth_api.get_admin_articles()
+
+        assert response.status_code == codes.FORBIDDEN, response.content
+        self.use_case.list_articles.assert_not_called()
+
+    def test_admin_articles_allow_authenticated_moderator(
+        self,
+        sdk_auth_api: APIHelper,
+        sdk_authentication_client: FakeAuthenticationClient,
+    ) -> None:
+        self.use_case.list_articles.return_value = self.factory.core.article_list(
+            articles=[],
+            total_count=0,
+            total_pages=0,
+        )
+        sdk_authentication_client.set_authenticated(
+            username="moderator",
+            role=SdkRoleEnum.MODERATOR,
+        )
+        sdk_auth_api.client.headers["Authorization"] = "Bearer moderator-token"
+
+        response = sdk_auth_api.get_admin_articles()
+
+        assert response.status_code == codes.OK, response.content
+        assert response.json() == {"totalCount": 0, "totalPages": 0, "articles": []}
 
     def test_provide_article_filters_builds_filters_from_query_parameters(self) -> None:
         filters = provide_article_filters(
@@ -239,7 +294,6 @@ class TestListArticlesAPI(ApiTestCase):
         response = self.no_auth_api.get_admin_articles(page=1, page_size=10)
 
         assert response.status_code == codes.UNAUTHORIZED
-        assert response.json()["message"] == UnauthorizedError.message
         self.use_case.list_articles.assert_not_called()
 
     def test_moderator_can_filter_draft_articles_from_admin_api(self) -> None:

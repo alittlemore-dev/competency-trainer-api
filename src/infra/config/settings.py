@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Literal
 
 from litestar.config.response_cache import CACHE_FOREVER
-from pydantic import PositiveInt, SecretStr, field_validator
+from pydantic import NonNegativeFloat, PositiveFloat, PositiveInt, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from core.files.types import Namespace
@@ -80,6 +80,15 @@ class AppSettings(ProjectBaseSettings):
         if self.use_cache:
             return value
         return 0
+
+
+class AuthSettings(ProjectBaseSettings):
+    model_config = SettingsConfigDict(env_prefix="AUTH_")
+
+    verify_url: str
+    timeout_seconds: PositiveFloat
+    cache_ttl_seconds: NonNegativeFloat
+    max_cache_entries: PositiveInt
 
 
 class MinioSettings(ProjectBaseSettings):
@@ -188,6 +197,7 @@ class CacheWarmSettings(ProjectBaseSettings):
 class Settings:
     agent_access: AgentAccessSettings
     app: AppSettings
+    auth: AuthSettings
     cache_warm: CacheWarmSettings
     competency_matrix: CompetencyMatrixSettings
     database: DatabaseSettings
@@ -201,6 +211,7 @@ class Settings:
     def __init__(self) -> None:
         self.agent_access = AgentAccessSettings()
         self.app = AppSettings()
+        self.auth = AuthSettings()
         self.cache_warm = CacheWarmSettings()
         self.competency_matrix = CompetencyMatrixSettings()
         self.database = DatabaseSettings()

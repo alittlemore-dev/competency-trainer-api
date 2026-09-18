@@ -1,3 +1,5 @@
+from backend_sdk import RoleEnum
+from backend_sdk.integrations.litestar import RequireRole
 from dishka import FromDishka
 from dishka.integrations.litestar import DishkaRouter
 from litestar import Controller, get, status_codes
@@ -5,13 +7,12 @@ from litestar import Controller, get, status_codes
 from core.wiki_links.use_cases import WikiLinksUseCase
 from entrypoints.litestar.api.parameters import LanguageQuery
 from entrypoints.litestar.api.wiki_links.schemas import WikiLinkTargetsResponseSchema
-from entrypoints.litestar.guards import content_manager_guard
 
 
 class WikiLinksApiController(Controller):
     path = "/wiki-links"
     tags = ["admin wiki links"]
-    guards = [content_manager_guard]
+    guards = [RequireRole(RoleEnum.MODERATOR)]
 
     @get(
         "/targets",

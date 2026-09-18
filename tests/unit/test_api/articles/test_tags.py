@@ -4,7 +4,6 @@ from httpx import codes
 
 from core.articles.schemas import TagCreateParams, TagUpdateParams
 from core.i18n.enums import LanguageEnum
-from core.identity import UnauthorizedError
 from entrypoints.litestar.response_cache import ResponseCacheDomain
 from tests.test_cases import ApiTestCase
 
@@ -82,7 +81,6 @@ class TestTagsAPI(ApiTestCase):
         response = self.no_auth_api.get_admin_tags()
 
         assert response.status_code == codes.UNAUTHORIZED
-        assert response.json()["message"] == UnauthorizedError.message
         self.use_case.list_tags.assert_not_called()
 
     def test_search_tags(self) -> None:

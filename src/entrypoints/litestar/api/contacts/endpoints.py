@@ -48,4 +48,8 @@ class ContactsApiController(Controller):
         )
 
 
-api_router = DishkaRouter("", route_handlers=[ContactsApiController])
+api_router = DishkaRouter(
+    "",
+    route_handlers=[ContactsApiController],
+    opt={"auth_public": True},
+)

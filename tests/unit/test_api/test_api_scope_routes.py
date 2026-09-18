@@ -6,11 +6,7 @@ from httpx import codes
 from core.articles.schemas import ArticleFilters
 from core.i18n.enums import LanguageEnum
 from core.identity import RoleEnum, UserIdentity
-from entrypoints.litestar.api.competency_matrix.endpoints import (
-    AdminCompetencyMatrixApiController,
-)
 from entrypoints.litestar.api.routers import api_router
-from entrypoints.litestar.guards import content_manager_guard
 from tests.test_cases import ApiTestCase
 
 
@@ -96,7 +92,6 @@ class TestApiScopeRouteMetadata:
     def test_matrix_admin_urls_are_not_exposed_under_public_api(self) -> None:
         route_paths = _api_route_paths()
 
-        assert AdminCompetencyMatrixApiController.guards == [content_manager_guard]
         assert "/api/competency-matrix/resources/search" not in route_paths
         assert "/api/competency-matrix/queued-questions" not in route_paths
         assert "/api/competency-matrix/queued-questions/import" not in route_paths

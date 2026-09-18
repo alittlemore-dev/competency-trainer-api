@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, Mock
 from urllib.parse import quote
 
 import pytest
+from backend_sdk.auth.testing import FakeAuthenticationClient
+from backend_sdk.integrations.litestar import AuthPlugin
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -90,6 +92,11 @@ def agent_api_provider() -> MockAgentApiProvider:
 
 
 @pytest.fixture
+def human_auth_client() -> FakeAuthenticationClient:
+    return FakeAuthenticationClient()
+
+
+@pytest.fixture
 def agent_identity() -> AgentIdentity:
     return AgentIdentity(
         agent_client_id="a" * 32,
@@ -119,12 +126,13 @@ def escaped_agent_certificate() -> str:
 @pytest.fixture
 def agent_api_app(
     agent_api_provider: MockAgentApiProvider,
+    human_auth_client: FakeAuthenticationClient,
 ) -> Litestar:
     container = make_async_container(LitestarProvider(), agent_api_provider)
     return create_litestar_app(
         lifespan=[],
         container=container,
-        extra_plugins=[],
+        extra_plugins=[AuthPlugin(auth_client=human_auth_client)],
         extra_middlewares=[],
     )
 

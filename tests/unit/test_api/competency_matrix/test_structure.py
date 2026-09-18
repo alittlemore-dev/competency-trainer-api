@@ -11,11 +11,9 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixSubsectionPriorityUpdateParams,
 )
 from entrypoints.litestar.api.competency_matrix.endpoints import (
-    AdminCompetencyMatrixApiController,
     PublicCompetencyMatrixApiController,
 )
 from entrypoints.litestar.api.routers import api_router
-from entrypoints.litestar.guards import content_manager_guard
 from tests.test_cases import ApiTestCase
 
 
@@ -227,7 +225,6 @@ class TestMatrixStructureRouteMetadata:
     def test_structure_endpoints_are_admin_only(self) -> None:
         route_paths = _api_route_paths()
 
-        assert AdminCompetencyMatrixApiController.guards == [content_manager_guard]
         assert not hasattr(
             PublicCompetencyMatrixApiController,
             "list_competency_matrix_structure",

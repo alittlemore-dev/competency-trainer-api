@@ -31,4 +31,9 @@ class HealthcheckController(Controller):
         return Response(content="", status_code=status.HTTP_200_OK)
 
 
-api_router = DishkaRouter("", route_handlers=[HealthcheckController], include_in_schema=False)
+api_router = DishkaRouter(
+    "",
+    route_handlers=[HealthcheckController],
+    include_in_schema=False,
+    opt={"auth_public": True},
+)

@@ -50,7 +50,7 @@ class TestAdminFilesAPI(ApiTestCase):
             content_type="image/png",
         )
 
-        assert response.status_code == codes.UNAUTHORIZED
+        assert response.status_code == codes.FORBIDDEN
 
     def test_upload_file_allows_moderator(self) -> None:
         self.identity_controller.authenticate.return_value = UserIdentity(

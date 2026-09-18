@@ -261,5 +261,5 @@ agent_api_router = DishkaRouter(
     exception_handlers=AGENT_ACCESS_EXCEPTION_HANDLERS,
     request_max_body_size=constants.agent_access.request_body_max_size_bytes,
     include_in_schema=False,
-    opt={"exclude_from_auth": True},
+    opt={"auth_public": True, "exclude_from_auth": True},
 )

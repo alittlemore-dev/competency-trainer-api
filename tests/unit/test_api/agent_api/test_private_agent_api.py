@@ -1,6 +1,7 @@
 from dataclasses import replace
 
 import pytest
+from backend_sdk.auth.testing import FakeAuthenticationClient
 from litestar import Litestar
 from litestar.routes import HTTPRoute
 from litestar.status_codes import (
@@ -121,6 +122,7 @@ def test_agent_route_ignores_invalid_human_bearer_credentials(
     agent_api_client: TestClient,
     agent_api_provider: MockAgentApiProvider,
     agent_identity: AgentIdentity,
+    human_auth_client: FakeAuthenticationClient,
 ) -> None:
     agent_api_client.headers["Authorization"] = "Bearer invalid-human-token"
     agent_api_provider.identity_use_case.authenticate_business_client.return_value = agent_identity
@@ -129,6 +131,7 @@ def test_agent_route_ignores_invalid_human_bearer_credentials(
 
     assert response.status_code == HTTP_403_FORBIDDEN
     agent_api_provider.identity_use_case.authenticate_business_client.assert_awaited_once()
+    assert human_auth_client.tokens == ()
 
 
 def test_private_app_rejects_docs_unknown_routes_and_wrong_methods(

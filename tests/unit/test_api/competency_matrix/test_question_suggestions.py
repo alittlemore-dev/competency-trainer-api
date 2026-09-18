@@ -4,6 +4,9 @@ from typing import cast
 from unittest.mock import ANY, Mock
 
 import pytest_asyncio
+from backend_sdk.auth import Principal
+from backend_sdk.auth import RoleEnum as SdkRoleEnum
+from backend_sdk.auth.testing import FakeAuthenticationClient
 from httpx import codes
 from litestar import Request
 from litestar.datastructures import State
@@ -41,6 +44,7 @@ from entrypoints.litestar.api.competency_matrix.schemas import (
     QueuedQuestionsImportPreviewRequestSchema,
 )
 from entrypoints.litestar.api.schemas import CamelCaseSchema
+from tests.helpers.api import APIHelper
 from tests.test_cases import ApiTestCase
 from tests.unit.mocks.providers.general import test_current_datetime
 
@@ -55,8 +59,8 @@ class TestQuestionSuggestionsApi(ApiTestCase):
         assert issubclass(QueuedQuestionsImportPreviewRequestSchema, CamelCaseSchema)
         assert issubclass(QueuedQuestionsImportConfirmationRequestSchema, CamelCaseSchema)
 
-    def test_anonymous_user_can_suggest_question(self) -> None:
-        response = self.no_auth_api.post_question_suggestion(
+    def test_anonymous_user_can_suggest_question(self, sdk_auth_api: APIHelper) -> None:
+        response = sdk_auth_api.post_question_suggestion(
             question="  What is PEP 8?  ",
             sheet="python",
         )
@@ -115,8 +119,15 @@ class TestQuestionSuggestionsApi(ApiTestCase):
         assert call_params.limit.now.tzinfo is not None
         assert call_params.suggested_by_username == "anon"
 
-    def test_authenticated_public_suggestion_uses_username_and_keeps_ip_quota(self) -> None:
-        response = self.api.post_question_suggestion(question="What is PEP 8?")
+    def test_authenticated_public_suggestion_uses_username_and_keeps_ip_quota(
+        self,
+        sdk_auth_api: APIHelper,
+        sdk_authentication_client: FakeAuthenticationClient,
+    ) -> None:
+        sdk_authentication_client.set_authenticated(username="test", role=SdkRoleEnum.USER)
+        sdk_auth_api.client.headers["Authorization"] = "Bearer user-token"
+
+        response = sdk_auth_api.post_question_suggestion(question="What is PEP 8?")
 
         self.asserts.status(response=response, expected_status=codes.NO_CONTENT)
         call_params = self.use_case.suggest_question.call_args.kwargs["params"]
@@ -125,7 +136,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
 
     def test_question_suggestion_limit_dependency_uses_forwarded_client_identifier(self) -> None:
         request = cast(
-            "Request[UserIdentity, object | None, State]",
+            "Request[Principal, object | None, State]",
             Mock(
                 headers={"x-forwarded-for": "203.0.113.10, 10.0.0.2"},
                 client=Mock(host="198.51.100.4"),
@@ -250,7 +261,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
 
         response = self.api.get_queued_matrix_questions()
 
-        self.asserts.status(response=response, expected_status=codes.UNAUTHORIZED)
+        self.asserts.status(response=response, expected_status=codes.FORBIDDEN)
         self.use_case.list_queued_questions.assert_not_called()
 
     def test_queue_list_exposes_active_agent_claim(self) -> None:
@@ -484,7 +495,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
             content_type="text/plain",
         )
 
-        self.asserts.status(response=response, expected_status=codes.UNAUTHORIZED)
+        self.asserts.status(response=response, expected_status=codes.FORBIDDEN)
         self.use_case.preview_queued_questions_import.assert_not_called()
 
     def test_content_manager_can_import_csv_queued_questions(self) -> None:
@@ -618,7 +629,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
             selected_row_numbers=[1],
         )
 
-        self.asserts.status(response=response, expected_status=codes.UNAUTHORIZED)
+        self.asserts.status(response=response, expected_status=codes.FORBIDDEN)
         self.use_case.import_queued_questions.assert_not_called()
 
     def test_import_rejects_csv_without_question_header(self) -> None:
@@ -699,7 +710,7 @@ class TestQuestionSuggestionsApi(ApiTestCase):
 
         response = self.api.post_create_queued_matrix_question(question="What is PEP 8?")
 
-        self.asserts.status(response=response, expected_status=codes.UNAUTHORIZED)
+        self.asserts.status(response=response, expected_status=codes.FORBIDDEN)
         self.use_case.suggest_question.assert_not_called()
 
     def test_create_queued_question_rejects_blank_question(self) -> None:

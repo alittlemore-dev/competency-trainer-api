@@ -163,8 +163,8 @@ class TestAdminToolsCacheAccess(ApiTestCase):
         clear_response = self.api.post_admin_tools_cache_clear()
         warm_response = self.api.post_admin_tools_cache_warm()
 
-        self.asserts.status(response=clear_response, expected_status=codes.UNAUTHORIZED)
-        self.asserts.status(response=warm_response, expected_status=codes.UNAUTHORIZED)
+        self.asserts.status(response=clear_response, expected_status=codes.FORBIDDEN)
+        self.asserts.status(response=warm_response, expected_status=codes.FORBIDDEN)
 
 
 class TestAdminToolsCacheRouteMetadata:

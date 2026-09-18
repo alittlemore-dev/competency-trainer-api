@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from backend_sdk import RoleEnum
+from backend_sdk.integrations.litestar import RequireRole
 from dishka import FromDishka
 from dishka.integrations.litestar import DishkaRouter
 from litestar import Controller, get, post, status_codes
@@ -11,13 +13,12 @@ from entrypoints.litestar.api.admin_tools.schemas import (
     CacheStatusResponseSchema,
     CacheWarmOperationResponseSchema,
 )
-from entrypoints.litestar.guards import team_manager_guard
 
 
 class AdminToolsApiController(Controller):
     path = "/tools"
     tags = ["admin tools"]
-    guards = [team_manager_guard]
+    guards = [RequireRole(RoleEnum.ADMIN)]
 
     @get(
         "/cache",

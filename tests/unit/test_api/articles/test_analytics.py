@@ -1,6 +1,8 @@
 from datetime import date
 
 import pytest_asyncio
+from backend_sdk.auth import RoleEnum as SdkRoleEnum
+from backend_sdk.auth.testing import FakeAuthenticationClient
 from httpx import codes
 
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
@@ -15,6 +17,7 @@ from core.articles.schemas import (
 )
 from core.i18n.enums import LanguageEnum
 from core.identity import RoleEnum, UserIdentity
+from tests.helpers.api import APIHelper
 from tests.test_cases import ApiTestCase
 
 
@@ -26,7 +29,7 @@ class TestArticleAnalyticsAPI(ApiTestCase):
         self.analytics_use_case = await self.container.get_article_analytics_use_case()
         self.config = await self.container.get_article_analytics_config()
 
-    def test_track_public_view(self) -> None:
+    def test_track_public_view(self, sdk_auth_api: APIHelper) -> None:
         article = self.factory.core.article(
             article_id="00000000000040008000000000000041",
             title="Public article",
@@ -34,7 +37,7 @@ class TestArticleAnalyticsAPI(ApiTestCase):
         )
         self.articles_use_case.get_article.return_value = article
 
-        response = self.no_auth_api.post_article_view(slug="public-article")
+        response = sdk_auth_api.post_article_view(slug="public-article")
 
         assert response.status_code == codes.NO_CONTENT, response.content
         self.articles_use_case.get_article.assert_called_once_with(
@@ -47,20 +50,25 @@ class TestArticleAnalyticsAPI(ApiTestCase):
             config=self.config,
         )
 
-    def test_moderator_public_view_is_not_tracked(self) -> None:
-        self.identity_controller.authenticate.return_value = UserIdentity(
+    def test_moderator_public_view_is_not_tracked(
+        self,
+        sdk_auth_api: APIHelper,
+        sdk_authentication_client: FakeAuthenticationClient,
+    ) -> None:
+        sdk_authentication_client.set_authenticated(
             username="moderator",
-            role=RoleEnum.MODERATOR,
+            role=SdkRoleEnum.MODERATOR,
         )
+        sdk_auth_api.client.headers["Authorization"] = "Bearer moderator-token"
 
-        response = self.api.post_article_view(slug="public-article")
+        response = sdk_auth_api.post_article_view(slug="public-article")
 
         assert response.status_code == codes.NO_CONTENT, response.content
         self.articles_use_case.get_article.assert_not_called()
         self.analytics_use_case.track_public_view.assert_not_called()
 
-    def test_track_engaged_view(self) -> None:
-        response = self.no_auth_api.post_article_engaged_view(slug="public-article")
+    def test_track_engaged_view(self, sdk_auth_api: APIHelper) -> None:
+        response = sdk_auth_api.post_article_engaged_view(slug="public-article")
 
         assert response.status_code == codes.NO_CONTENT, response.content
         self.analytics_use_case.track_engaged_view.assert_called_once_with(
@@ -68,13 +76,18 @@ class TestArticleAnalyticsAPI(ApiTestCase):
             source_category=ArticleViewSourceCategory.UNKNOWN,
         )
 
-    def test_moderator_engaged_view_is_not_tracked(self) -> None:
-        self.identity_controller.authenticate.return_value = UserIdentity(
+    def test_moderator_engaged_view_is_not_tracked(
+        self,
+        sdk_auth_api: APIHelper,
+        sdk_authentication_client: FakeAuthenticationClient,
+    ) -> None:
+        sdk_authentication_client.set_authenticated(
             username="moderator",
-            role=RoleEnum.MODERATOR,
+            role=SdkRoleEnum.MODERATOR,
         )
+        sdk_auth_api.client.headers["Authorization"] = "Bearer moderator-token"
 
-        response = self.api.post_article_engaged_view(slug="public-article")
+        response = sdk_auth_api.post_article_engaged_view(slug="public-article")
 
         assert response.status_code == codes.NO_CONTENT, response.content
         self.analytics_use_case.track_engaged_view.assert_not_called()
