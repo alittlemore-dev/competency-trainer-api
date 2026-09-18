@@ -10,10 +10,10 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-cache --all-extras --no-install-project
+RUN uv sync --frozen --no-cache --no-default-groups --all-extras --no-install-project
 
 
-FROM ghcr.io/astral-sh/uv:0.12.5-python3.14-trixie-slim
+FROM python:3.14-slim-trixie
 
 ENV CUSTOM_USER=python-user
 ENV APP_PATH=/project
@@ -22,7 +22,12 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONPATH=$APP_PATH/src
 ENV PATH=$APP_PATH/.venv/bin:${PATH}
 
-RUN groupadd --gid 10001 $CUSTOM_USER \
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.14 \
+ && rm -rf /usr/local/lib/python3.14/ensurepip /usr/local/lib/python3.14/site-packages/pip* \
+ && groupadd --gid 10001 $CUSTOM_USER \
  && useradd --uid 10001 --gid 10001 $CUSTOM_USER \
  && mkdir -p $APP_PATH /project/.cache/uv \
  && chown -R $CUSTOM_USER:$CUSTOM_USER $APP_PATH /project/.cache
