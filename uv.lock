@@ -444,7 +444,8 @@ dependencies = [
     { name = "cryptography" },
     { name = "dishka" },
     { name = "ecs-logging" },
-    { name = "granian", extra = ["reload"] },
+    { name = "granian" },
+    { name = "httpx" },
     { name = "litestar", extra = ["cli", "pydantic", "valkey"] },
     { name = "mcp" },
     { name = "msgpack" },
@@ -455,7 +456,7 @@ dependencies = [
     { name = "python-dateutil" },
     { name = "sentry-sdk", extra = ["litestar"] },
     { name = "sniffio" },
-    { name = "sqlalchemy", extra = ["asyncio", "mypy"] },
+    { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "sqlalchemy-dev-utils" },
     { name = "structlog" },
     { name = "taskiq" },
@@ -468,7 +469,7 @@ dependencies = [
 dev = [
     { name = "bandit" },
     { name = "coverage" },
-    { name = "httpx" },
+    { name = "granian", extra = ["reload"] },
     { name = "mypy" },
     { name = "pip-audit" },
     { name = "pytest" },
@@ -476,6 +477,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "sqlalchemy", extra = ["mypy"] },
     { name = "vulture" },
 ]
 local = [
@@ -492,7 +494,8 @@ requires-dist = [
     { name = "cryptography", specifier = ">=50.0.0" },
     { name = "dishka", specifier = ">=1.10.1" },
     { name = "ecs-logging", specifier = ">=2.3.0" },
-    { name = "granian", extras = ["reload"], specifier = ">=2.8.1" },
+    { name = "granian", specifier = ">=2.8.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "litestar", extras = ["cli", "pydantic", "valkey"], specifier = ">=2.24.0" },
     { name = "mcp", specifier = ">=2.0.0,<3" },
     { name = "msgpack", specifier = ">=1.2.1" },
@@ -503,7 +506,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "sentry-sdk", extras = ["litestar"], specifier = ">=2.68.0" },
     { name = "sniffio", specifier = ">=1.3.1" },
-    { name = "sqlalchemy", extras = ["asyncio", "mypy"], specifier = ">=2.0.52" },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.52" },
     { name = "sqlalchemy-dev-utils", specifier = ">=1.4.0" },
     { name = "structlog", specifier = ">=26.1.0" },
     { name = "taskiq", specifier = ">=0.12.4" },
@@ -516,7 +519,7 @@ requires-dist = [
 dev = [
     { name = "bandit", specifier = ">=1.9.4" },
     { name = "coverage", specifier = ">=7.15.4" },
-    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "granian", extras = ["reload"], specifier = ">=2.8.1" },
     { name = "mypy", specifier = ">=2.3.1" },
     { name = "pip-audit", specifier = ">=2.10.1" },
     { name = "pytest", specifier = "==9.1.1" },
@@ -524,6 +527,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=7.1.0" },
     { name = "pytest-xdist", specifier = ">=3.8.0" },
     { name = "ruff", specifier = ">=0.16.3" },
+    { name = "sqlalchemy", extras = ["mypy"], specifier = ">=2.0.52" },
     { name = "vulture", specifier = ">=2.16" },
 ]
 local = [

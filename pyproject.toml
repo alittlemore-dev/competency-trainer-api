@@ -9,12 +9,13 @@ license = { text = "MIT" }
 dependencies = [
     "alittlemore-backend-sdk[litestar]>=0.2.0,<0.3.0",
     "cryptography>=50.0.0",
-    "granian[reload]>=2.8.1",
+    "granian>=2.8.1",
+    "httpx>=0.28.1",
     "pydantic-settings>=2.15.0",
     "psycopg[binary]>=3.3.4",
     "verbose-http-exceptions[litestar]>=3.0.0",
     "python-dateutil>=2.9.0.post0",
-    "sqlalchemy[asyncio,mypy]>=2.0.52",
+    "sqlalchemy[asyncio]>=2.0.52",
     "sqlalchemy-dev-utils>=1.4.0",
     "alembic>=1.19.1",
     "structlog>=26.1.0",
@@ -38,7 +39,7 @@ dependencies = [
 dev = [
     "bandit>=1.9.4",
     "coverage>=7.15.4",
-    "httpx>=0.28.1",
+    "granian[reload]>=2.8.1",
     "mypy>=2.3.1",
     "pip-audit>=2.10.1",
     "pytest==9.1.1",
@@ -46,6 +47,7 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.16.3",
+    "sqlalchemy[mypy]>=2.0.52",
     "vulture>=2.16",
 ]
 local = [
