@@ -20,7 +20,6 @@ from infra.post_commit_actions import PostCommitActions
 
 class ResponseCacheDomain(StrEnum):
     HEALTHCHECK = "healthcheck"
-    I18N = "i18n"
     ARTICLES = "articles"
     COMPETENCY_MATRIX = "competency_matrix"
 

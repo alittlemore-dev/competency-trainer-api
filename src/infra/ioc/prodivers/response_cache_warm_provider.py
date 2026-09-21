@@ -20,7 +20,6 @@ from entrypoints.taskiq.cache_warm.targets import (
     ArticlesCacheWarmTargetCollector,
     CacheWarmQueryBuilder,
     CompetencyMatrixCacheWarmTargetCollector,
-    I18nCacheWarmTargetCollector,
     ResponseCacheWarmTargetCollector,
 )
 from entrypoints.taskiq.cache_warm.writer import ResponseCacheWarmWriter
@@ -36,7 +35,6 @@ class ResponseCacheWarmProvider(Provider):
     scope = Scope.REQUEST
 
     cache_warm_query_builder = provide(CacheWarmQueryBuilder)
-    i18n_cache_warm_target_collector = provide(I18nCacheWarmTargetCollector)
     articles_cache_warm_target_collector = provide(ArticlesCacheWarmTargetCollector)
     competency_matrix_cache_warm_target_collector = provide(
         CompetencyMatrixCacheWarmTargetCollector,
@@ -78,7 +76,6 @@ class ResponseCacheWarmProvider(Provider):
             writer=writer,
             use_cache=settings.app.use_cache,
             supported_domains=(
-                ResponseCacheDomain.I18N,
                 ResponseCacheDomain.ARTICLES,
                 ResponseCacheDomain.COMPETENCY_MATRIX,
             ),

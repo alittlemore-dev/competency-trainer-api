@@ -26,12 +26,6 @@ def cache_status() -> CacheToolsStatus:
         scheduled_warm_interval_seconds=3_600,
         domains=(
             CacheDomainStatus(
-                domain=CacheDomainEnum.I18N,
-                key_count=3,
-                minimum_remaining_ttl_seconds=120,
-                non_expiring_key_count=1,
-            ),
-            CacheDomainStatus(
                 domain=CacheDomainEnum.ARTICLES,
                 key_count=0,
                 minimum_remaining_ttl_seconds=None,
@@ -71,12 +65,6 @@ class TestAdminToolsCacheAPI(ApiTestCase):
             "scheduledWarmIntervalSeconds": 3_600,
             "domains": [
                 {
-                    "domain": "i18n",
-                    "keyCount": 3,
-                    "minimumRemainingTtlSeconds": 120,
-                    "nonExpiringKeyCount": 1,
-                },
-                {
                     "domain": "articles",
                     "keyCount": 0,
                     "minimumRemainingTtlSeconds": None,
@@ -104,7 +92,7 @@ class TestAdminToolsCacheAPI(ApiTestCase):
         response = self.api.post_admin_tools_cache_clear()
 
         self.asserts.status(response=response, expected_status=codes.OK)
-        assert response.json()["domains"][0]["keyCount"] == 3
+        assert response.json()["domains"][0]["keyCount"] == 0
         self.use_case.clear.assert_awaited_once_with(policy=self.policy)
         self.use_case.enqueue_manual_warm.assert_not_awaited()
 

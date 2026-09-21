@@ -60,11 +60,11 @@ class TestValkeyResponseCacheStatusStorage:
         valkey.scan = AsyncMock(return_value=(0, []))
         storage = ValkeyResponseCacheStatusStorage(
             valkey=valkey,
-            namespaces={CacheDomainEnum.I18N: "LITESTAR_i18n"},
+            namespaces={CacheDomainEnum.ARTICLES: "LITESTAR_articles"},
             scan_batch_size=200,
         )
 
-        result = await storage.get_domain_status(domain=CacheDomainEnum.I18N)
+        result = await storage.get_domain_status(domain=CacheDomainEnum.ARTICLES)
 
         assert result.key_count == 0
         assert result.minimum_remaining_ttl_seconds is None

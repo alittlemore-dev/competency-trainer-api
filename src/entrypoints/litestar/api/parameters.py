@@ -560,12 +560,3 @@ TagIdPath: TypeAlias = Annotated[
         examples=("00000000000000000000000000000005",),
     ),
 ]
-I18nLanguagePath: TypeAlias = Annotated[
-    LanguageEnum,
-    api_path_parameter(
-        name="language",
-        title="Language",
-        description="Interface language code for the requested i18n bundle.",
-        examples=(LanguageEnum.RU.value, LanguageEnum.EN.value),
-    ),
-]

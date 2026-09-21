@@ -23,7 +23,6 @@ from core.generators import HexUuidIdGenerator
 
 CURRENT_DATETIME = datetime(2026, 7, 16, 12, 0, tzinfo=UTC)
 DOMAINS = (
-    CacheDomainEnum.I18N,
     CacheDomainEnum.ARTICLES,
     CacheDomainEnum.COMPETENCY_MATRIX,
 )
@@ -53,12 +52,6 @@ class TestCacheToolsUseCase:
 
     async def test_get_status_reports_metrics_and_latest_manual_operation(self) -> None:
         domain_statuses = (
-            CacheDomainStatus(
-                domain=CacheDomainEnum.I18N,
-                key_count=3,
-                minimum_remaining_ttl_seconds=120,
-                non_expiring_key_count=1,
-            ),
             CacheDomainStatus(
                 domain=CacheDomainEnum.ARTICLES,
                 key_count=4,

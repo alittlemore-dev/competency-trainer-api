@@ -24,12 +24,6 @@ from entrypoints.litestar.api.competency_matrix.schemas import (
     CompetencyMatrixItemsListResponseSchema,
     CompetencyMatrixSheetsListResponseSchema,
 )
-from entrypoints.litestar.api.i18n.catalog import get_i18n_messages, get_language_label
-from entrypoints.litestar.api.i18n.schemas import (
-    I18nBundleResponseSchema,
-    LanguageResponseSchema,
-    LanguagesResponseSchema,
-)
 from entrypoints.litestar.api.schemas import CamelCaseSchema
 from entrypoints.litestar.response_cache import ResponseCacheDomain
 from infra.config.constants import constants
@@ -59,43 +53,6 @@ class CacheWarmTarget:
 class CacheWarmQueryBuilder:
     def build(self, *values: tuple[str, str]) -> tuple[tuple[str, str], ...]:
         return tuple(sorted(values, key=lambda item: item[0]))
-
-
-@dataclass(frozen=True, slots=True)
-class I18nCacheWarmTargetCollector:
-    def collect(self) -> list[CacheWarmTarget]:
-        return [
-            self._languages_target(),
-            *[self._bundle_target(language=language) for language in LanguageEnum],
-        ]
-
-    def _languages_target(self) -> CacheWarmTarget:
-        return CacheWarmTarget(
-            domain=ResponseCacheDomain.I18N,
-            path="/api/i18n/languages",
-            query=(),
-            response=LanguagesResponseSchema(
-                default_language=settings.i18n.default_language,
-                languages=[
-                    LanguageResponseSchema.from_language(
-                        language=language,
-                        label=get_language_label(language=language),
-                    )
-                    for language in LanguageEnum
-                ],
-            ),
-        )
-
-    def _bundle_target(self, *, language: LanguageEnum) -> CacheWarmTarget:
-        return CacheWarmTarget(
-            domain=ResponseCacheDomain.I18N,
-            path=f"/api/i18n/bundles/{language.value}",
-            query=(),
-            response=I18nBundleResponseSchema(
-                language=language,
-                messages=dict(get_i18n_messages(language=language)),
-            ),
-        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,15 +283,12 @@ class CompetencyMatrixCacheWarmTargetCollector:
 
 @dataclass(frozen=True, slots=True)
 class ResponseCacheWarmTargetCollector:
-    i18n_collector: I18nCacheWarmTargetCollector
     articles_collector: ArticlesCacheWarmTargetCollector
     matrix_collector: CompetencyMatrixCacheWarmTargetCollector
 
     async def collect(self, *, domains: Iterable[ResponseCacheDomain]) -> list[CacheWarmTarget]:
         requested_domains = tuple(domains)
         targets: list[CacheWarmTarget] = []
-        if ResponseCacheDomain.I18N in requested_domains:
-            targets.extend(self.i18n_collector.collect())
         if ResponseCacheDomain.ARTICLES in requested_domains:
             targets.extend(await self.articles_collector.collect())
         if ResponseCacheDomain.COMPETENCY_MATRIX in requested_domains:

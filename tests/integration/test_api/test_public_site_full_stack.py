@@ -16,10 +16,6 @@ from entrypoints.litestar.api.competency_matrix.schemas import (
     PublicCompetencyMatrixItemDetailResponseSchema,
     PublicCompetencyMatrixItemsListResponseSchema,
 )
-from entrypoints.litestar.api.i18n.schemas import (
-    I18nBundleResponseSchema,
-    LanguagesResponseSchema,
-)
 from entrypoints.litestar.initializers.main import create_litestar_app
 from infra.ioc.registry import get_providers
 from infra.postgresql.models import (
@@ -115,17 +111,6 @@ async def test_public_site_read_paths_use_real_http_wiring_and_postgresql(
 ) -> None:
     health_response = public_site_full_stack_client.get("/api/healthcheck")
     assert health_response.status_code == 200
-
-    languages_response = public_site_full_stack_client.get("/api/i18n/languages")
-    assert languages_response.status_code == 200
-    languages = LanguagesResponseSchema.model_validate(languages_response.json())
-    assert {language.code.value for language in languages.languages} == {"ru", "en"}
-
-    bundle_response = public_site_full_stack_client.get("/api/i18n/bundles/ru")
-    assert bundle_response.status_code == 200
-    bundle = I18nBundleResponseSchema.model_validate(bundle_response.json())
-    assert bundle.language.value == "ru"
-    assert bundle.messages
 
     articles_response = public_site_full_stack_client.get(
         "/api/articles?page=1&pageSize=20&language=ru",

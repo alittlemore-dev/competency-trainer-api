@@ -98,7 +98,7 @@ def test_ordinary_main_route_bypasses_agent_authentication_and_audit(
     agent_api_client: TestClient,
     agent_api_provider: MockAgentApiProvider,
 ) -> None:
-    response = agent_api_client.get("/api/i18n/languages")
+    response = agent_api_client.get("/api/healthcheck")
 
     assert response.status_code == HTTP_200_OK
     agent_api_provider.identity_use_case.authenticate_business_client.assert_not_awaited()

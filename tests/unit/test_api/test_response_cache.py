@@ -19,7 +19,6 @@ from entrypoints.litestar.api.competency_matrix.endpoints import (
     PublicCompetencyMatrixApiController,
 )
 from entrypoints.litestar.api.healthcheck.endpoints import HealthcheckController
-from entrypoints.litestar.api.i18n.endpoints import I18nApiController
 from entrypoints.litestar.cli.commands.cache import invalidate_cache_command
 from entrypoints.litestar.cli.plugins import CLIPlugin
 from entrypoints.litestar.initializers import main as litestar_initializers
@@ -136,20 +135,20 @@ class TestResponseCacheDomainStore:
         assert matrix_store.values == {"GET/api/competency-matrix/sheets": b"matrix"}
 
     async def test_clear_domains_delegates_to_existing_domain_stores(self) -> None:
-        i18n_store = FakeStore(values={"GET/api/i18n/languages": b"i18n"})
+        matrix_store = FakeStore(values={"GET/api/competency-matrix/sheets": b"matrix"})
         articles_store = FakeStore(values={"GET/api/articles": b"articles"})
         store = ResponseCacheDomainStore(
             stores={
-                ResponseCacheDomain.I18N: cast("Store", i18n_store),
+                ResponseCacheDomain.COMPETENCY_MATRIX: cast("Store", matrix_store),
                 ResponseCacheDomain.ARTICLES: cast("Store", articles_store),
             },
         )
 
         await store.clear_domains(
-            domains=(CacheDomainEnum.I18N, CacheDomainEnum.ARTICLES),
+            domains=(CacheDomainEnum.COMPETENCY_MATRIX, CacheDomainEnum.ARTICLES),
         )
 
-        assert i18n_store.values == {}
+        assert matrix_store.values == {}
         assert articles_store.values == {}
 
 
@@ -376,16 +375,6 @@ class TestResponseCacheRouteConfiguration:
             "get_competency_matrix_item",
         ):
             assert getattr(AdminCompetencyMatrixApiController, handler_name).cache is False
-
-    def test_i18n_get_handlers_use_i18n_cache(self) -> None:
-        for handler_name in ("list_languages", "get_bundle"):
-            handler = getattr(I18nApiController, handler_name)
-
-            assert handler.cache == settings.app.get_cache_duration(
-                constants.response_cache.default_ttl_seconds,
-            )
-            assert handler.cache_key_builder is not None
-            assert handler.cache_key_builder(cast("Any", FakeRequest())).startswith("i18n:")
 
     def test_healthcheck_uses_domain_cache_key(self) -> None:
         handler = HealthcheckController.health

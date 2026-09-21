@@ -22,7 +22,6 @@ from entrypoints.taskiq.cache_warm.targets import (
     CacheWarmQueryBuilder,
     CacheWarmTarget,
     CompetencyMatrixCacheWarmTargetCollector,
-    I18nCacheWarmTargetCollector,
     ResponseCacheWarmTargetCollector,
 )
 from entrypoints.taskiq.cache_warm.writer import ResponseCacheWarmWriter
@@ -141,7 +140,6 @@ class TestCacheWarmTargetGeneration(TestCase):
         matrix_use_case = FakeCompetencyMatrixUseCase(factory=self.factory)
         query_builder = CacheWarmQueryBuilder()
         collector = ResponseCacheWarmTargetCollector(
-            i18n_collector=I18nCacheWarmTargetCollector(),
             articles_collector=ArticlesCacheWarmTargetCollector(
                 articles_use_case=cast("ArticlesUseCase", articles_use_case),
                 query_builder=query_builder,
@@ -154,7 +152,6 @@ class TestCacheWarmTargetGeneration(TestCase):
 
         targets = await collector.collect(
             domains=(
-                ResponseCacheDomain.I18N,
                 ResponseCacheDomain.ARTICLES,
                 ResponseCacheDomain.COMPETENCY_MATRIX,
             ),
@@ -162,11 +159,6 @@ class TestCacheWarmTargetGeneration(TestCase):
         target_paths = {(target.domain, target.path, target.query) for target in targets}
 
         for language in LanguageEnum:
-            assert (
-                ResponseCacheDomain.I18N,
-                f"/api/i18n/bundles/{language.value}",
-                (),
-            ) in target_paths
             assert (
                 ResponseCacheDomain.ARTICLES,
                 "/api/articles",
@@ -206,11 +198,6 @@ class TestCacheWarmTargetGeneration(TestCase):
                     (("language", language.value),),
                 ) in target_paths
 
-        assert (
-            ResponseCacheDomain.I18N,
-            "/api/i18n/languages",
-            (),
-        ) in target_paths
         assert articles_use_case.list_articles_filters == [
             ArticleFilters(
                 page=1,
@@ -247,7 +234,6 @@ class TestCacheWarmTargetGeneration(TestCase):
         matrix_use_case = FakeCompetencyMatrixUseCase(factory=self.factory)
         query_builder = CacheWarmQueryBuilder()
         collector = ResponseCacheWarmTargetCollector(
-            i18n_collector=I18nCacheWarmTargetCollector(),
             articles_collector=ArticlesCacheWarmTargetCollector(
                 articles_use_case=cast("ArticlesUseCase", articles_use_case),
                 query_builder=query_builder,
@@ -332,7 +318,6 @@ class TestCacheWarmWriter(TestCase):
         store = ResponseCacheDomainStore(stores={})
         query_builder = CacheWarmQueryBuilder()
         target_collector = ResponseCacheWarmTargetCollector(
-            i18n_collector=I18nCacheWarmTargetCollector(),
             articles_collector=ArticlesCacheWarmTargetCollector(
                 articles_use_case=cast("ArticlesUseCase", articles_use_case),
                 query_builder=query_builder,
@@ -350,7 +335,6 @@ class TestCacheWarmWriter(TestCase):
             writer=writer,
             use_cache=False,
             supported_domains=(
-                ResponseCacheDomain.I18N,
                 ResponseCacheDomain.ARTICLES,
                 ResponseCacheDomain.COMPETENCY_MATRIX,
             ),
