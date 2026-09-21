@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:0.12.5-python3.14-trixie-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.12.17-python3.14-trixie-slim AS builder
 
 ENV APP_PATH=/project
 ENV UV_VENV_PATH=/project/.venv
