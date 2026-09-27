@@ -65,18 +65,19 @@ class TestWikiLinksUseCase(TestCase):
             self.factory.core.competency_matrix_item(
                 item_id=1,
                 slug="how-to-write-function",
+                sheet_key="python",
                 question_ru="Как написать функцию",
                 question_en="How to write a function",
             ),
             self.factory.core.competency_matrix_item(
                 item_id=2,
                 slug="draft-matrix-question",
+                sheet_key="python",
                 question_ru="Черновой вопрос матрицы",
                 question_en="Draft matrix question",
                 publish_status=PublishStatusEnum.DRAFT,
             ),
         ]
-
         result = await self.use_case.list_targets(language=language)
 
         assert result == WikiLinkTargets(
@@ -100,12 +101,12 @@ class TestWikiLinksUseCase(TestCase):
                     type=WikiLinkTargetTypeEnum.MATRIX,
                     items=[
                         WikiLinkTarget(
-                            slug="how-to-write-function",
+                            slug="python:how-to-write-function",
                             title=matrix_title,
                             publish_status=PublishStatusEnum.PUBLISHED,
                         ),
                         WikiLinkTarget(
-                            slug="draft-matrix-question",
+                            slug="python:draft-matrix-question",
                             title=(
                                 "Черновой вопрос матрицы"
                                 if language == LanguageEnum.RU

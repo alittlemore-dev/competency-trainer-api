@@ -174,6 +174,7 @@ class TestGetItemAPI(ApiTestCase):
         response = self.no_auth_api.get_public_competency_matrix_item(
             slug="how-to-write-function",
             language="en",
+            sheet_key="python",
         )
         assert response.status_code == codes.OK
         body = response.json()
@@ -184,6 +185,7 @@ class TestGetItemAPI(ApiTestCase):
         assert body["suggestedByUsername"] == "anon"
         self.use_case.get_item_by_slug.assert_called_once_with(
             params=CompetencyMatrixItemBySlugGetParams(
+                sheet_key="python",
                 slug="how-to-write-function",
                 only_published=True,
             ),
@@ -193,6 +195,7 @@ class TestGetItemAPI(ApiTestCase):
         response = self.no_auth_api.get_public_competency_matrix_item(
             slug="how-to-write-function",
             language=None,
+            sheet_key="python",
         )
         assert response.status_code == codes.BAD_REQUEST
         self.use_case.get_item_by_slug.assert_not_called()
@@ -202,6 +205,15 @@ class TestGetItemAPI(ApiTestCase):
         response = self.no_auth_api.get_public_competency_matrix_item(
             slug="missing-question",
             language="ru",
+            sheet_key="python",
         )
         assert response.status_code == codes.NOT_FOUND
         assert response.json()["message"] == "Competency matrix item not found"
+
+    def test_public_competency_matrix_item_requires_sheet_in_path(self) -> None:
+        response = self.no_auth_api.client.get(
+            "/api/competency-matrix/items/public/how-to-write-function",
+            params={"language": "ru"},
+        )
+        assert response.status_code == codes.NOT_FOUND
+        self.use_case.get_item_by_slug.assert_not_called()

@@ -255,6 +255,7 @@ class CompetencyMatrixCacheWarmTargetCollector:
     ) -> list[CacheWarmTarget]:
         public_detail = await self.matrix_use_case.get_item_by_slug(
             params=CompetencyMatrixItemBySlugGetParams(
+                sheet_key=item.sheet_key,
                 slug=item.slug,
                 only_published=True,
             ),
@@ -272,7 +273,7 @@ class CompetencyMatrixCacheWarmTargetCollector:
     ) -> CacheWarmTarget:
         return CacheWarmTarget(
             domain=ResponseCacheDomain.COMPETENCY_MATRIX,
-            path=f"/api/competency-matrix/items/public/{item.slug}",
+            path=f"/api/competency-matrix/items/public/{item.sheet_key}/{item.slug}",
             query=self.query_builder.build(("language", language.value)),
             response=CompetencyMatrixItemDetailResponseSchema.from_domain_schema(
                 schema=detail,

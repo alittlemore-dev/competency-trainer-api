@@ -501,17 +501,22 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             raise CompetencyMatrixItemNotFoundError
         return item.to_domain_schema(include_relationships=True)
 
-    async def get_competency_matrix_item_by_slug(self, slug: str) -> CompetencyMatrixItem:
-        stmt = (
-            select(CompetencyMatrixItemModel)
-            .where(CompetencyMatrixItemModel.slug == slug)
-            .options(
-                *self._item_domain_load_options(),
-                *self._item_structure_load_options(),
-                selectinload(CompetencyMatrixItemModel.resource_links).selectinload(
-                    ResourceToItemSecondaryModel.resource,
-                ),
-            )
+    async def get_competency_matrix_item_by_slug(
+        self, *, sheet_key: str, slug: str
+    ) -> CompetencyMatrixItem:
+        stmt = select(CompetencyMatrixItemModel).options(
+            *self._item_domain_load_options(),
+            *self._item_structure_load_options(),
+            selectinload(CompetencyMatrixItemModel.resource_links).selectinload(
+                ResourceToItemSecondaryModel.resource,
+            ),
+        )
+        stmt = stmt.join(
+            CompetencyMatrixSheetModel,
+            CompetencyMatrixSheetModel.id == CompetencyMatrixItemModel.sheet_id,
+        ).where(
+            CompetencyMatrixSheetModel.key == sheet_key,
+            CompetencyMatrixItemModel.slug == slug,
         )
         item = await self.session.scalar(stmt)
         if item is None:
@@ -537,7 +542,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
         except IntegrityError as error:
             diagnostics = getattr(error.orig, "diag", None)
             constraint_name = getattr(diagnostics, "constraint_name", None)
-            if constraint_name == "ix_competency_matrix__competency_matrix_item_model_slug":
+            if constraint_name == "cm_item_sheet_slug_uniq":
                 raise CompetencyMatrixItemConflictError from error
             if isinstance(constraint_name, str) and constraint_name.endswith(
                 "_subsection_id_fkey",
@@ -564,7 +569,13 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             item=item,
             existing_links=item_model.resource_links,
         )
-        await self.session.flush()
+        try:
+            await self.session.flush()
+        except IntegrityError as error:
+            diagnostics = getattr(error.orig, "diag", None)
+            if getattr(diagnostics, "constraint_name", None) == "cm_item_sheet_slug_uniq":
+                raise CompetencyMatrixItemConflictError from error
+            raise
         return await self.get_competency_matrix_item(item_id=item.id)
 
     async def update_competency_matrix_item_publish_status(

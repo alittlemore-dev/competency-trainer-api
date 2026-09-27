@@ -361,20 +361,25 @@ class QuestionQueueImportPreview:
         queued_questions: QueuedCompetencyMatrixQuestions,
     ) -> QuestionQueueImportPreview:
         queued_fingerprints = {
-            CompetencyMatrixQuestionFingerprint.from_question(question=question.question).value
+            (
+                question.sheet,
+                CompetencyMatrixQuestionFingerprint.from_question(question=question.question).value,
+            )
             for question in queued_questions
         }
-        first_rows_by_fingerprint: dict[str, int] = {}
+        first_rows_by_fingerprint: dict[tuple[str | None, str], int] = {}
         preview_rows: list[QuestionQueueImportPreviewRow] = []
         for row in self.rows:
             preview_row = row
             fingerprint = preview_row.question_fingerprint()
-            if fingerprint is None:
+            params = preview_row.params
+            if fingerprint is None or params is None:
                 preview_rows.append(preview_row)
                 continue
-            first_row_number = first_rows_by_fingerprint.get(fingerprint)
+            fingerprint_key = (params.sheet, fingerprint)
+            first_row_number = first_rows_by_fingerprint.get(fingerprint_key)
             if first_row_number is None:
-                first_rows_by_fingerprint[fingerprint] = preview_row.row_number
+                first_rows_by_fingerprint[fingerprint_key] = preview_row.row_number
             else:
                 preview_row = preview_row.with_issue(
                     issue=QuestionQueueImportPreviewIssue(
@@ -383,7 +388,7 @@ class QuestionQueueImportPreview:
                         related_row_numbers=(first_row_number,),
                     ),
                 )
-            if fingerprint in queued_fingerprints:
+            if fingerprint_key in queued_fingerprints:
                 preview_row = preview_row.with_issue(
                     issue=QuestionQueueImportPreviewIssue(
                         code=QuestionQueueImportIssueCodeEnum.DUPLICATE_IN_QUEUE,
@@ -479,6 +484,7 @@ class CompetencyMatrixItemGetParams:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CompetencyMatrixItemBySlugGetParams:
+    sheet_key: str
     slug: str
     only_published: bool
 
@@ -892,6 +898,7 @@ class CompetencyMatrixItems(ValuedDataclass[CompetencyMatrixItem]):
         return PublishedCompetencyMatrixItemsForSeo(
             values=[
                 PublishedCompetencyMatrixItemForSeo(
+                    sheet_key=item.sheet_key,
                     slug=item.slug,
                     publish_status=item.publish_status,
                 )
@@ -902,6 +909,7 @@ class CompetencyMatrixItems(ValuedDataclass[CompetencyMatrixItem]):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PublishedCompetencyMatrixItemForSeo:
+    sheet_key: str
     slug: str
     publish_status: PublishStatusEnum
 

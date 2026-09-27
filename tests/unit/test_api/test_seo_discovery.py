@@ -33,6 +33,7 @@ class TestSeoDiscoveryAPI(ApiTestCase):
             PublishedCompetencyMatrixItemsForSeo(
                 values=[
                     PublishedCompetencyMatrixItemForSeo(
+                        sheet_key="python",
                         slug="how-to-write-function",
                         publish_status=PublishStatusEnum.PUBLISHED,
                     ),
@@ -54,11 +55,11 @@ class TestSeoDiscoveryAPI(ApiTestCase):
         assert "<loc>http://localhost:8000/ru/competency/articles/typed-articles</loc>" in sitemap
         assert "<loc>http://localhost:8000/en/competency/articles/typed-articles</loc>" in sitemap
         assert (
-            "<loc>http://localhost:8000/ru/competency/matrix/questions/how-to-write-function</loc>"
+            "<loc>http://localhost:8000/ru/competency/matrix/questions/python/how-to-write-function</loc>"
             in sitemap
         )
         assert (
-            "<loc>http://localhost:8000/en/competency/matrix/questions/how-to-write-function</loc>"
+            "<loc>http://localhost:8000/en/competency/matrix/questions/python/how-to-write-function</loc>"
             in sitemap
         )
         assert (
@@ -71,12 +72,12 @@ class TestSeoDiscoveryAPI(ApiTestCase):
         )
         assert (
             'hreflang="ru" '
-            'href="http://localhost:8000/ru/competency/matrix/questions/how-to-write-function"'
+            'href="http://localhost:8000/ru/competency/matrix/questions/python/how-to-write-function"'
             in sitemap
         )
         assert (
             'hreflang="en" '
-            'href="http://localhost:8000/en/competency/matrix/questions/how-to-write-function"'
+            'href="http://localhost:8000/en/competency/matrix/questions/python/how-to-write-function"'
             in sitemap
         )
         assert "<lastmod>2026-02-04T04:05:06+00:00</lastmod>" in sitemap
@@ -98,6 +99,7 @@ class TestSeoDiscoveryAPI(ApiTestCase):
             PublishedCompetencyMatrixItemsForSeo(
                 values=[
                     PublishedCompetencyMatrixItemForSeo(
+                        sheet_key="python",
                         slug="draft-question",
                         publish_status=PublishStatusEnum.DRAFT,
                     ),

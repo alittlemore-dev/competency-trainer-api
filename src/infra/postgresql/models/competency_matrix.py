@@ -262,9 +262,11 @@ class CompetencyMatrixSubsectionModel(PriorityMixin, HexUuidIDMixin, BaseModel):
 class CompetencyMatrixItemModel(PublishMixin, HexUuidIDMixin, BaseModel):
     slug: Mapped[str] = mapped_column(
         String(length=255),
-        unique=True,
-        index=True,
         doc="URL slug for the competency matrix question",
+    )
+    sheet_id: Mapped[str] = mapped_column(
+        ForeignKey(CompetencyMatrixSheetModel.id, ondelete="RESTRICT"),
+        doc="Question sheet identifier",
     )
     question_ru: Mapped[str] = mapped_column(
         String(length=255),
@@ -333,6 +335,7 @@ class CompetencyMatrixItemModel(PublishMixin, HexUuidIDMixin, BaseModel):
     @classmethod
     def __table_args__(cls) -> TableArgs:
         return (
+            UniqueConstraint(cls.sheet_id, cls.slug, name="cm_item_sheet_slug_uniq"),
             Index(
                 "cmi_subsection_status_grade_idx",
                 cls.subsection_id,
@@ -407,6 +410,7 @@ class CompetencyMatrixItemModel(PublishMixin, HexUuidIDMixin, BaseModel):
         return cls(
             id=item.id,
             slug=item.slug,
+            sheet_id=item.structure.sheet_id,
             question_ru=item.question_ru,
             question_en=item.question_en,
             question_ru_fingerprint=CompetencyMatrixQuestionFingerprint.from_question(
@@ -435,6 +439,7 @@ class CompetencyMatrixItemModel(PublishMixin, HexUuidIDMixin, BaseModel):
 
     def update_from_domain_schema(self, item: CompetencyMatrixItem) -> None:
         self.slug = item.slug
+        self.sheet_id = item.structure.sheet_id
         self.question_ru = item.question_ru
         self.question_en = item.question_en
         self.question_ru_fingerprint = CompetencyMatrixQuestionFingerprint.from_question(

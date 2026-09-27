@@ -161,7 +161,10 @@ class CompetencyMatrixUseCase:
         *,
         params: CompetencyMatrixItemBySlugGetParams,
     ) -> CompetencyMatrixItem:
-        item = await self.storage.get_competency_matrix_item_by_slug(slug=params.slug)
+        item = await self.storage.get_competency_matrix_item_by_slug(
+            sheet_key=params.sheet_key,
+            slug=params.slug,
+        )
         if params.only_published and not item.is_available():
             raise CompetencyMatrixItemNotFoundError
         return item

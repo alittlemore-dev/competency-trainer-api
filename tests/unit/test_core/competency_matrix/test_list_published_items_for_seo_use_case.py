@@ -55,6 +55,7 @@ class TestCompetencyMatrixUseCase(TestCase):
         assert result == PublishedCompetencyMatrixItemsForSeo(
             values=[
                 PublishedCompetencyMatrixItemForSeo(
+                    sheet_key="python",
                     slug="published-question",
                     publish_status=PublishStatusEnum.PUBLISHED,
                 ),

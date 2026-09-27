@@ -126,8 +126,8 @@ class PublicCompetencyMatrixApiController(Controller):
         )
 
     @get(
-        "/items/public/{slug:str}",
-        description="Get public competency matrix question details by slug.",
+        "/items/public/{sheet_key:str}/{slug:str}",
+        description="Get public competency matrix question details by sheet and slug.",
         name="public-competency-matrix-public-item-detail-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),

@@ -158,7 +158,7 @@ async def test_public_site_read_paths_use_real_http_wiring_and_postgresql(
     assert item_slugs == [MATRIX_ITEM_SLUG]
 
     matrix_detail_response = public_site_full_stack_client.get(
-        f"/api/competency-matrix/items/public/{MATRIX_ITEM_SLUG}?language=ru",
+        f"/api/competency-matrix/items/public/{MATRIX_SHEET_KEY}/{MATRIX_ITEM_SLUG}?language=ru",
     )
     assert matrix_detail_response.status_code == 200
     matrix_detail = PublicCompetencyMatrixItemDetailResponseSchema.model_validate(

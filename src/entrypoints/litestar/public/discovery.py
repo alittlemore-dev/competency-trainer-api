@@ -49,7 +49,7 @@ class PublicDiscoveryUrls:
         )
         urls.extend(
             PublicUrl(
-                path=f"/{language.value}/competency/matrix/questions/{item.slug}",
+                path=f"/{language.value}/competency/matrix/questions/{item.sheet_key}/{item.slug}",
                 updated_at=None,
             )
             for item in self.matrix_items

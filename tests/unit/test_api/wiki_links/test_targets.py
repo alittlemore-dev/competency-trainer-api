@@ -32,7 +32,7 @@ class TestWikiLinkTargetsAPI(ApiTestCase):
                     type=WikiLinkTargetTypeEnum.MATRIX,
                     items=[
                         WikiLinkTarget(
-                            slug="how-to-write-function",
+                            slug="python:how-to-write-function",
                             title="Как написать функцию",
                             publish_status=PublishStatusEnum.DRAFT,
                         ),
@@ -60,7 +60,7 @@ class TestWikiLinkTargetsAPI(ApiTestCase):
                     "type": "matrix",
                     "items": [
                         {
-                            "slug": "how-to-write-function",
+                            "slug": "python:how-to-write-function",
                             "title": "Как написать функцию",
                             "publishStatus": "Draft",
                         },

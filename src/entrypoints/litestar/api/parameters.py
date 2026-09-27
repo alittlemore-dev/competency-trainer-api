@@ -497,6 +497,15 @@ MatrixItemSlugPath: TypeAlias = Annotated[
         examples=("python-asyncio-task-gather",),
     ),
 ]
+MatrixSheetKeyPath: TypeAlias = Annotated[
+    str,
+    api_path_parameter(
+        name="sheet_key",
+        title="Competency matrix sheet key",
+        description="Stable key of the question's sheet.",
+        examples=("python",),
+    ),
+]
 UsernamePath: TypeAlias = Annotated[
     str,
     api_path_parameter(

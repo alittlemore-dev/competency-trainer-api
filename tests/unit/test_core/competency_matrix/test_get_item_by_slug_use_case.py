@@ -37,6 +37,7 @@ class TestCompetencyMatrixUseCase(TestCase):
         with pytest.raises(CompetencyMatrixItemNotFoundError):
             await self.use_case.get_item_by_slug(
                 params=CompetencyMatrixItemBySlugGetParams(
+                    sheet_key="python",
                     slug="draft-question",
                     only_published=True,
                 ),
@@ -56,6 +57,7 @@ class TestCompetencyMatrixUseCase(TestCase):
 
         result = await self.use_case.get_item_by_slug(
             params=CompetencyMatrixItemBySlugGetParams(
+                sheet_key="python",
                 slug="how-to-write-a-function",
                 only_published=True,
             ),
@@ -63,5 +65,6 @@ class TestCompetencyMatrixUseCase(TestCase):
 
         assert result == item
         self.storage.get_competency_matrix_item_by_slug.assert_called_once_with(
+            sheet_key="python",
             slug="how-to-write-a-function",
         )

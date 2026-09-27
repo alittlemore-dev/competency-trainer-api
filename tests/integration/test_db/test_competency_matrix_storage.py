@@ -31,7 +31,10 @@ from core.competency_matrix.schemas import (
 )
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
-from infra.postgresql.models import CompetencyMatrixItemModel, ExternalResourceModel
+from infra.postgresql.models import (
+    CompetencyMatrixItemModel,
+    ExternalResourceModel,
+)
 from infra.postgresql.models.competency_matrix import (
     QueuedQuestionModel,
     ResourceToItemSecondaryModel,
@@ -462,7 +465,7 @@ class TestCompetencyMatrixStorage(StorageTestCase):
         )
 
     async def test_get_competency_matrix_item_by_slug_found(self) -> None:
-        item = await self.storage.get_competency_matrix_item_by_slug(slug="1")
+        item = await self.storage.get_competency_matrix_item_by_slug(sheet_key="python", slug="1")
         assert item == self.factory.core.competency_matrix_item(
             item_id=1,
             question="1",
@@ -484,7 +487,9 @@ class TestCompetencyMatrixStorage(StorageTestCase):
 
     async def test_get_competency_matrix_item_by_slug_not_found(self) -> None:
         with pytest.raises(CompetencyMatrixItemNotFoundError):
-            await self.storage.get_competency_matrix_item_by_slug(slug="missing-question")
+            await self.storage.get_competency_matrix_item_by_slug(
+                sheet_key="python", slug="missing-question"
+            )
 
     async def test_list_items_filters_by_publish_status_without_availability_check(self) -> None:
         await self.storage_helper.create_competency_matrix_items(
@@ -986,6 +991,45 @@ class TestCompetencyMatrixStorage(StorageTestCase):
                     item_id=99,
                     slug="1",
                     question="Duplicate slug",
+                ),
+            )
+
+    async def test_same_slug_in_different_sheets_resolves_by_sheet(self) -> None:
+        second = await self.storage.create_competency_matrix_item(
+            item=self.factory.core.competency_matrix_item(
+                item_id=99,
+                slug="1",
+                sheet_id=2,
+                sheet_key="sql",
+                sheet="SQL",
+                section_id=2,
+                subsection_id=2,
+                section="Basics",
+                subsection="Async",
+                question="Same slug in SQL",
+            ),
+        )
+
+        first = await self.storage.get_competency_matrix_item_by_slug(sheet_key="python", slug="1")
+        loaded_second = await self.storage.get_competency_matrix_item_by_slug(
+            sheet_key="sql", slug="1"
+        )
+        assert first.id != second.id
+        assert loaded_second == second
+
+        with pytest.raises(CompetencyMatrixItemConflictError):
+            await self.storage.update_competency_matrix_item(
+                item=self.factory.core.competency_matrix_item(
+                    item_id=2,
+                    slug="1",
+                    sheet_id=2,
+                    sheet_key="sql",
+                    sheet="SQL",
+                    section_id=2,
+                    subsection_id=2,
+                    section="Basics",
+                    subsection="Async",
+                    question="Collision within SQL",
                 ),
             )
 

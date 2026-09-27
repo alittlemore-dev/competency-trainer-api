@@ -38,7 +38,7 @@ class WikiLinksUseCase:
                     type=WikiLinkTargetTypeEnum.MATRIX,
                     items=[
                         WikiLinkTarget(
-                            slug=item.slug,
+                            slug=f"{item.sheet_key}:{item.slug}",
                             title=item.localized_question(language=language),
                             publish_status=item.publish_status,
                         )

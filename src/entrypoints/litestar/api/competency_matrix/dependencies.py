@@ -23,6 +23,7 @@ from entrypoints.litestar.api.parameters import (
     MatrixItemSlugPath,
     MatrixSectionIdsQuery,
     MatrixSectionsQuery,
+    MatrixSheetKeyPath,
     MatrixSheetKeysQuery,
     MatrixSubsectionIdsQuery,
     MatrixSubsectionsQuery,
@@ -62,9 +63,11 @@ def provide_competency_matrix_item_get_params(
 
 
 def provide_competency_matrix_public_item_get_params(
+    sheet_key: MatrixSheetKeyPath,
     slug: MatrixItemSlugPath,
 ) -> CompetencyMatrixItemBySlugGetParams:
     return CompetencyMatrixItemBySlugGetParams(
+        sheet_key=sheet_key,
         slug=slug,
         only_published=True,
     )

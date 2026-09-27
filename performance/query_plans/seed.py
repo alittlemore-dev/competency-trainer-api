@@ -636,6 +636,7 @@ async def insert_competency_matrix_items(
         insert(CompetencyMatrixItemModel.__table__).from_select(
             [
                 "id",
+                "sheet_id",
                 "slug",
                 "question_ru",
                 "question_en",
@@ -654,6 +655,7 @@ async def insert_competency_matrix_items(
             ],
             select(
                 hex_id_expr(value=value),
+                hex_id_expr(value=sheet_bucket + 1),
                 func.concat(literal("matrix-question-"), value),
                 func.concat(literal("Вопрос матрицы "), value),
                 func.concat(literal("Matrix question "), value),

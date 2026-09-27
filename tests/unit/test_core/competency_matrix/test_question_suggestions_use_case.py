@@ -300,6 +300,42 @@ class TestQuestionSuggestionsUseCase(TestCase):
         assert result.rows[0].selected_by_default is False
         assert result.rows[1].selected_by_default is False
 
+    async def test_preview_import_allows_matching_questions_in_different_sheets(self) -> None:
+        preview = QuestionQueueImportPreview(
+            rows=[
+                QuestionQueueImportPreviewRow(
+                    row_number=number,
+                    question="What is a closure?",
+                    sheet=sheet,
+                    grade="",
+                    params=QueuedCompetencyMatrixQuestionCreateParams(
+                        question="What is a closure?",
+                        grade=None,
+                        sheet=sheet,
+                    ),
+                    issues=(),
+                )
+                for number, sheet in ((1, "javascript"), (2, "python"))
+            ],
+        )
+        self.storage.list_queued_questions.return_value = QueuedCompetencyMatrixQuestions(
+            values=[
+                self.factory.core.queued_competency_matrix_question(
+                    question_id=10,
+                    question="What is a closure?",
+                    sheet="javascript",
+                ),
+            ],
+        )
+
+        result = await self.use_case.preview_queued_questions_import(preview=preview)
+
+        assert [issue.code for issue in result.rows[0].issues] == [
+            QuestionQueueImportIssueCodeEnum.DUPLICATE_IN_QUEUE,
+        ]
+        assert result.rows[1].issues == ()
+        assert result.rows[1].selected_by_default is True
+
     async def test_create_item_from_queue_creates_item_then_removes_queue_entry(self) -> None:
         current_datetime = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
         queued_question = QueuedCompetencyMatrixQuestion(

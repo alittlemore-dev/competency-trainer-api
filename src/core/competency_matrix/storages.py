@@ -151,7 +151,9 @@ class CompetencyMatrixStorage(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_competency_matrix_item_by_slug(self, slug: str) -> CompetencyMatrixItem:
+    async def get_competency_matrix_item_by_slug(
+        self, *, sheet_key: str, slug: str
+    ) -> CompetencyMatrixItem:
         raise NotImplementedError
 
     @abstractmethod

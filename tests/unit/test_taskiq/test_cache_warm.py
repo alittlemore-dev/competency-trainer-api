@@ -194,7 +194,7 @@ class TestCacheWarmTargetGeneration(TestCase):
             for slug in ("first-question", "second-question"):
                 assert (
                     ResponseCacheDomain.COMPETENCY_MATRIX,
-                    f"/api/competency-matrix/items/public/{slug}",
+                    f"/api/competency-matrix/items/public/python/{slug}",
                     (("language", language.value),),
                 ) in target_paths
 

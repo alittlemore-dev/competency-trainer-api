@@ -561,7 +561,8 @@ async def run_get_competency_matrix_item(session: AsyncSession) -> None:
 
 async def run_get_competency_matrix_item_by_slug(session: AsyncSession) -> None:
     await CompetencyMatrixDatabaseStorage(session=session).get_competency_matrix_item_by_slug(
-        "matrix-question-100",
+        sheet_key="python",
+        slug="matrix-question-100",
     )
 
 

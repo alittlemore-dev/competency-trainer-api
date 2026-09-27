@@ -217,13 +217,14 @@ class APIHelper:
     def get_public_competency_matrix_item(
         self,
         slug: str,
+        sheet_key: str,
         language: str | None = "ru",
     ) -> Response:
         params: dict[str, str] = {}
         if language is not None:
             params["language"] = language
         return self.client.get(
-            f"/api/competency-matrix/items/public/{slug}",
+            f"/api/competency-matrix/items/public/{sheet_key}/{slug}",
             params=params,
         )
 
