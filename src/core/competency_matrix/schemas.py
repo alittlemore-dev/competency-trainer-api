@@ -38,6 +38,18 @@ class CompetencyMatrixMissingFieldEnum(StrEnum):
     INTERVIEW_ANSWER_EXPLANATION_EN = "interviewAnswerExplanationEn"
 
 
+class CompetencyMatrixStructureNodeKind(StrEnum):
+    SHEET = "sheet"
+    SECTION = "section"
+    SUBSECTION = "subsection"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CompetencyMatrixStructureDeletionImpact:
+    subsection_ids: tuple[str, ...]
+    has_questions: bool
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class QuestionSuggestionLimiterConfig:
     quota_secret: Secret[str]

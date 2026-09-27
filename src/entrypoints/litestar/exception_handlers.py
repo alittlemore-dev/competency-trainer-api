@@ -34,6 +34,7 @@ from core.articles.exceptions import (
 from core.competency_matrix.exceptions import (
     CompetencyMatrixItemNotPublicReadyError,
     CompetencyMatrixStructureAlreadyExistsError,
+    CompetencyMatrixStructureContainsQuestionsError,
     CompetencyMatrixStructurePriorityInvalidError,
     MatrixQuestionClaimConflictError,
     QuestionQueueImportInvalidError,
@@ -63,6 +64,7 @@ DOMAIN_ERROR_MAPPING: dict[type[DomainError], type[BaseVerboseHTTPException]] = 
     FileClientInternalError: InternalServerErrorHTTPException,
     CompetencyMatrixItemNotPublicReadyError: BadRequestHTTPException,
     CompetencyMatrixStructureAlreadyExistsError: BadRequestHTTPException,
+    CompetencyMatrixStructureContainsQuestionsError: ConflictHTTPException,
     CompetencyMatrixStructurePriorityInvalidError: BadRequestHTTPException,
     QuestionSuggestionQuotaExceededError: TooManyRequestsHTTPException,
     QuestionSuggestionAlreadyExistsError: ConflictHTTPException,

@@ -38,6 +38,7 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixSectionPriorityUpdateParams,
     CompetencyMatrixSheetCreateParams,
     CompetencyMatrixSheetPriorityUpdateParams,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixSubsectionCreateParams,
     CompetencyMatrixSubsectionPriorityUpdateParams,
     CompetencyMatrixWorkspaceFilters,
@@ -473,6 +474,21 @@ async def run_create_matrix_subsection(session: AsyncSession) -> None:
             name_ru="Новый подраздел query plan",
             name_en="Query plan new subsection",
         ),
+    )
+
+
+async def run_inspect_matrix_structure_deletion(session: AsyncSession) -> None:
+    await CompetencyMatrixDatabaseStorage(session=session).inspect_structure_deletion(
+        kind=CompetencyMatrixStructureNodeKind.SHEET,
+        node_id=PYTHON_SHEET_ID,
+    )
+
+
+async def run_delete_matrix_structure_node(session: AsyncSession) -> None:
+    await CompetencyMatrixDatabaseStorage(session=session).delete_structure_node(
+        kind=CompetencyMatrixStructureNodeKind.SUBSECTION,
+        node_id=PYTHON_SUBSECTION_ID,
+        subsection_ids=(PYTHON_SUBSECTION_ID,),
     )
 
 
@@ -1612,6 +1628,26 @@ STORAGE_SCENARIOS = (
         forbidden_seq_scan_relations=(),
         allow_seq_scan_reason=None,
         run=run_update_matrix_sheet_priorities,
+    ),
+    scenario(
+        name="matrix_inspect_structure_deletion",
+        storage_class="CompetencyMatrixDatabaseStorage",
+        method_name="inspect_structure_deletion",
+        group=QueryThresholdGroup.POINT_READ,
+        expected_index_names=(),
+        forbidden_seq_scan_relations=(),
+        allow_seq_scan_reason=None,
+        run=run_inspect_matrix_structure_deletion,
+    ),
+    scenario(
+        name="matrix_delete_structure_node",
+        storage_class="CompetencyMatrixDatabaseStorage",
+        method_name="delete_structure_node",
+        group=QueryThresholdGroup.SMALL_WRITE,
+        expected_index_names=(),
+        forbidden_seq_scan_relations=(),
+        allow_seq_scan_reason=None,
+        run=run_delete_matrix_structure_node,
     ),
     scenario(
         name="matrix_update_section_priorities",

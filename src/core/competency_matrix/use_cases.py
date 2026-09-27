@@ -3,6 +3,7 @@ from datetime import datetime
 
 from core.competency_matrix.exceptions import (
     CompetencyMatrixItemNotFoundError,
+    CompetencyMatrixStructureContainsQuestionsError,
     MatrixQuestionClaimConflictError,
     QuestionSuggestionAlreadyExistsError,
     QuestionSuggestionSheetUnavailableError,
@@ -24,6 +25,7 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixSheetCreateParams,
     CompetencyMatrixSheetPriorityUpdateParams,
     CompetencyMatrixStructure,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixStructureSection,
     CompetencyMatrixStructureSheet,
     CompetencyMatrixStructureSubsection,
@@ -78,6 +80,22 @@ class CompetencyMatrixUseCase:
         params: CompetencyMatrixSubsectionCreateParams,
     ) -> CompetencyMatrixStructureSubsection:
         return await self.storage.create_subsection(params=params)
+
+    async def delete_structure_node(
+        self,
+        *,
+        kind: CompetencyMatrixStructureNodeKind,
+        node_id: str,
+        delete_with_questions: bool,
+    ) -> None:
+        impact = await self.storage.inspect_structure_deletion(kind=kind, node_id=node_id)
+        if impact.has_questions and not delete_with_questions:
+            raise CompetencyMatrixStructureContainsQuestionsError
+        await self.storage.delete_structure_node(
+            kind=kind,
+            node_id=node_id,
+            subsection_ids=impact.subsection_ids,
+        )
 
     async def update_sheet_priorities(
         self,

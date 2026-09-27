@@ -2,7 +2,10 @@ import pytest
 import pytest_asyncio
 from httpx import codes
 
-from core.competency_matrix.exceptions import CompetencyMatrixStructurePriorityInvalidError
+from core.competency_matrix.exceptions import (
+    CompetencyMatrixStructureContainsQuestionsError,
+    CompetencyMatrixStructurePriorityInvalidError,
+)
 from core.enums import PublishStatusEnum
 from entrypoints.litestar.response_cache import ResponseCacheDomain
 from tests.test_cases import ApiTestCase
@@ -61,6 +64,18 @@ class TestCompetencyMatrixResponseCacheInvalidation(ApiTestCase):
             self.api.put_update_matrix_sheet_priorities(ordered_ids=[2, 1]),
             self.api.put_update_matrix_section_priorities(sheet_id=1, ordered_ids=[2, 1]),
             self.api.put_update_matrix_subsection_priorities(section_id=1, ordered_ids=[2, 1]),
+            self.api.client.delete(
+                "/api/admin/competency-matrix/sheets/1",
+                params={"deleteWithQuestions": "false"},
+            ),
+            self.api.client.delete(
+                "/api/admin/competency-matrix/sections/2",
+                params={"deleteWithQuestions": "false"},
+            ),
+            self.api.client.delete(
+                "/api/admin/competency-matrix/subsections/3",
+                params={"deleteWithQuestions": "true"},
+            ),
         ]
 
         assert [response.status_code for response in responses] == [
@@ -73,8 +88,11 @@ class TestCompetencyMatrixResponseCacheInvalidation(ApiTestCase):
             codes.NO_CONTENT,
             codes.NO_CONTENT,
             codes.NO_CONTENT,
+            codes.NO_CONTENT,
+            codes.NO_CONTENT,
+            codes.NO_CONTENT,
         ]
-        assert invalidated_domains == [ResponseCacheDomain.COMPETENCY_MATRIX] * 9
+        assert invalidated_domains == [ResponseCacheDomain.COMPETENCY_MATRIX] * 12
 
     def test_item_validation_error_does_not_schedule_matrix_cache_invalidation(
         self,
@@ -132,4 +150,36 @@ class TestCompetencyMatrixResponseCacheInvalidation(ApiTestCase):
         response = self.api.put_update_matrix_sheet_priorities(ordered_ids=[2, 1])
 
         assert response.status_code == codes.BAD_REQUEST
+        assert invalidated_domains == []
+
+    def test_structure_delete_conflict_does_not_invalidate_matrix_cache(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        invalidated_domains: list[ResponseCacheDomain] = []
+
+        async def fake_invalidate_response_cache_domain_for_mutation(
+            *,
+            request: object,
+            domain: ResponseCacheDomain,
+            post_commit_actions: object,
+        ) -> None:
+            _ = request, post_commit_actions
+            invalidated_domains.append(domain)
+
+        monkeypatch.setattr(
+            "entrypoints.litestar.api.competency_matrix.endpoints.invalidate_response_cache_domain_for_mutation",
+            fake_invalidate_response_cache_domain_for_mutation,
+            raising=False,
+        )
+        self.use_case.delete_structure_node.side_effect = (
+            CompetencyMatrixStructureContainsQuestionsError
+        )
+
+        response = self.api.client.delete(
+            "/api/admin/competency-matrix/sheets/1",
+            params={"deleteWithQuestions": "false"},
+        )
+
+        assert response.status_code == codes.CONFLICT
         assert invalidated_domains == []

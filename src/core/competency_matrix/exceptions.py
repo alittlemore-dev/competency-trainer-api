@@ -25,6 +25,10 @@ class CompetencyMatrixStructureAlreadyExistsError(DomainError):
     message = "Competency matrix structure entry already exists"
 
 
+class CompetencyMatrixStructureContainsQuestionsError(DomainError):
+    message = "Competency matrix structure entry contains questions"
+
+
 class CompetencyMatrixStructurePriorityInvalidError(DomainError):
     message = "Competency matrix structure priority order is invalid"
 

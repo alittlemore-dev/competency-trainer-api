@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.competency_matrix.enums import (
@@ -22,6 +23,7 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixSectionPriorityUpdateParams,
     CompetencyMatrixSheetCreateParams,
     CompetencyMatrixSheetPriorityUpdateParams,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixSubsectionCreateParams,
     CompetencyMatrixSubsectionPriorityUpdateParams,
     CompetencyMatrixWorkspaceFilters,
@@ -29,6 +31,11 @@ from core.competency_matrix.schemas import (
 )
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from infra.postgresql.models import CompetencyMatrixItemModel, ExternalResourceModel
+from infra.postgresql.models.competency_matrix import (
+    QueuedQuestionModel,
+    ResourceToItemSecondaryModel,
+)
 from infra.postgresql.storages.competency_matrix import CompetencyMatrixDatabaseStorage
 from tests.test_cases import StorageTestCase
 
@@ -36,6 +43,7 @@ from tests.test_cases import StorageTestCase
 class TestCompetencyMatrixStorage(StorageTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, session: AsyncSession) -> None:
+        self.session = session
         self.storage = CompetencyMatrixDatabaseStorage(session=session)
         await self.storage_helper.create_competency_matrix_items(
             items=[
@@ -80,6 +88,121 @@ class TestCompetencyMatrixStorage(StorageTestCase):
                 ),
             ],
         )
+
+    @pytest.mark.parametrize("kind", list(CompetencyMatrixStructureNodeKind))
+    async def test_deletes_structure_branch_and_its_questions(
+        self,
+        kind: CompetencyMatrixStructureNodeKind,
+    ) -> None:
+        queued_question = QueuedQuestionModel(
+            question="Suggested Python question",
+            question_fingerprint=b"q" * 32,
+            grade=GradeEnum.JUNIOR,
+            sheet="Python",
+            section="Basics",
+            subsection="Functions",
+            suggested_by_username="tester",
+            created_at=datetime.now(tz=UTC),
+        )
+        self.session.add(queued_question)
+        await self.session.flush()
+        await self.storage.create_competency_matrix_item(
+            item=self.factory.core.competency_matrix_item(
+                item_id=3,
+                question="Draft question",
+                sheet="Python",
+                section="Basics",
+                subsection="Functions",
+                publish_status=PublishStatusEnum.DRAFT,
+            ),
+        )
+        node_id = self.factory.core.hex_id(1)
+        impact = await self.storage.inspect_structure_deletion(kind=kind, node_id=node_id)
+
+        assert impact.has_questions is True
+        assert impact.subsection_ids == (self.factory.core.hex_id(1),)
+
+        await self.storage.delete_structure_node(
+            kind=kind,
+            node_id=node_id,
+            subsection_ids=impact.subsection_ids,
+        )
+
+        assert (
+            await self.session.get(CompetencyMatrixItemModel, self.factory.core.hex_id(1)) is None
+        )
+        assert (
+            await self.session.get(CompetencyMatrixItemModel, self.factory.core.hex_id(3)) is None
+        )
+        assert (
+            await self.session.get(CompetencyMatrixItemModel, self.factory.core.hex_id(2))
+            is not None
+        )
+        assert (
+            await self.session.get(ExternalResourceModel, self.factory.core.hex_id(1)) is not None
+        )
+        assert await self.session.get(QueuedQuestionModel, queued_question.id) is not None
+        assert (
+            await self.session.scalar(
+                select(ResourceToItemSecondaryModel).where(
+                    ResourceToItemSecondaryModel.item_id == self.factory.core.hex_id(1),
+                ),
+            )
+            is None
+        )
+        structure = await self.storage.list_structure()
+        if kind is CompetencyMatrixStructureNodeKind.SHEET:
+            assert [sheet.key for sheet in structure.sheets] == ["sql"]
+        elif kind is CompetencyMatrixStructureNodeKind.SECTION:
+            assert structure.require_sheet(sheet_id=node_id).sections == []
+        else:
+            assert structure.require_section(section_id=node_id).subsections == []
+
+    @pytest.mark.parametrize("kind", list(CompetencyMatrixStructureNodeKind))
+    async def test_deletes_empty_structure_branch_without_questions(
+        self,
+        kind: CompetencyMatrixStructureNodeKind,
+    ) -> None:
+        sheet = await self.storage.create_sheet(
+            params=CompetencyMatrixSheetCreateParams(key="go", name_ru="Го", name_en="Go"),
+        )
+        section = await self.storage.create_section(
+            params=CompetencyMatrixSectionCreateParams(
+                sheet_id=sheet.id,
+                name_ru="Основы",
+                name_en="Basics",
+            ),
+        )
+        subsection = await self.storage.create_subsection(
+            params=CompetencyMatrixSubsectionCreateParams(
+                section_id=section.id,
+                name_ru="Функции",
+                name_en="Functions",
+            ),
+        )
+        node_id = {
+            CompetencyMatrixStructureNodeKind.SHEET: sheet.id,
+            CompetencyMatrixStructureNodeKind.SECTION: section.id,
+            CompetencyMatrixStructureNodeKind.SUBSECTION: subsection.id,
+        }[kind]
+
+        impact = await self.storage.inspect_structure_deletion(kind=kind, node_id=node_id)
+        assert impact.has_questions is False
+        await self.storage.delete_structure_node(
+            kind=kind,
+            node_id=node_id,
+            subsection_ids=impact.subsection_ids,
+        )
+
+        with pytest.raises(CompetencyMatrixStructureNotFoundError):
+            await self.storage.inspect_structure_deletion(kind=kind, node_id=node_id)
+
+    async def test_inspect_structure_deletion_rejects_missing_node(self) -> None:
+        with pytest.raises(CompetencyMatrixStructureNotFoundError):
+            await self.storage.inspect_structure_deletion(
+                kind=CompetencyMatrixStructureNodeKind.SUBSECTION,
+                node_id=self.factory.core.hex_id(-1),
+            )
 
     async def test_list_sheets(self) -> None:
         sheets = await self.storage.list_sheets()

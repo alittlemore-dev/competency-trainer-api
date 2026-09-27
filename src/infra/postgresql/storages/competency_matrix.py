@@ -47,6 +47,8 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixSheetCreateParams,
     CompetencyMatrixSheetPriorityUpdateParams,
     CompetencyMatrixStructure,
+    CompetencyMatrixStructureDeletionImpact,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixStructureSection,
     CompetencyMatrixStructureSheet,
     CompetencyMatrixStructureSubsection,
@@ -201,6 +203,93 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             name_en=subsection.name_en,
             priority=subsection.priority,
         )
+
+    async def inspect_structure_deletion(
+        self,
+        *,
+        kind: CompetencyMatrixStructureNodeKind,
+        node_id: str,
+    ) -> CompetencyMatrixStructureDeletionImpact:
+        if kind is CompetencyMatrixStructureNodeKind.SHEET:
+            root_ids = await self._lock_structure_ids(
+                model=CompetencyMatrixSheetModel,
+                conditions=(CompetencyMatrixSheetModel.id == node_id,),
+            )
+            if not root_ids:
+                raise CompetencyMatrixStructureNotFoundError
+            section_ids = await self._lock_structure_ids(
+                model=CompetencyMatrixSectionModel,
+                conditions=(CompetencyMatrixSectionModel.sheet_id == node_id,),
+            )
+            subsection_ids = await self._lock_structure_ids(
+                model=CompetencyMatrixSubsectionModel,
+                conditions=(CompetencyMatrixSubsectionModel.section_id.in_(section_ids),),
+            )
+        elif kind is CompetencyMatrixStructureNodeKind.SECTION:
+            root_ids = await self._lock_structure_ids(
+                model=CompetencyMatrixSectionModel,
+                conditions=(CompetencyMatrixSectionModel.id == node_id,),
+            )
+            if not root_ids:
+                raise CompetencyMatrixStructureNotFoundError
+            subsection_ids = await self._lock_structure_ids(
+                model=CompetencyMatrixSubsectionModel,
+                conditions=(CompetencyMatrixSubsectionModel.section_id == node_id,),
+            )
+        else:
+            subsection_ids = await self._lock_structure_ids(
+                model=CompetencyMatrixSubsectionModel,
+                conditions=(CompetencyMatrixSubsectionModel.id == node_id,),
+            )
+            if not subsection_ids:
+                raise CompetencyMatrixStructureNotFoundError
+
+        has_questions = False
+        if subsection_ids:
+            has_questions = bool(
+                await self.session.scalar(
+                    select(
+                        select(CompetencyMatrixItemModel.id)
+                        .where(CompetencyMatrixItemModel.subsection_id.in_(subsection_ids))
+                        .exists(),
+                    ),
+                ),
+            )
+        return CompetencyMatrixStructureDeletionImpact(
+            subsection_ids=subsection_ids,
+            has_questions=has_questions,
+        )
+
+    async def delete_structure_node(
+        self,
+        *,
+        kind: CompetencyMatrixStructureNodeKind,
+        node_id: str,
+        subsection_ids: tuple[str, ...],
+    ) -> None:
+        if subsection_ids:
+            await self.session.execute(
+                delete(CompetencyMatrixItemModel).where(
+                    CompetencyMatrixItemModel.subsection_id.in_(subsection_ids),
+                ),
+            )
+        model: PriorityStructureModel
+        if kind is CompetencyMatrixStructureNodeKind.SHEET:
+            model = CompetencyMatrixSheetModel
+        elif kind is CompetencyMatrixStructureNodeKind.SECTION:
+            model = CompetencyMatrixSectionModel
+        else:
+            model = CompetencyMatrixSubsectionModel
+        await self.session.execute(delete(model).where(model.id == node_id))
+
+    async def _lock_structure_ids(
+        self,
+        *,
+        model: PriorityStructureModel,
+        conditions: tuple[ColumnElement[bool], ...],
+    ) -> tuple[str, ...]:
+        stmt = select(model.id).where(*conditions).order_by(model.id).with_for_update()
+        return tuple(await self.session.scalars(stmt))
 
     async def update_sheet_priorities(
         self,

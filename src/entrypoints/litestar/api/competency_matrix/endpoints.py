@@ -16,6 +16,7 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixItemGetParams,
     CompetencyMatrixItemPublishStatusSwitchParams,
     CompetencyMatrixResourceSearchParams,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixWorkspaceFilters,
     QuestionQueueImportFile,
     QuestionSuggestionLimitParams,
@@ -59,12 +60,14 @@ from entrypoints.litestar.api.competency_matrix.schemas import (
     QueuedQuestionsResponseSchema,
 )
 from entrypoints.litestar.api.parameters import (
+    DeleteWithQuestionsQuery,
     EntityPkPath,
     LanguageQuery,
     OnlyPublishedQuery,
     SectionIdPath,
     SheetIdPath,
     SheetKeyQuery,
+    SubsectionIdPath,
     api_json_body,
     api_multipart_body,
 )
@@ -331,6 +334,81 @@ class AdminCompetencyMatrixApiController(Controller):
         return MatrixStructureSubsectionResponseSchema.from_domain_schema(
             schema=subsection,
             language=language,
+        )
+
+    @delete(
+        "/sheets/{sheet_id:str}",
+        description="Delete a competency matrix sheet and its contents.",
+        name="admin-competency-matrix-sheet-delete-api-handler",
+        status_code=status_codes.HTTP_204_NO_CONTENT,
+    )
+    async def delete_competency_matrix_sheet(
+        self,
+        sheet_id: SheetIdPath,
+        delete_with_questions: DeleteWithQuestionsQuery,
+        request: Request[Principal, object | None, State],
+        use_case: FromDishka[CompetencyMatrixUseCase],
+        post_commit_actions: FromDishka[PostCommitActions],
+    ) -> None:
+        await use_case.delete_structure_node(
+            kind=CompetencyMatrixStructureNodeKind.SHEET,
+            node_id=sheet_id,
+            delete_with_questions=delete_with_questions,
+        )
+        await invalidate_response_cache_domain_for_mutation(
+            request=request,
+            domain=ResponseCacheDomain.COMPETENCY_MATRIX,
+            post_commit_actions=post_commit_actions,
+        )
+
+    @delete(
+        "/sections/{section_id:str}",
+        description="Delete a competency matrix section and its contents.",
+        name="admin-competency-matrix-section-delete-api-handler",
+        status_code=status_codes.HTTP_204_NO_CONTENT,
+    )
+    async def delete_competency_matrix_section(
+        self,
+        section_id: SectionIdPath,
+        delete_with_questions: DeleteWithQuestionsQuery,
+        request: Request[Principal, object | None, State],
+        use_case: FromDishka[CompetencyMatrixUseCase],
+        post_commit_actions: FromDishka[PostCommitActions],
+    ) -> None:
+        await use_case.delete_structure_node(
+            kind=CompetencyMatrixStructureNodeKind.SECTION,
+            node_id=section_id,
+            delete_with_questions=delete_with_questions,
+        )
+        await invalidate_response_cache_domain_for_mutation(
+            request=request,
+            domain=ResponseCacheDomain.COMPETENCY_MATRIX,
+            post_commit_actions=post_commit_actions,
+        )
+
+    @delete(
+        "/subsections/{subsection_id:str}",
+        description="Delete a competency matrix subsection and its questions.",
+        name="admin-competency-matrix-subsection-delete-api-handler",
+        status_code=status_codes.HTTP_204_NO_CONTENT,
+    )
+    async def delete_competency_matrix_subsection(
+        self,
+        subsection_id: SubsectionIdPath,
+        delete_with_questions: DeleteWithQuestionsQuery,
+        request: Request[Principal, object | None, State],
+        use_case: FromDishka[CompetencyMatrixUseCase],
+        post_commit_actions: FromDishka[PostCommitActions],
+    ) -> None:
+        await use_case.delete_structure_node(
+            kind=CompetencyMatrixStructureNodeKind.SUBSECTION,
+            node_id=subsection_id,
+            delete_with_questions=delete_with_questions,
+        )
+        await invalidate_response_cache_domain_for_mutation(
+            request=request,
+            domain=ResponseCacheDomain.COMPETENCY_MATRIX,
+            post_commit_actions=post_commit_actions,
         )
 
     @put(

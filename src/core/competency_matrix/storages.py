@@ -12,6 +12,8 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixSheetCreateParams,
     CompetencyMatrixSheetPriorityUpdateParams,
     CompetencyMatrixStructure,
+    CompetencyMatrixStructureDeletionImpact,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixStructureSection,
     CompetencyMatrixStructureSheet,
     CompetencyMatrixStructureSubsection,
@@ -71,6 +73,25 @@ class CompetencyMatrixStorage(ABC):
         *,
         params: CompetencyMatrixSubsectionCreateParams,
     ) -> CompetencyMatrixStructureSubsection:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def inspect_structure_deletion(
+        self,
+        *,
+        kind: CompetencyMatrixStructureNodeKind,
+        node_id: str,
+    ) -> CompetencyMatrixStructureDeletionImpact:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_structure_node(
+        self,
+        *,
+        kind: CompetencyMatrixStructureNodeKind,
+        node_id: str,
+        subsection_ids: tuple[str, ...],
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod

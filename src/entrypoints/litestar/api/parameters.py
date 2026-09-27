@@ -542,6 +542,28 @@ SectionIdPath: TypeAlias = Annotated[
         examples=("00000000000000000000000000000002",),
     ),
 ]
+SubsectionIdPath: TypeAlias = Annotated[
+    str,
+    api_path_parameter(
+        name="subsection_id",
+        title="Subsection identifier",
+        description="Hex identifier of the competency matrix subsection.",
+        examples=("00000000000000000000000000000003",),
+    ),
+]
+DeleteWithQuestionsQuery: TypeAlias = Annotated[
+    bool,
+    api_query_parameter(
+        name="deleteWithQuestions",
+        title="Delete with questions",
+        description="Explicitly allow deletion of questions in the selected structure branch.",
+        examples=(False, True),
+        ge=None,
+        le=None,
+        min_items=None,
+        max_items=None,
+    ),
+]
 FileIdPath: TypeAlias = Annotated[
     str,
     api_path_parameter(

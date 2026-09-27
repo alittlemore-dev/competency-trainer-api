@@ -1,10 +1,15 @@
 import pytest_asyncio
 from httpx import codes
 
+from core.competency_matrix.exceptions import (
+    CompetencyMatrixStructureContainsQuestionsError,
+    CompetencyMatrixStructureNotFoundError,
+)
 from core.competency_matrix.schemas import (
     CompetencyMatrixSectionPriorityUpdateParams,
     CompetencyMatrixSheetPriorityUpdateParams,
     CompetencyMatrixStructure,
+    CompetencyMatrixStructureNodeKind,
     CompetencyMatrixStructureSection,
     CompetencyMatrixStructureSheet,
     CompetencyMatrixStructureSubsection,
@@ -189,6 +194,49 @@ class TestMatrixStructureAPI(ApiTestCase):
             ),
         )
 
+    def test_deletes_each_structure_level_through_admin_routes(self) -> None:
+        cases = (
+            ("sheets", CompetencyMatrixStructureNodeKind.SHEET),
+            ("sections", CompetencyMatrixStructureNodeKind.SECTION),
+            ("subsections", CompetencyMatrixStructureNodeKind.SUBSECTION),
+        )
+        node_id = self.factory.core.hex_id(1)
+
+        for path, kind in cases:
+            response = self.api.client.delete(
+                f"/api/admin/competency-matrix/{path}/{node_id}",
+                params={"deleteWithQuestions": "false"},
+            )
+
+            assert response.status_code == codes.NO_CONTENT, response.content
+            self.use_case.delete_structure_node.assert_called_with(
+                kind=kind,
+                node_id=node_id,
+                delete_with_questions=False,
+            )
+
+    def test_delete_with_questions_requires_confirmation(self) -> None:
+        self.use_case.delete_structure_node.side_effect = (
+            CompetencyMatrixStructureContainsQuestionsError
+        )
+
+        response = self.api.client.delete(
+            f"/api/admin/competency-matrix/subsections/{self.factory.core.hex_id(3)}",
+            params={"deleteWithQuestions": "false"},
+        )
+
+        assert response.status_code == codes.CONFLICT, response.content
+
+    def test_delete_missing_structure_node_returns_not_found(self) -> None:
+        self.use_case.delete_structure_node.side_effect = CompetencyMatrixStructureNotFoundError
+
+        response = self.api.client.delete(
+            f"/api/admin/competency-matrix/sheets/{self.factory.core.hex_id(-1)}",
+            params={"deleteWithQuestions": "true"},
+        )
+
+        assert response.status_code == codes.NOT_FOUND, response.content
+
     def test_create_sheet_rejects_invalid_key(self) -> None:
         response = self.api.client.post(
             "/api/admin/competency-matrix/sheets",
@@ -234,6 +282,10 @@ class TestMatrixStructureRouteMetadata:
         assert "POST" not in _api_route_methods(path="/api/competency-matrix/sheets")
         assert "/api/admin/competency-matrix/sheets" in route_paths
         assert "/api/admin/competency-matrix/sheets/priorities" in route_paths
+        assert "DELETE" not in _api_route_methods(path="/api/competency-matrix/sheets")
+        assert "DELETE" in _api_route_methods(
+            path="/api/admin/competency-matrix/sheets/{sheet_id:str}"
+        )
 
 
 def _api_route_paths() -> set[str]:
