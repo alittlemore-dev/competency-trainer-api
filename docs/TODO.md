@@ -547,15 +547,6 @@ Flashcards should be implemented strictly after auth implementation for common u
 - [ ] Security audit
   - [ ] User cannot edit another user's course progress
 
-### Editor platform
-
-The shared editor is currently Markdown-first. Treat it as a reusable editor platform so future
-modes, such as programming-course assignment workspaces, can reuse only the relevant foundation
-instead of inheriting every Markdown-specific feature.
-
-Graph views, plugin APIs, and plugin-system support are explicitly out of scope for this roadmap.
-
-
 ### Other tasks
 
 - [ ] Split monorepo into separate repos: front, back, infra.
