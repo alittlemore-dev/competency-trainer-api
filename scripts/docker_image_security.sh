@@ -32,6 +32,8 @@ fi
 trap cleanup_image EXIT
 
 docker build \
+    --pull \
+    --no-cache \
     -f "${repo_dir}/${dockerfile}" \
     -t "$image_ref" \
     "${repo_dir}/${build_context}"

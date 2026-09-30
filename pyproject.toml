@@ -57,7 +57,12 @@ local = [
 
 [tool.uv]
 package = false
-constraint-dependencies = ["aiohttp>=3.14.3"]
+constraint-dependencies = [
+    "aiohttp>=3.14.3",
+    "pyjwt>=2.15.0",
+    "urllib3>=2.8.0",
+    "virtualenv>=21.7.13",
+]
 
 [tool.ruff]
 output-format = "concise"
