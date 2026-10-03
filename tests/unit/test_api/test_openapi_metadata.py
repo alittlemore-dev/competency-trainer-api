@@ -2,9 +2,16 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from litestar import Litestar
+from litestar.testing import TestClient
 
 
 class TestOpenApiMetadata:
+    def test_schema_is_anonymous_with_real_auth_plugin(self, sdk_auth_app: Litestar) -> None:
+        with TestClient(sdk_auth_app) as client:
+            response = client.get("/api/docs/openapi.json")
+            assert response.status_code == 200
+            assert "/api/articles" in response.json()["paths"]
+
     def test_public_openapi_schema_excludes_admin_routes(self, app: Litestar) -> None:
         schema = app.openapi_schema.to_schema()
         admin_paths = sorted(path for path in schema["paths"] if path.startswith("/api/admin"))

@@ -73,7 +73,12 @@ def create_openapi_config() -> OpenAPIConfig:
     return OpenAPIConfig(
         title="docs",
         version="0.1.0",
-        path="/api/docs",
+        openapi_router=Router(
+            "/api/docs",
+            route_handlers=[],
+            include_in_schema=False,
+            opt={"auth_public": True},
+        ),
         render_plugins=[SwaggerRenderPlugin()],
     )
 
