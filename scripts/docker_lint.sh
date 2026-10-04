@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_dir="$(cd -- "${script_dir}/.." && pwd)"
 
-hadolint_image="${HADOLINT_IMAGE:-hadolint/hadolint:v2.14.0}"
+hadolint_image="${HADOLINT_IMAGE:-hadolint/hadolint:v2.15.1-alpine@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d}"
 dockle_image="${DOCKLE_IMAGE:-goodwithtech/dockle:v0.4.15}"
 dockle_exit_level="${DOCKLE_EXIT_LEVEL:-warn}"
 dockle_accept_keys="${DOCKLE_ACCEPT_KEYS:-KEY_SHA512}"

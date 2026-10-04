@@ -123,10 +123,10 @@ class ArticlesDatabaseStorage(ArticlesStorage):
 
     def _apply_article_filters(
         self,
-        query: Select[tuple[_SelectT]],
+        query: Select[_SelectT],
         *,
         filters: ArticleFilters,
-    ) -> Select[tuple[_SelectT]]:
+    ) -> Select[_SelectT]:
         if filters.only_published is True:
             query = query.where(ArticleModel.publish_status == PublishStatusEnum.PUBLISHED)
         if filters.publish_status is not None:

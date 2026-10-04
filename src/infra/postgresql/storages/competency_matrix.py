@@ -628,7 +628,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             links.append(link)
         return links
 
-    def _select_items_with_structure(self) -> Select[tuple[CompetencyMatrixItemModel]]:
+    def _select_items_with_structure(self) -> Select[CompetencyMatrixItemModel]:
         return self._join_structure(select(CompetencyMatrixItemModel)).options(
             *self._item_domain_load_options(),
             *self._item_structure_load_options(),
@@ -640,7 +640,10 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             defer(CompetencyMatrixItemModel.question_en_fingerprint),
         )
 
-    def _join_structure(self, stmt: Select[Any]) -> Select[Any]:
+    def _join_structure[*SelectTypes](
+        self,
+        stmt: Select[*SelectTypes],
+    ) -> Select[*SelectTypes]:
         return (
             stmt.select_from(CompetencyMatrixItemModel)
             .join(CompetencyMatrixItemModel.subsection)
@@ -648,7 +651,10 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             .join(CompetencyMatrixSectionModel.sheet)
         )
 
-    def _join_structure_nodes_with_items(self, stmt: Select[Any]) -> Select[Any]:
+    def _join_structure_nodes_with_items[*SelectTypes](
+        self,
+        stmt: Select[*SelectTypes],
+    ) -> Select[*SelectTypes]:
         return (
             stmt.select_from(CompetencyMatrixSheetModel)
             .join(CompetencyMatrixSheetModel.sections)
@@ -796,12 +802,12 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
         )
         return bool(await self.session.scalar(exists_stmt))
 
-    def _apply_workspace_filters(
+    def _apply_workspace_filters[*SelectTypes](
         self,
-        stmt: Select[Any],
+        stmt: Select[*SelectTypes],
         *,
         filters: CompetencyMatrixWorkspaceFilters,
-    ) -> Select[Any]:
+    ) -> Select[*SelectTypes]:
         conditions = self._workspace_filter_conditions(filters=filters)
         return stmt.where(*conditions) if conditions else stmt
 

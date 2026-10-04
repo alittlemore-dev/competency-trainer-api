@@ -183,4 +183,4 @@ security-docker-image:
 publish-image:
 	bash scripts/publish_image.sh "$(LOCAL_IMAGE)" "$(IMAGE_NAME)" "$(IMAGE_TAG)"
 
-TRIVY_IMAGE := docker.io/aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e
+TRIVY_IMAGE := docker.io/aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa

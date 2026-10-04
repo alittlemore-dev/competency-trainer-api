@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy import String, cast, func
 from sqlalchemy.orm import Mapped, mapped_column, synonym
-from sqlalchemy.orm.decl_api import declarative_mixin, declared_attr
+from sqlalchemy.orm.decl_api import declared_attr
 from sqlalchemy_dev_utils.mixins.base import BaseModelMixin
 
 
@@ -10,7 +10,6 @@ def generate_uuid4_hex() -> str:
     return uuid.uuid4().hex
 
 
-@declarative_mixin
 class HexUuidIDMixin(BaseModelMixin):
     @declared_attr
     def id(cls) -> Mapped[str]:
