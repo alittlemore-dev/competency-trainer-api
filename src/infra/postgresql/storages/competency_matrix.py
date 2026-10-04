@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time
-from typing import Any, cast
+from typing import Any
 
 from sqlalchemy import (
     ARRAY,
@@ -70,13 +70,11 @@ from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
 from infra.config.constants import constants
 from infra.postgresql.models import (
-    AgentClientModel,
     CompetencyMatrixItemModel,
     CompetencyMatrixSectionModel,
     CompetencyMatrixSheetModel,
     CompetencyMatrixSubsectionModel,
     ExternalResourceModel,
-    MatrixQuestionClaimModel,
 )
 from infra.postgresql.models.competency_matrix import (
     QueuedQuestionModel,
@@ -484,7 +482,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             for sheet_key, sheet in sheets.items()
         ]
 
-    async def get_competency_matrix_item(self, item_id: str) -> CompetencyMatrixItem:
+    async def get_competency_matrix_item(self, *, item_id: str, lock: bool) -> CompetencyMatrixItem:
         stmt = (
             select(CompetencyMatrixItemModel)
             .where(CompetencyMatrixItemModel.id == item_id)
@@ -496,6 +494,8 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
                 ),
             )
         )
+        if lock:
+            stmt = stmt.with_for_update(of=CompetencyMatrixItemModel)
         item = await self.session.scalar(stmt)
         if item is None:
             raise CompetencyMatrixItemNotFoundError
@@ -553,7 +553,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             ):
                 raise CompetencyMatrixItemNotFoundError from error
             raise
-        return await self.get_competency_matrix_item(item_id=item.id)
+        return await self.get_competency_matrix_item(item_id=item.id, lock=False)
 
     async def update_competency_matrix_item(
         self,
@@ -576,7 +576,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             if getattr(diagnostics, "constraint_name", None) == "cm_item_sheet_slug_uniq":
                 raise CompetencyMatrixItemConflictError from error
             raise
-        return await self.get_competency_matrix_item(item_id=item.id)
+        return await self.get_competency_matrix_item(item_id=item.id, lock=False)
 
     async def update_competency_matrix_item_publish_status(
         self,
@@ -1202,42 +1202,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
         )
         questions = await self.session.scalars(stmt)
         return QueuedCompetencyMatrixQuestions(
-            values=[question.to_domain_schema(claim=None) for question in questions],
-        )
-
-    async def list_queued_questions_with_active_claims(
-        self,
-        *,
-        active_at: datetime,
-    ) -> QueuedCompetencyMatrixQuestions:
-        stmt = (
-            select(QueuedQuestionModel, MatrixQuestionClaimModel, AgentClientModel.name)
-            .outerjoin(
-                MatrixQuestionClaimModel,
-                and_(
-                    MatrixQuestionClaimModel.queue_item_id == QueuedQuestionModel.id,
-                    MatrixQuestionClaimModel.expires_at > active_at,
-                ),
-            )
-            .outerjoin(
-                AgentClientModel,
-                AgentClientModel.id == MatrixQuestionClaimModel.agent_client_id,
-            )
-            .options(*self._queued_question_domain_load_options())
-            .order_by(QueuedQuestionModel.created_at, QueuedQuestionModel.id)
-        )
-        rows = await self.session.execute(stmt)
-        return QueuedCompetencyMatrixQuestions(
-            values=[
-                question.to_domain_schema(
-                    claim=(
-                        claim.to_summary(agent_client_name=cast("str", agent_client_name))
-                        if claim is not None
-                        else None
-                    ),
-                )
-                for question, claim, agent_client_name in rows
-            ],
+            values=[question.to_domain_schema() for question in questions],
         )
 
     async def get_queued_question(
@@ -1246,41 +1211,17 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
         *,
         lock: bool,
     ) -> QueuedCompetencyMatrixQuestion:
-        if lock:
-            locked_question_id = await self.session.scalar(
-                select(QueuedQuestionModel.id)
-                .where(QueuedQuestionModel.id == question_id)
-                .with_for_update(of=QueuedQuestionModel),
-            )
-            if locked_question_id is None:
-                raise QueuedCompetencyMatrixQuestionNotFoundError
         stmt = (
-            select(QueuedQuestionModel, MatrixQuestionClaimModel, AgentClientModel.name)
-            .outerjoin(
-                MatrixQuestionClaimModel,
-                MatrixQuestionClaimModel.queue_item_id == QueuedQuestionModel.id,
-            )
-            .outerjoin(
-                AgentClientModel,
-                AgentClientModel.id == MatrixQuestionClaimModel.agent_client_id,
-            )
-            .where(QueuedQuestionModel.id == question_id)
+            select(QueuedQuestionModel)
             .options(*self._queued_question_domain_load_options())
+            .where(QueuedQuestionModel.id == question_id)
         )
-        row = (await self.session.execute(stmt)).one_or_none()
-        if row is None:
+        if lock:
+            stmt = stmt.with_for_update(of=QueuedQuestionModel)
+        question = await self.session.scalar(stmt)
+        if question is None:
             raise QueuedCompetencyMatrixQuestionNotFoundError
-        question, claim, agent_client_name = row
-        return cast(
-            "QueuedCompetencyMatrixQuestion",
-            question.to_domain_schema(
-                claim=(
-                    claim.to_summary(agent_client_name=cast("str", agent_client_name))
-                    if claim is not None
-                    else None
-                ),
-            ),
-        )
+        return question.to_domain_schema()
 
     async def question_suggestion_exists(
         self,
@@ -1330,7 +1271,7 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
         )
         self.session.add(question)
         await self.session.flush()
-        return question.to_domain_schema(claim=None)
+        return question.to_domain_schema()
 
     async def create_queued_questions(
         self,
@@ -1350,18 +1291,12 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
         self.session.add_all(questions)
         await self.session.flush()
         return QueuedCompetencyMatrixQuestions(
-            values=[question.to_domain_schema(claim=None) for question in questions],
+            values=[question.to_domain_schema() for question in questions],
         )
 
     async def delete_queued_question(self, question_id: str) -> None:
         question = await self._get_queued_question_model(question_id=question_id)
         await self.session.delete(question)
-        await self.session.flush()
-
-    async def delete_question_claim(self, claim_id: str) -> None:
-        await self.session.execute(
-            delete(MatrixQuestionClaimModel).where(MatrixQuestionClaimModel.id == claim_id),
-        )
         await self.session.flush()
 
     async def _get_queued_question_model(self, question_id: str) -> QueuedQuestionModel:

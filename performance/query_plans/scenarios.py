@@ -1,25 +1,10 @@
 from collections.abc import Awaitable, Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from hashlib import md5
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.agent_access.enums import (
-    AgentActionEnum,
-    AgentAuditResultEnum,
-    AgentClientStatusEnum,
-    AgentScopeEnum,
-)
-from core.agent_access.schemas import (
-    AgentAuditEventCreateParams,
-    AgentAuditEventPageQuery,
-    AgentCertificate,
-    AgentCertificateRotation,
-    AgentClient,
-    AgentClientRevokeParams,
-    MatrixQuestionDraftCompletion,
-)
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.articles.schemas import Article, ArticleFilters, ArticleFolder, ArticleMetadata, Tag, Tags
 from core.competency_matrix.enums import (
@@ -48,7 +33,6 @@ from core.competency_matrix.schemas import (
 from core.contacts.schemas import ContactMe
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
-from infra.postgresql.storages.agent_access import AgentAccessDatabaseStorage
 from infra.postgresql.storages.articles import (
     ArticleAnalyticsDatabaseStorage,
     ArticlesDatabaseStorage,
@@ -103,14 +87,6 @@ EXISTING_MATRIX_ITEM_ID = hex_id(100)
 DELETABLE_MATRIX_ITEM_ID = hex_id(101)
 EXISTING_QUEUED_QUESTION_ID = hex_id(100)
 DELETABLE_QUEUED_QUESTION_ID = hex_id(101)
-DELETABLE_MATRIX_QUESTION_CLAIM_ID = hex_id(61_002)
-AGENT_CLIENT_ID = hex_id(60_001)
-CLAIMABLE_AGENT_CLIENT_ID = hex_id(60_003)
-REVOKABLE_AGENT_CLIENT_ID = hex_id(60_004)
-AGENT_CERTIFICATE_ID = hex_id(62_001)
-CLAIMABLE_AGENT_CERTIFICATE_ID = hex_id(62_003)
-AGENT_ROTATION_ID = "query-plan-pending-rotation"
-AGENT_COMPLETION_ID = hex_id(63_001)
 SHORT_TRIGRAM_ALLOW_REASON = (
     "short search string has too few extractable trigrams for an index-selective search"
 )
@@ -555,7 +531,8 @@ async def run_list_competency_matrix_workspace_filter_options(session: AsyncSess
 
 async def run_get_competency_matrix_item(session: AsyncSession) -> None:
     await CompetencyMatrixDatabaseStorage(session=session).get_competency_matrix_item(
-        EXISTING_MATRIX_ITEM_ID,
+        item_id=EXISTING_MATRIX_ITEM_ID,
+        lock=False,
     )
 
 
@@ -589,12 +566,6 @@ async def run_update_competency_matrix_item_publish_status(session: AsyncSession
 
 async def run_list_queued_questions(session: AsyncSession) -> None:
     await CompetencyMatrixDatabaseStorage(session=session).list_queued_questions()
-
-
-async def run_list_queued_questions_with_active_claims(session: AsyncSession) -> None:
-    await CompetencyMatrixDatabaseStorage(
-        session=session,
-    ).list_queued_questions_with_active_claims(active_at=SEED_NOW)
 
 
 async def run_question_suggestion_exists(session: AsyncSession) -> None:
@@ -654,223 +625,6 @@ async def run_create_queued_questions(session: AsyncSession) -> None:
 async def run_delete_queued_question(session: AsyncSession) -> None:
     await CompetencyMatrixDatabaseStorage(session=session).delete_queued_question(
         DELETABLE_QUEUED_QUESTION_ID,
-    )
-
-
-async def run_delete_question_claim(session: AsyncSession) -> None:
-    await CompetencyMatrixDatabaseStorage(session=session).delete_question_claim(
-        DELETABLE_MATRIX_QUESTION_CLAIM_ID,
-    )
-
-
-async def run_agent_client_name_exists(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).client_name_exists(
-        normalized_name="query-plan-agent-0",
-    )
-
-
-async def run_create_agent_client(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).create_client(
-        client=AgentClient(
-            id=hex_id(69_001),
-            name="query-plan-new-agent",
-            status=AgentClientStatusEnum.ACTIVE,
-            scopes=frozenset(AgentScopeEnum),
-            created_at=SEED_NOW,
-            revoked_at=None,
-        ),
-    )
-
-
-async def run_list_agent_clients(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).list_clients()
-
-
-async def run_create_agent_certificate(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).create_certificate(
-        certificate=AgentCertificate(
-            id=hex_id(69_002),
-            agent_client_id=CLAIMABLE_AGENT_CLIENT_ID,
-            fingerprint_sha256="a" * 64,
-            serial_number="query-plan-new-certificate",
-            certificate_pem="query-plan-new-certificate",
-            valid_from=SEED_NOW,
-            expires_at=SEED_NOW + timedelta(days=90),
-            created_at=SEED_NOW,
-            revoked_at=None,
-        ),
-    )
-
-
-async def run_list_agent_certificates(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).list_certificates(
-        agent_client_id=AGENT_CLIENT_ID,
-    )
-
-
-async def run_revoke_agent_client(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).revoke_client(
-        params=AgentClientRevokeParams(
-            agent_client_id=REVOKABLE_AGENT_CLIENT_ID,
-            revoked_at=SEED_NOW,
-        ),
-    )
-
-
-async def run_get_agent_credential(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_credential_by_fingerprint(
-        fingerprint_sha256=f"{1:064x}",
-    )
-
-
-async def run_get_agent_client_for_rotation(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_client_for_rotation(
-        agent_client_id=AGENT_CLIENT_ID,
-    )
-
-
-async def run_get_agent_certificate_for_rotation(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_certificate_for_rotation(
-        certificate_id=AGENT_CERTIFICATE_ID,
-        agent_client_id=AGENT_CLIENT_ID,
-    )
-
-
-async def run_get_agent_certificate_by_id(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_certificate_by_id(
-        certificate_id=AGENT_CERTIFICATE_ID,
-        agent_client_id=AGENT_CLIENT_ID,
-    )
-
-
-async def run_get_agent_certificate_rotation(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_certificate_rotation(
-        rotation_id=AGENT_ROTATION_ID,
-    )
-
-
-async def run_get_pending_agent_certificate_rotation(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_pending_certificate_rotation(
-        current_certificate_id=AGENT_CERTIFICATE_ID,
-    )
-
-
-async def run_create_agent_certificate_rotation(session: AsyncSession) -> None:
-    replacement = AgentCertificate(
-        id=hex_id(69_003),
-        agent_client_id=CLAIMABLE_AGENT_CLIENT_ID,
-        fingerprint_sha256="b" * 64,
-        serial_number="query-plan-new-replacement",
-        certificate_pem="query-plan-new-replacement",
-        valid_from=SEED_NOW,
-        expires_at=SEED_NOW + timedelta(days=90),
-        created_at=SEED_NOW,
-        revoked_at=None,
-    )
-    await AgentAccessDatabaseStorage(session=session).create_certificate_rotation(
-        rotation=AgentCertificateRotation(
-            rotation_id="query-plan-new-rotation",
-            agent_client_id=CLAIMABLE_AGENT_CLIENT_ID,
-            current_certificate_id=CLAIMABLE_AGENT_CERTIFICATE_ID,
-            replacement_certificate_id=replacement.id,
-            csr_digest="e" * 64,
-            created_at=SEED_NOW,
-            normal_access_until=SEED_NOW + timedelta(minutes=15),
-            confirmed_at=None,
-        ),
-        replacement=replacement,
-    )
-
-
-async def run_confirm_agent_certificate_rotation(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).confirm_certificate_rotation(
-        rotation_id=AGENT_ROTATION_ID,
-        current_certificate_id=AGENT_CERTIFICATE_ID,
-        confirmed_at=SEED_NOW + timedelta(minutes=1),
-    )
-
-
-async def run_create_agent_audit_event(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).create_audit_event(
-        params=AgentAuditEventCreateParams(
-            agent_client_id=AGENT_CLIENT_ID,
-            certificate_id=AGENT_CERTIFICATE_ID,
-            action=AgentActionEnum.GET_MATRIX_AUTHORING_CONTEXT,
-            queue_item_id=None,
-            matrix_item_id=None,
-            request_id="query-plan-new-audit",
-            result=AgentAuditResultEnum.SUCCESS,
-            input_digest="f" * 64,
-            created_at=SEED_NOW,
-        ),
-    )
-
-
-async def run_prune_agent_audit_events(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).prune_audit_events(
-        created_at_before=SEED_NOW - timedelta(days=180),
-    )
-
-
-async def run_list_agent_audit_events(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).list_audit_events(
-        params=AgentAuditEventPageQuery(
-            agent_client_id=AGENT_CLIENT_ID,
-            limit=51,
-            cursor=None,
-            created_at_from=SEED_NOW - timedelta(days=365),
-        ),
-    )
-
-
-async def run_claim_next_agent_matrix_question(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).claim_next_matrix_question(
-        agent_client_id=CLAIMABLE_AGENT_CLIENT_ID,
-        claimed_at=SEED_NOW,
-        expires_at=SEED_NOW + timedelta(hours=2),
-    )
-
-
-async def run_get_matrix_question_draft_completion(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).get_matrix_question_draft_completion(
-        claim_id=AGENT_COMPLETION_ID,
-        agent_client_id=AGENT_CLIENT_ID,
-    )
-
-
-async def run_lock_agent_matrix_question_claim(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).lock_matrix_question_claim(
-        agent_client_id=AGENT_CLIENT_ID,
-        claim_id=hex_id(61_001),
-    )
-
-
-async def run_create_matrix_question_draft_completion(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).create_matrix_question_draft_completion(
-        completion=MatrixQuestionDraftCompletion(
-            claim_id=hex_id(69_004),
-            agent_client_id=CLAIMABLE_AGENT_CLIENT_ID,
-            queue_item_id=hex_id(1),
-            matrix_item_id=hex_id(69_005),
-            input_digest="1" * 64,
-            completed_at=SEED_NOW,
-        ),
-    )
-
-
-async def run_consume_agent_matrix_question_claim(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).consume_matrix_question_claim(
-        agent_client_id=AGENT_CLIENT_ID,
-        claim_id=hex_id(61_001),
-        queue_item_id=hex_id(100),
-    )
-
-
-async def run_release_agent_matrix_question_claim(session: AsyncSession) -> None:
-    await AgentAccessDatabaseStorage(session=session).release_matrix_question_claim(
-        agent_client_id=hex_id(60_002),
-        claim_id=hex_id(61_002),
-        released_at=SEED_NOW + timedelta(minutes=1),
     )
 
 
@@ -1069,158 +823,6 @@ def scenario(  # noqa: PLR0913
 
 
 STORAGE_SCENARIOS = (
-    *(
-        scenario(
-            name=name,
-            storage_class="AgentAccessDatabaseStorage",
-            method_name=method_name,
-            group=group,
-            expected_index_names=(),
-            forbidden_seq_scan_relations=(),
-            allow_seq_scan_reason=None,
-            run=runner,
-        )
-        for name, method_name, group, runner in (
-            (
-                "agent_client_name_exists",
-                "client_name_exists",
-                QueryThresholdGroup.POINT_READ,
-                run_agent_client_name_exists,
-            ),
-            (
-                "agent_client_create",
-                "create_client",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_create_agent_client,
-            ),
-            (
-                "agent_clients_list",
-                "list_clients",
-                QueryThresholdGroup.LIST_READ,
-                run_list_agent_clients,
-            ),
-            (
-                "agent_certificate_create",
-                "create_certificate",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_create_agent_certificate,
-            ),
-            (
-                "agent_certificates_list",
-                "list_certificates",
-                QueryThresholdGroup.LIST_READ,
-                run_list_agent_certificates,
-            ),
-            (
-                "agent_client_revoke",
-                "revoke_client",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_revoke_agent_client,
-            ),
-            (
-                "agent_credential_by_fingerprint",
-                "get_credential_by_fingerprint",
-                QueryThresholdGroup.POINT_READ,
-                run_get_agent_credential,
-            ),
-            (
-                "agent_rotation_client",
-                "get_client_for_rotation",
-                QueryThresholdGroup.POINT_READ,
-                run_get_agent_client_for_rotation,
-            ),
-            (
-                "agent_rotation_current_certificate",
-                "get_certificate_for_rotation",
-                QueryThresholdGroup.POINT_READ,
-                run_get_agent_certificate_for_rotation,
-            ),
-            (
-                "agent_certificate_by_id",
-                "get_certificate_by_id",
-                QueryThresholdGroup.POINT_READ,
-                run_get_agent_certificate_by_id,
-            ),
-            (
-                "agent_rotation_by_id",
-                "get_certificate_rotation",
-                QueryThresholdGroup.POINT_READ,
-                run_get_agent_certificate_rotation,
-            ),
-            (
-                "agent_pending_rotation",
-                "get_pending_certificate_rotation",
-                QueryThresholdGroup.POINT_READ,
-                run_get_pending_agent_certificate_rotation,
-            ),
-            (
-                "agent_rotation_create",
-                "create_certificate_rotation",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_create_agent_certificate_rotation,
-            ),
-            (
-                "agent_rotation_confirm",
-                "confirm_certificate_rotation",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_confirm_agent_certificate_rotation,
-            ),
-            (
-                "agent_audit_create",
-                "create_audit_event",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_create_agent_audit_event,
-            ),
-            (
-                "agent_audit_prune",
-                "prune_audit_events",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_prune_agent_audit_events,
-            ),
-            (
-                "agent_audit_list",
-                "list_audit_events",
-                QueryThresholdGroup.LIST_READ,
-                run_list_agent_audit_events,
-            ),
-            (
-                "agent_matrix_claim_next",
-                "claim_next_matrix_question",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_claim_next_agent_matrix_question,
-            ),
-            (
-                "agent_matrix_completion_by_claim",
-                "get_matrix_question_draft_completion",
-                QueryThresholdGroup.POINT_READ,
-                run_get_matrix_question_draft_completion,
-            ),
-            (
-                "agent_matrix_claim_lock",
-                "lock_matrix_question_claim",
-                QueryThresholdGroup.POINT_READ,
-                run_lock_agent_matrix_question_claim,
-            ),
-            (
-                "agent_matrix_completion_create",
-                "create_matrix_question_draft_completion",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_create_matrix_question_draft_completion,
-            ),
-            (
-                "agent_matrix_claim_consume",
-                "consume_matrix_question_claim",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_consume_agent_matrix_question_claim,
-            ),
-            (
-                "agent_matrix_claim_release",
-                "release_matrix_question_claim",
-                QueryThresholdGroup.SMALL_WRITE,
-                run_release_agent_matrix_question_claim,
-            ),
-        )
-    ),
     scenario(
         name="contact_create_request",
         storage_class="ContactMeDatabaseStorage",
@@ -1781,19 +1383,6 @@ STORAGE_SCENARIOS = (
         run=run_list_queued_questions,
     ),
     scenario(
-        name="matrix_queue_list_fifo_with_agent_claims",
-        storage_class="CompetencyMatrixDatabaseStorage",
-        method_name="list_queued_questions_with_active_claims",
-        group=QueryThresholdGroup.LIST_READ,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=(),
-        allow_seq_scan_reason=(
-            "joining the complete queue to the intentionally tiny active-claim set makes a "
-            "sequential scan and in-memory sort optimal"
-        ),
-        run=run_list_queued_questions_with_active_claims,
-    ),
-    scenario(
         name="matrix_queue_detail_by_id",
         storage_class="CompetencyMatrixDatabaseStorage",
         method_name="get_queued_question",
@@ -1842,18 +1431,6 @@ STORAGE_SCENARIOS = (
         forbidden_seq_scan_relations=("competency_matrix__queued_question_model",),
         allow_seq_scan_reason=None,
         run=run_delete_queued_question,
-    ),
-    scenario(
-        name="matrix_queue_claim_delete",
-        storage_class="CompetencyMatrixDatabaseStorage",
-        method_name="delete_question_claim",
-        group=QueryThresholdGroup.SMALL_WRITE,
-        expected_index_names=(),
-        forbidden_seq_scan_relations=(),
-        allow_seq_scan_reason=(
-            "one active claim per registered agent keeps this lease table intentionally small"
-        ),
-        run=run_delete_question_claim,
     ),
     scenario(
         name="matrix_resources_by_ids",

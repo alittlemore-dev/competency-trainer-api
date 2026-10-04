@@ -5,7 +5,6 @@ from inspect import getmembers, isclass, iscoroutinefunction
 from performance.query_plans.models import StorageMethod
 
 STORAGE_MODULE_NAMES = (
-    "infra.postgresql.storages.agent_access",
     "infra.postgresql.storages.competency_matrix",
     "infra.postgresql.storages.contacts",
     "infra.postgresql.storages.articles",

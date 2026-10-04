@@ -28,7 +28,9 @@ def build_project_logging_config(*, debug: bool) -> ProjectLoggingConfig:
         processors.extend(
             [
                 structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S", utc=False),
-                structlog.dev.ConsoleRenderer(),
+                structlog.dev.ConsoleRenderer(
+                    exception_formatter=structlog.dev.RichTracebackFormatter(show_locals=False),
+                ),
             ],
         )
         wrapper_class = structlog.make_filtering_bound_logger(logging.DEBUG)

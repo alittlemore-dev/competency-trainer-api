@@ -17,10 +17,6 @@ from sqlalchemy.pool import NullPool
 from infra.config.settings import Settings
 from infra.postgresql import meta
 from infra.postgresql.models import (
-    AgentAuditEventModel,
-    AgentCertificateModel,
-    AgentCertificateRotationModel,
-    AgentClientModel,
     ArticleDailyAnalyticsModel,
     ArticleFileUsageModel,
     ArticleModel,
@@ -29,8 +25,6 @@ from infra.postgresql.models import (
     CompetencyMatrixItemModel,
     ExternalResourceModel,
     FileModel,
-    MatrixQuestionClaimModel,
-    MatrixQuestionDraftCompletionModel,
     QueuedQuestionModel,
     TagModel,
 )
@@ -138,12 +132,6 @@ def setup_migrations(
 @pytest_asyncio.fixture
 async def clear_tables(engine: AsyncEngine) -> None:
     async with engine.begin() as conn:
-        await conn.execute(delete(AgentAuditEventModel))
-        await conn.execute(delete(MatrixQuestionDraftCompletionModel))
-        await conn.execute(delete(AgentCertificateRotationModel))
-        await conn.execute(delete(MatrixQuestionClaimModel))
-        await conn.execute(delete(AgentCertificateModel))
-        await conn.execute(delete(AgentClientModel))
         await conn.execute(delete(QueuedQuestionModel))
         await conn.execute(delete(ExternalResourceModel))
         await conn.execute(delete(CompetencyMatrixItemModel))

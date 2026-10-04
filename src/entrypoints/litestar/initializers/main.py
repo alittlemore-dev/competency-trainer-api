@@ -16,11 +16,9 @@ from litestar.stores.base import Store
 from litestar.stores.valkey import ValkeyStore
 from litestar.types import Middleware
 
-from entrypoints.litestar.api.agent_access.endpoints import agent_api_router
 from entrypoints.litestar.api.routers import api_router
 from entrypoints.litestar.cli.plugins import CLIPlugin
 from entrypoints.litestar.exception_handlers import get_litestar_exception_handlers
-from entrypoints.litestar.middlewares.agent_audit import AgentOutcomeAuditMiddleware
 from entrypoints.litestar.middlewares.logging import (
     LogExceptionMiddleware,
     RequestIdLoggingMiddleware,
@@ -119,7 +117,7 @@ def create_middlewares(_container: AsyncContainer) -> list[Middleware]:
 
 
 def create_routers() -> list[Router]:
-    return [api_router, public_router, agent_api_router]
+    return [api_router, public_router]
 
 
 def create_cli_app(
@@ -162,9 +160,5 @@ def create_litestar_app(
         openapi_config=create_openapi_config(),
     )
     setup_dishka(container=container, app=app)
-    app.asgi_handler = AgentOutcomeAuditMiddleware(
-        app=app.asgi_handler,
-        container=container,
-    )
     install_openapi_request_body_metadata()
     return app

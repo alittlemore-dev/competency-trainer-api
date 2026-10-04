@@ -31,9 +31,12 @@ class FilesApiController(Controller):
 
     @post(
         "",
-        description="Upload a managed file.",
+        description=(
+            "Upload a managed file.\n\nPersonal API token permissions: competency.files.create."
+        ),
         name="admin-files-upload-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.files.create",)},
     )
     async def upload_file(
         self,
@@ -72,8 +75,11 @@ class FilesApiController(Controller):
 
     @get(
         "",
-        description="List managed files.",
+        description=(
+            "List managed files.\n\nPersonal API token permissions: competency.files.read."
+        ),
         name="admin-files-list-api-handler",
+        opt={"pat_permissions": ("competency.files.read",)},
     )
     async def list_files(
         self,
@@ -86,8 +92,11 @@ class FilesApiController(Controller):
 
     @get(
         "/{file_id:str}",
-        description="Get managed file metadata.",
+        description=(
+            "Get managed file metadata.\n\nPersonal API token permissions: competency.files.read."
+        ),
         name="admin-files-detail-api-handler",
+        opt={"pat_permissions": ("competency.files.read",)},
     )
     async def get_file(
         self,
@@ -100,8 +109,12 @@ class FilesApiController(Controller):
 
     @put(
         "/{file_id:str}",
-        description="Update managed file metadata.",
+        description=(
+            "Update managed file metadata.\n\nPersonal API token permissions: "
+            "competency.files.update."
+        ),
         name="admin-files-update-api-handler",
+        opt={"pat_permissions": ("competency.files.update",)},
     )
     async def update_file(
         self,
@@ -127,9 +140,12 @@ class FilesApiController(Controller):
 
     @delete(
         "/{file_id:str}",
-        description="Delete a managed file.",
+        description=(
+            "Delete a managed file.\n\nPersonal API token permissions: competency.files.delete."
+        ),
         name="admin-files-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.files.delete",)},
     )
     async def delete_file(
         self,

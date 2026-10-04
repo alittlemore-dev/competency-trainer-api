@@ -130,10 +130,13 @@ class PublicArticlesApiController(Controller):
 
     @post(
         "/detail/{slug:str}/analytics/view",
-        description="Track a public article view.",
+        description=(
+            "Track a public article view.\n\nPersonal API token permissions: "
+            "competency.articles.record_view."
+        ),
         name="public-articles-track-public-view-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"auth_optional": True},
+        opt={"auth_optional": True, "pat_permissions": ("competency.articles.record_view",)},
     )
     async def track_public_view(
         self,
@@ -155,10 +158,13 @@ class PublicArticlesApiController(Controller):
 
     @post(
         "/detail/{slug:str}/analytics/engaged-view",
-        description="Track an engaged article view.",
+        description=(
+            "Track an engaged article view.\n\nPersonal API token permissions: "
+            "competency.articles.record_view."
+        ),
         name="public-articles-track-engaged-view-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"auth_optional": True},
+        opt={"auth_optional": True, "pat_permissions": ("competency.articles.record_view",)},
     )
     async def track_engaged_view(
         self,
@@ -229,10 +235,14 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "",
-        description="Get the admin article list.",
+        description=(
+            "Get the admin article list.\n\nPersonal API token permissions: "
+            "competency.articles.read."
+        ),
         name="admin-articles-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
         dependencies={"filters": Provide(provide_article_filters, sync_to_thread=False)},
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def list_articles(
         self,
@@ -247,9 +257,14 @@ class AdminArticlesApiController(Controller):
 
     @post(
         "",
-        description="Create an article.",
+        description=(
+            "Create an article.\n\nPersonal API token permissions: "
+            "competency.articles.create. Published content also requires "
+            "competency.articles.publish."
+        ),
         name="admin-articles-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.articles.create",)},
     )
     async def create_article(  # noqa: PLR0913
         self,
@@ -309,9 +324,13 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "/tree",
-        description="Get the admin article folder tree.",
+        description=(
+            "Get the admin article folder tree.\n\nPersonal API token "
+            "permissions: competency.articles.read."
+        ),
         name="admin-articles-tree-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def list_articles_tree(
         self,
@@ -323,9 +342,13 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "/folders",
-        description="Get the admin article folder list.",
+        description=(
+            "Get the admin article folder list.\n\nPersonal API token "
+            "permissions: competency.articles.read."
+        ),
         name="admin-articles-folders-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def list_folders(
         self,
@@ -340,9 +363,13 @@ class AdminArticlesApiController(Controller):
 
     @post(
         "/folders",
-        description="Create an article folder.",
+        description=(
+            "Create an article folder.\n\nPersonal API token permissions: "
+            "competency.articles.create, competency.articles.publish."
+        ),
         name="admin-articles-folders-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.articles.create", "competency.articles.publish")},
     )
     async def create_folder(  # noqa: PLR0913
         self,
@@ -383,9 +410,14 @@ class AdminArticlesApiController(Controller):
 
     @put(
         "/folders/priorities",
-        description="Update article folder priority order.",
+        description=(
+            "Update article folder priority order.\n\nPersonal API token "
+            "permissions: competency.articles.update, "
+            "competency.articles.publish."
+        ),
         name="admin-articles-folders-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.articles.update", "competency.articles.publish")},
     )
     async def update_folder_priorities(
         self,
@@ -410,9 +442,13 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "/detail/{slug:str}",
-        description="Get admin article details.",
+        description=(
+            "Get admin article details.\n\nPersonal API token permissions: "
+            "competency.articles.read."
+        ),
         name="admin-articles-detail-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def get_article(
         self,
@@ -429,9 +465,13 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "/stats",
-        description="Get admin article statistics.",
+        description=(
+            "Get admin article statistics.\n\nPersonal API token permissions: "
+            "competency.articles.read."
+        ),
         name="admin-articles-stats-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def get_stats(
         self,
@@ -449,9 +489,14 @@ class AdminArticlesApiController(Controller):
 
     @put(
         "/detail/{slug:str}",
-        description="Update an article.",
+        description=(
+            "Update an article.\n\nPersonal API token permissions: "
+            "competency.articles.update. Published content also requires "
+            "competency.articles.publish."
+        ),
         name="admin-articles-update-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.update",)},
     )
     async def update_article(  # noqa: PLR0913
         self,
@@ -509,9 +554,14 @@ class AdminArticlesApiController(Controller):
 
     @delete(
         "/detail/{slug:str}",
-        description="Delete an article.",
+        description=(
+            "Delete an article.\n\nPersonal API token permissions: "
+            "competency.articles.delete. Published content also requires "
+            "competency.articles.publish."
+        ),
         name="admin-articles-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.articles.delete",)},
     )
     async def delete_article(
         self,
@@ -533,9 +583,13 @@ class AdminArticlesApiController(Controller):
 
     @post(
         "/detail/{slug:str}/set-draft",
-        description='Set article status to "Draft".',
+        description=(
+            'Set article status to "Draft".\n\nPersonal API token permissions: '
+            "competency.articles.publish."
+        ),
         name="admin-articles-set-draft-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.articles.publish",)},
     )
     async def set_draft_status_to_article(
         self,
@@ -556,9 +610,13 @@ class AdminArticlesApiController(Controller):
 
     @post(
         "/detail/{slug:str}/set-published",
-        description='Set article status to "Published".',
+        description=(
+            'Set article status to "Published".\n\nPersonal API token '
+            "permissions: competency.articles.publish."
+        ),
         name="admin-articles-set-published-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.articles.publish",)},
     )
     async def set_published_status_to_article(
         self,
@@ -579,9 +637,12 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "/tags",
-        description="Get the admin tag list.",
+        description=(
+            "Get the admin tag list.\n\nPersonal API token permissions: competency.articles.read."
+        ),
         name="admin-articles-tags-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def list_tags(
         self,
@@ -596,9 +657,12 @@ class AdminArticlesApiController(Controller):
 
     @get(
         "/tags/search",
-        description="Search admin tags.",
+        description=(
+            "Search admin tags.\n\nPersonal API token permissions: competency.articles.read."
+        ),
         name="admin-articles-tags-search-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.read",)},
     )
     async def search_tags(
         self,
@@ -616,9 +680,13 @@ class AdminArticlesApiController(Controller):
 
     @post(
         "/tags",
-        description="Create a tag.",
+        description=(
+            "Create a tag.\n\nPersonal API token permissions: "
+            "competency.articles.create, competency.articles.publish."
+        ),
         name="admin-articles-tags-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.articles.create", "competency.articles.publish")},
     )
     async def create_tag(  # noqa: PLR0913
         self,
@@ -656,9 +724,13 @@ class AdminArticlesApiController(Controller):
 
     @put(
         "/tags/{tag_id:str}",
-        description="Update a tag.",
+        description=(
+            "Update a tag.\n\nPersonal API token permissions: "
+            "competency.articles.update, competency.articles.publish."
+        ),
         name="admin-articles-tags-update-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.articles.update", "competency.articles.publish")},
     )
     async def update_tag(  # noqa: PLR0913
         self,
@@ -697,9 +769,13 @@ class AdminArticlesApiController(Controller):
 
     @delete(
         "/tags/{tag_id:str}",
-        description="Delete a tag.",
+        description=(
+            "Delete a tag.\n\nPersonal API token permissions: "
+            "competency.articles.delete, competency.articles.publish."
+        ),
         name="admin-articles-tags-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.articles.delete", "competency.articles.publish")},
     )
     async def delete_tag(
         self,

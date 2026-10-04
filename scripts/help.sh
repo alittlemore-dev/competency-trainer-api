@@ -2,6 +2,7 @@
 set -euo pipefail
 
 printf '%-28s %s\n' \
+    'lock' 'Refresh the dependency lockfile after an intentional dependency change.' \
     'install' 'Install Python dependencies.' \
     'tests / tests-fast' 'Run all tests / unit tests.' \
     'test-integration' 'Run PostgreSQL and migration tests.' \

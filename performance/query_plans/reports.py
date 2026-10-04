@@ -209,7 +209,6 @@ def serialize_profile(*, profile: QueryPlanProfile) -> Mapping[str, object]:
                 "resourceLinks": cardinalities.matrix.resource_links,
                 "queuedQuestions": cardinalities.matrix.queued_questions,
             },
-            "agentAccess": {"auditEvents": cardinalities.agent_access.audit_events},
         },
         "relationCardinalities": profile.relation_cardinalities,
     }

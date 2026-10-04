@@ -1,9 +1,8 @@
 from ipaddress import IPv4Address
-from pathlib import Path
 from typing import Literal
 
 from litestar.config.response_cache import CACHE_FOREVER
-from pydantic import NonNegativeFloat, PositiveFloat, PositiveInt, SecretStr, field_validator
+from pydantic import NonNegativeFloat, PositiveFloat, PositiveInt, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from core.files.types import Namespace
@@ -152,30 +151,9 @@ class CompetencyMatrixSettings(ProjectBaseSettings):
     question_suggestion_anonymous_daily_limit: PositiveInt
 
 
-class AgentAccessSettings(ProjectBaseSettings):
-    model_config = SettingsConfigDict(env_prefix="AGENT_ACCESS_")
-
-    issuing_certificate_file: Path
-    issuing_private_key_file: Path
-    certificate_chain_file: Path
-
-    @field_validator(
-        "issuing_certificate_file",
-        "issuing_private_key_file",
-        "certificate_chain_file",
-    )
-    @classmethod
-    def validate_absolute_file_path(cls, value: Path) -> Path:
-        if not value.is_absolute():
-            msg = "agent access secret file paths must be absolute"
-            raise ValueError(msg)
-        return value
-
-
 class TaskiqSettings(ProjectBaseSettings):
     model_config = SettingsConfigDict(env_prefix="TASKIQ_")
 
-    agent_audit_prune_interval_seconds: PositiveInt
     cache_warm_interval_seconds: PositiveInt
     file_orphan_prune_interval_seconds: PositiveInt
     result_expire_seconds: PositiveInt
@@ -188,7 +166,6 @@ class CacheWarmSettings(ProjectBaseSettings):
 
 
 class Settings:
-    agent_access: AgentAccessSettings
     app: AppSettings
     auth: AuthSettings
     cache_warm: CacheWarmSettings
@@ -201,7 +178,6 @@ class Settings:
     valkey: ValkeySettings
 
     def __init__(self) -> None:
-        self.agent_access = AgentAccessSettings()
         self.app = AppSettings()
         self.auth = AuthSettings()
         self.cache_warm = CacheWarmSettings()

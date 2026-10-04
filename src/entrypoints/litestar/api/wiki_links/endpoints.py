@@ -16,9 +16,13 @@ class WikiLinksApiController(Controller):
 
     @get(
         "/targets",
-        description="Get available typed wiki link targets.",
+        description=(
+            "Get available typed wiki link targets.\n\nPersonal API token "
+            "permissions: competency.wiki_links.read."
+        ),
         name="admin-wiki-links-targets-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.wiki_links.read",)},
     )
     async def list_wiki_link_targets(
         self,

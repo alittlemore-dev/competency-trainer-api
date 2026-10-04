@@ -8,6 +8,7 @@ from core.competency_matrix.services import QuestionSuggestionLimiter
 from core.competency_matrix.storages import CompetencyMatrixStorage
 from core.competency_matrix.use_cases import CompetencyMatrixUseCase
 from core.enums import PublishStatusEnum
+from core.identity import PublicationAccess
 from tests.test_cases import TestCase
 
 
@@ -17,6 +18,7 @@ class TestCompetencyMatrixUseCase(TestCase):
         self.storage = Mock(spec=CompetencyMatrixStorage)
         self.question_suggestion_limiter = Mock(spec=QuestionSuggestionLimiter)
         self.use_case = CompetencyMatrixUseCase(
+            publication=PublicationAccess(allowed=True),
             storage=self.storage,
             question_suggestion_limiter=self.question_suggestion_limiter,
         )
@@ -50,6 +52,7 @@ class TestCompetencyMatrixUseCase(TestCase):
         )
         self.storage.get_competency_matrix_item.assert_called_once_with(
             item_id=self.factory.core.hex_id(1),
+            lock=True,
         )
         self.storage.update_competency_matrix_item_publish_status.assert_called_once_with(
             item_id=self.factory.core.hex_id(1),

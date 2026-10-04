@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from core.enums import LabeledStrEnum
+from core.enums import LabeledStrEnum, PublishStatusEnum
 from core.exceptions import DomainError
 
 
@@ -48,3 +48,12 @@ class UnauthorizedError(DomainError):
 
 class ForbiddenError(DomainError):
     message = "Forbidden error"
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PublicationAccess:
+    allowed: bool
+
+    def ensure_allowed(self, *statuses: PublishStatusEnum) -> None:
+        if not self.allowed and PublishStatusEnum.PUBLISHED in statuses:
+            raise ForbiddenError

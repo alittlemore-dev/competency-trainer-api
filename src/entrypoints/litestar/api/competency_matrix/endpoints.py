@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated
 
 from backend_sdk import Principal, RoleEnum
@@ -153,10 +152,13 @@ class PublicCompetencyMatrixApiController(Controller):
 
     @post(
         "/question-suggestions",
-        description="Suggest a competency matrix question.",
+        description=(
+            "Suggest a competency matrix question.\n\nPersonal API token "
+            "permissions: competency.matrix.suggest."
+        ),
         name="public-competency-matrix-question-suggestion-create-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"auth_optional": True},
+        opt={"auth_optional": True, "pat_permissions": ("competency.matrix.suggest",)},
         dependencies={
             "limit": Provide(
                 provide_question_suggestion_limit_params,
@@ -201,9 +203,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/sheets",
-        description="Get the admin competency matrix sheet list.",
+        description=(
+            "Get the admin competency matrix sheet list.\n\nPersonal API token "
+            "permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-sheets-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def list_competency_matrix_sheet(
         self,
@@ -218,9 +224,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/structure",
-        description="Get the admin competency matrix structure tree.",
+        description=(
+            "Get the admin competency matrix structure tree.\n\nPersonal API "
+            "token permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-structure-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def list_competency_matrix_structure(
         self,
@@ -235,9 +245,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/sheets",
-        description="Create a competency matrix sheet.",
+        description=(
+            "Create a competency matrix sheet.\n\nPersonal API token permissions:"
+            " competency.matrix.create, competency.matrix.publish."
+        ),
         name="admin-competency-matrix-sheet-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.matrix.create", "competency.matrix.publish")},
     )
     async def create_competency_matrix_sheet(
         self,
@@ -268,9 +282,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/sheets/{sheet_id:str}/sections",
-        description="Create a competency matrix section.",
+        description=(
+            "Create a competency matrix section.\n\nPersonal API token "
+            "permissions: competency.matrix.create, competency.matrix.publish."
+        ),
         name="admin-competency-matrix-section-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.matrix.create", "competency.matrix.publish")},
     )
     async def create_competency_matrix_section(
         self,
@@ -303,9 +321,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/sections/{section_id:str}/subsections",
-        description="Create a competency matrix subsection.",
+        description=(
+            "Create a competency matrix subsection.\n\nPersonal API token "
+            "permissions: competency.matrix.create, competency.matrix.publish."
+        ),
         name="admin-competency-matrix-subsection-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.matrix.create", "competency.matrix.publish")},
     )
     async def create_competency_matrix_subsection(
         self,
@@ -338,9 +360,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @delete(
         "/sheets/{sheet_id:str}",
-        description="Delete a competency matrix sheet and its contents.",
+        description=(
+            "Delete a competency matrix sheet and its contents.\n\nPersonal API "
+            "token permissions: competency.matrix.delete, "
+            "competency.matrix.publish."
+        ),
         name="admin-competency-matrix-sheet-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.delete", "competency.matrix.publish")},
     )
     async def delete_competency_matrix_sheet(
         self,
@@ -363,9 +390,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @delete(
         "/sections/{section_id:str}",
-        description="Delete a competency matrix section and its contents.",
+        description=(
+            "Delete a competency matrix section and its contents.\n\nPersonal API"
+            " token permissions: competency.matrix.delete, "
+            "competency.matrix.publish."
+        ),
         name="admin-competency-matrix-section-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.delete", "competency.matrix.publish")},
     )
     async def delete_competency_matrix_section(
         self,
@@ -388,9 +420,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @delete(
         "/subsections/{subsection_id:str}",
-        description="Delete a competency matrix subsection and its questions.",
+        description=(
+            "Delete a competency matrix subsection and its questions.\n\nPersonal"
+            " API token permissions: competency.matrix.delete, "
+            "competency.matrix.publish."
+        ),
         name="admin-competency-matrix-subsection-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.delete", "competency.matrix.publish")},
     )
     async def delete_competency_matrix_subsection(
         self,
@@ -413,9 +450,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @put(
         "/sheets/priorities",
-        description="Update competency matrix sheet priority order.",
+        description=(
+            "Update competency matrix sheet priority order.\n\nPersonal API token"
+            " permissions: competency.matrix.update, competency.matrix.publish."
+        ),
         name="admin-competency-matrix-sheet-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.update", "competency.matrix.publish")},
     )
     async def update_competency_matrix_sheet_priorities(
         self,
@@ -440,9 +481,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @put(
         "/sheets/{sheet_id:str}/sections/priorities",
-        description="Update competency matrix section priority order for one sheet.",
+        description=(
+            "Update competency matrix section priority order for one sheet.\n\n"
+            "Personal API token permissions: competency.matrix.update, "
+            "competency.matrix.publish."
+        ),
         name="admin-competency-matrix-section-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.update", "competency.matrix.publish")},
     )
     async def update_competency_matrix_section_priorities(
         self,
@@ -470,9 +516,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @put(
         "/sections/{section_id:str}/subsections/priorities",
-        description="Update competency matrix subsection priority order for one section.",
+        description=(
+            "Update competency matrix subsection priority order for one "
+            "section.\n\nPersonal API token permissions: "
+            "competency.matrix.update, competency.matrix.publish."
+        ),
         name="admin-competency-matrix-subsection-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.update", "competency.matrix.publish")},
     )
     async def update_competency_matrix_subsection_priorities(
         self,
@@ -500,7 +551,10 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/resources/search",
-        description="Search admin competency matrix resources by name and URL.",
+        description=(
+            "Search admin competency matrix resources by name and URL.\n\n"
+            "Personal API token permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-resources-search-api-handler",
         status_code=status_codes.HTTP_200_OK,
         dependencies={
@@ -509,6 +563,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def search_competency_matrix_resources(
         self,
@@ -523,21 +578,28 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/queued-questions",
-        description="Get the queued competency matrix question list.",
+        description=(
+            "Get the queued competency matrix question list.\n\nPersonal API "
+            "token permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-queued-questions-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def list_queued_competency_matrix_questions(
         self,
         use_case: FromDishka[CompetencyMatrixUseCase],
-        current_datetime: FromDishka[datetime],
     ) -> QueuedQuestionsResponseSchema:
-        questions = await use_case.list_queued_questions(current_datetime=current_datetime)
+        questions = await use_case.list_queued_questions()
         return QueuedQuestionsResponseSchema.from_domain_schema(schema=questions)
 
     @post(
         "/queued-questions",
-        description="Manually add a competency matrix question to the queue.",
+        description=(
+            "Manually add a competency matrix question to the queue.\n\nPersonal "
+            "API token permissions: competency.matrix.create. Published content"
+            " also requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-queued-question-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
         dependencies={
@@ -546,6 +608,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.create",)},
     )
     async def create_queued_competency_matrix_question(
         self,
@@ -574,9 +637,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/queued-questions/import/preview",
-        description="Preview queued competency matrix questions from a file.",
+        description=(
+            "Preview queued competency matrix questions from a file.\n\nPersonal "
+            "API token permissions: competency.matrix.create. Published content"
+            " also requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-queued-questions-import-preview-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.create",)},
     )
     async def preview_queued_competency_matrix_questions_import(
         self,
@@ -602,7 +670,11 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/queued-questions/import",
-        description="Import confirmed queued competency matrix questions from a file.",
+        description=(
+            "Import confirmed queued competency matrix questions from a file.\n\n"
+            "Personal API token permissions: competency.matrix.create. "
+            "Published content also requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-queued-questions-import-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
         dependencies={
@@ -611,6 +683,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.create",)},
     )
     async def import_queued_competency_matrix_questions(
         self,
@@ -641,39 +714,34 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @delete(
         "/queued-questions/{pk:str}",
-        description="Reject a queued competency matrix question.",
+        description=(
+            "Reject a queued competency matrix question.\n\nPersonal API token "
+            "permissions: competency.matrix.delete. Published content also "
+            "requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-queued-question-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.delete",)},
     )
     async def delete_queued_competency_matrix_question(
         self,
         pk: EntityPkPath,
         use_case: FromDishka[CompetencyMatrixUseCase],
-        current_datetime: FromDishka[datetime],
     ) -> None:
         await use_case.delete_queued_question(
             question_id=pk,
-            current_datetime=current_datetime,
         )
 
     @post(
-        "/queued-questions/{pk:str}/release-agent-claim",
-        description="Explicitly release an agent claim on a queued matrix question.",
-        name="admin-competency-matrix-queued-question-release-agent-claim-api-handler",
-        status_code=status_codes.HTTP_204_NO_CONTENT,
-    )
-    async def release_queued_competency_matrix_question_agent_claim(
-        self,
-        pk: EntityPkPath,
-        use_case: FromDishka[CompetencyMatrixUseCase],
-    ) -> None:
-        await use_case.release_queued_question_agent_claim(question_id=pk)
-
-    @post(
         "/queued-questions/{pk:str}/create-item",
-        description="Create a competency matrix question from the queue.",
+        description=(
+            "Create a competency matrix question from the queue.\n\nPersonal API "
+            "token permissions: competency.matrix.create. Published content "
+            "also requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-queued-question-create-item-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
+        opt={"pat_permissions": ("competency.matrix.create",)},
     )
     async def create_competency_matrix_item_from_queue(  # noqa: PLR0913
         self,
@@ -713,7 +781,6 @@ class AdminCompetencyMatrixApiController(Controller):
         ],
         use_case: FromDishka[CompetencyMatrixUseCase],
         language: LanguageQuery,
-        current_datetime: FromDishka[datetime],
         post_commit_actions: FromDishka[PostCommitActions],
     ) -> CompetencyMatrixItemDetailResponseSchema:
         item = await use_case.create_item_from_queue(
@@ -722,7 +789,6 @@ class AdminCompetencyMatrixApiController(Controller):
                 item_id_generator=id_generator,
                 resource_id_generator=id_generator,
             ),
-            current_datetime=current_datetime,
         )
         await invalidate_response_cache_domain_for_mutation(
             request=request,
@@ -736,7 +802,10 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/items/workspace",
-        description="Get the admin competency matrix question workspace list.",
+        description=(
+            "Get the admin competency matrix question workspace list.\n\nPersonal"
+            " API token permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-items-workspace-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
         dependencies={
@@ -745,6 +814,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def list_competency_matrix_workspace_items(
         self,
@@ -756,9 +826,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/items/filter-options",
-        description="Get competency matrix workspace filter values.",
+        description=(
+            "Get competency matrix workspace filter values.\n\nPersonal API token"
+            " permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-items-filter-options-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def list_competency_matrix_workspace_filter_options(
         self,
@@ -770,9 +844,13 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/items",
-        description="Get the admin competency matrix question list.",
+        description=(
+            "Get the admin competency matrix question list.\n\nPersonal API token"
+            " permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-items-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def list_competency_matrix_items(
         self,
@@ -794,7 +872,11 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/items",
-        description="Create a competency matrix question.",
+        description=(
+            "Create a competency matrix question.\n\nPersonal API token "
+            "permissions: competency.matrix.create. Published content also "
+            "requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-item-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
         dependencies={
@@ -803,6 +885,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.create",)},
     )
     async def create_competency_matrix_item(  # noqa: PLR0913
         self,
@@ -863,7 +946,10 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @get(
         "/items/detail/{pk:str}",
-        description="Get admin competency matrix question details.",
+        description=(
+            "Get admin competency matrix question details.\n\nPersonal API token "
+            "permissions: competency.matrix.read."
+        ),
         name="admin-competency-matrix-item-detail-api-handler",
         status_code=status_codes.HTTP_200_OK,
         dependencies={
@@ -872,6 +958,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.read",)},
     )
     async def get_competency_matrix_item(
         self,
@@ -887,9 +974,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @put(
         "/items/detail/{pk:str}",
-        description="Update a competency matrix question.",
+        description=(
+            "Update a competency matrix question.\n\nPersonal API token "
+            "permissions: competency.matrix.update. Published content also "
+            "requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-item-update-api-handler",
         status_code=status_codes.HTTP_200_OK,
+        opt={"pat_permissions": ("competency.matrix.update",)},
     )
     async def update_competency_matrix_item(  # noqa: PLR0913
         self,
@@ -949,9 +1041,14 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @delete(
         "/items/detail/{pk:str}",
-        description="Delete a competency matrix question.",
+        description=(
+            "Delete a competency matrix question.\n\nPersonal API token "
+            "permissions: competency.matrix.delete. Published content also "
+            "requires competency.matrix.publish."
+        ),
         name="admin-competency-matrix-item-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.matrix.delete",)},
     )
     async def delete_competency_matrix_item(
         self,
@@ -969,7 +1066,10 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/items/detail/{pk:str}/set-draft",
-        description='Set competency matrix question status to "Draft".',
+        description=(
+            'Set competency matrix question status to "Draft".\n\nPersonal API '
+            "token permissions: competency.matrix.publish."
+        ),
         name="admin-competency-matrix-item-set-draft-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
         dependencies={
@@ -978,6 +1078,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.publish",)},
     )
     async def set_draft_status_to_competency_matrix_item(
         self,
@@ -995,7 +1096,10 @@ class AdminCompetencyMatrixApiController(Controller):
 
     @post(
         "/items/detail/{pk:str}/set-published",
-        description='Set competency matrix question status to "Published".',
+        description=(
+            'Set competency matrix question status to "Published".\n\nPersonal '
+            "API token permissions: competency.matrix.publish."
+        ),
         name="admin-competency-matrix-item-set-published-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
         dependencies={
@@ -1004,6 +1108,7 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"pat_permissions": ("competency.matrix.publish",)},
     )
     async def set_published_status_to_competency_matrix_item(
         self,

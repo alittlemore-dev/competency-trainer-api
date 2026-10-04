@@ -30,6 +30,7 @@ from core.files.clients import FileClient
 from core.files.enums import FilePurpose
 from core.files.services import FileService
 from core.i18n.enums import LanguageEnum
+from core.identity import PublicationAccess
 from tests.test_cases import TestCase
 
 
@@ -41,6 +42,7 @@ class TestArticlesUseCase(TestCase):
         self.file_service = Mock(spec=FileService)
         self.file_client = Mock(spec=FileClient)
         self.use_case = ArticlesUseCase(
+            publication=PublicationAccess(allowed=True),
             storage=self.storage,
             file_service=self.file_service,
             file_client=self.file_client,

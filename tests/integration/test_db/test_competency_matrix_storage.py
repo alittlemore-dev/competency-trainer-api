@@ -441,10 +441,14 @@ class TestCompetencyMatrixStorage(StorageTestCase):
 
     async def test_get_competency_matrix_item_not_found(self) -> None:
         with pytest.raises(CompetencyMatrixItemNotFoundError):
-            await self.storage.get_competency_matrix_item(item_id=self.factory.core.hex_id(-1))
+            await self.storage.get_competency_matrix_item(
+                item_id=self.factory.core.hex_id(-1), lock=False
+            )
 
     async def test_get_competency_matrix_item_found(self) -> None:
-        item = await self.storage.get_competency_matrix_item(item_id=self.factory.core.hex_id(1))
+        item = await self.storage.get_competency_matrix_item(
+            item_id=self.factory.core.hex_id(1), lock=False
+        )
         assert item == self.factory.core.competency_matrix_item(
             item_id=1,
             question="1",
@@ -1207,7 +1211,9 @@ class TestCompetencyMatrixStorage(StorageTestCase):
             item_id=self.factory.core.hex_id(3),
             publish_status=PublishStatusEnum.DRAFT,
         )
-        item = await self.storage.get_competency_matrix_item(item_id=self.factory.core.hex_id(3))
+        item = await self.storage.get_competency_matrix_item(
+            item_id=self.factory.core.hex_id(3), lock=False
+        )
         assert item.publish_status == PublishStatusEnum.DRAFT
 
     async def test_update_publish_status_sets_first_published_at_only_once(self) -> None:
@@ -1230,7 +1236,9 @@ class TestCompetencyMatrixStorage(StorageTestCase):
             item_id=self.factory.core.hex_id(3),
             publish_status=PublishStatusEnum.PUBLISHED,
         )
-        first = await self.storage.get_competency_matrix_item(item_id=self.factory.core.hex_id(3))
+        first = await self.storage.get_competency_matrix_item(
+            item_id=self.factory.core.hex_id(3), lock=False
+        )
         await self.storage.update_competency_matrix_item_publish_status(
             item_id=self.factory.core.hex_id(3),
             publish_status=PublishStatusEnum.DRAFT,
@@ -1239,7 +1247,9 @@ class TestCompetencyMatrixStorage(StorageTestCase):
             item_id=self.factory.core.hex_id(3),
             publish_status=PublishStatusEnum.PUBLISHED,
         )
-        second = await self.storage.get_competency_matrix_item(item_id=self.factory.core.hex_id(3))
+        second = await self.storage.get_competency_matrix_item(
+            item_id=self.factory.core.hex_id(3), lock=False
+        )
 
         assert first.published_at is not None
         assert second.published_at == first.published_at
@@ -1308,7 +1318,9 @@ class TestCompetencyMatrixStorage(StorageTestCase):
         )
         await self.storage.delete_competency_matrix_item(item_id=self.factory.core.hex_id(3))
         with pytest.raises(CompetencyMatrixItemNotFoundError):
-            await self.storage.get_competency_matrix_item(item_id=self.factory.core.hex_id(3))
+            await self.storage.get_competency_matrix_item(
+                item_id=self.factory.core.hex_id(3), lock=False
+            )
 
     async def test_delete_not_found(self) -> None:
         with pytest.raises(CompetencyMatrixItemNotFoundError):

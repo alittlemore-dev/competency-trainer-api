@@ -57,21 +57,6 @@ class TestQueryPlanProfileSeed:
         assert ", 100) < 80" in compiled
         assert ", 100) = 0" in compiled
 
-    async def test_agent_audit_seed_uses_profile_cardinality(self) -> None:
-        connection = AsyncMock()
-
-        await query_plan_seed.insert_agent_access_records(
-            connection=connection,
-            profile=REALISTIC_PROFILE,
-        )
-
-        audit_statement = connection.execute.await_args_list[-1].args[0]
-        compiled = audit_statement.compile(dialect=postgresql.dialect())
-        assert "generate_series" in str(compiled)
-        assert REALISTIC_PROFILE.cardinalities.agent_access.audit_events in (
-            compiled.params.values()
-        )
-
     async def test_seed_profile_passes_profile_to_every_volume_seed(
         self,
         monkeypatch: pytest.MonkeyPatch,
@@ -89,7 +74,6 @@ class TestQueryPlanProfileSeed:
             "insert_competency_matrix_items",
             "insert_competency_matrix_resource_links",
             "insert_queued_competency_matrix_questions",
-            "insert_agent_access_records",
         )
 
         for seed_name in volume_seed_names:

@@ -5,11 +5,19 @@ from dishka import Provider, Scope, provide
 from litestar.stores.valkey import ValkeyStore
 from valkey.asyncio import Valkey
 
+from core.articles.storages import ArticlesStorage
+from core.articles.use_cases import ArticlesUseCase
 from core.cache_tools.enums import CacheDomainEnum
 from core.cache_tools.schemas import CacheToolsPolicy
 from core.cache_tools.storages import CacheWarmOperationStorage, ResponseCacheStatusStorage
 from core.cache_tools.use_cases import CacheToolsUseCase, ManualCacheWarmUseCase
+from core.competency_matrix.services import QuestionSuggestionLimiter
+from core.competency_matrix.storages import CompetencyMatrixStorage
+from core.competency_matrix.use_cases import CompetencyMatrixUseCase
+from core.files.clients import FileClient
+from core.files.services import FileService
 from core.generators import HexUuidIdGenerator
+from core.identity import PublicationAccess
 from entrypoints.litestar.response_cache import (
     ResponseCacheDomain,
     ResponseCacheDomainStore,
@@ -35,10 +43,41 @@ class ResponseCacheWarmProvider(Provider):
     scope = Scope.REQUEST
 
     cache_warm_query_builder = provide(CacheWarmQueryBuilder)
-    articles_cache_warm_target_collector = provide(ArticlesCacheWarmTargetCollector)
-    competency_matrix_cache_warm_target_collector = provide(
-        CompetencyMatrixCacheWarmTargetCollector,
-    )
+
+    @provide
+    async def provide_articles_collector(
+        self,
+        storage: ArticlesStorage,
+        file_service: FileService,
+        file_client: FileClient,
+        query_builder: CacheWarmQueryBuilder,
+    ) -> ArticlesCacheWarmTargetCollector:
+        return ArticlesCacheWarmTargetCollector(
+            articles_use_case=ArticlesUseCase(
+                storage=storage,
+                file_service=file_service,
+                file_client=file_client,
+                publication=PublicationAccess(allowed=False),
+            ),
+            query_builder=query_builder,
+        )
+
+    @provide
+    async def provide_matrix_collector(
+        self,
+        storage: CompetencyMatrixStorage,
+        question_suggestion_limiter: QuestionSuggestionLimiter,
+        query_builder: CacheWarmQueryBuilder,
+    ) -> CompetencyMatrixCacheWarmTargetCollector:
+        return CompetencyMatrixCacheWarmTargetCollector(
+            matrix_use_case=CompetencyMatrixUseCase(
+                storage=storage,
+                question_suggestion_limiter=question_suggestion_limiter,
+                publication=PublicationAccess(allowed=False),
+            ),
+            query_builder=query_builder,
+        )
+
     response_cache_warm_target_collector = provide(ResponseCacheWarmTargetCollector)
     response_cache_warm_writer = provide(ResponseCacheWarmWriter)
 

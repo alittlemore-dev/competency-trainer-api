@@ -18,6 +18,7 @@ from core.competency_matrix.schemas import (
 from core.competency_matrix.services import QuestionSuggestionLimiter
 from core.competency_matrix.storages import CompetencyMatrixStorage
 from core.competency_matrix.use_cases import CompetencyMatrixUseCase
+from core.identity import PublicationAccess
 from tests.test_cases import TestCase
 
 
@@ -27,6 +28,7 @@ class TestCompetencyMatrixStructurePriorityUseCase(TestCase):
         self.storage = Mock(spec=CompetencyMatrixStorage)
         self.question_suggestion_limiter = Mock(spec=QuestionSuggestionLimiter)
         self.use_case = CompetencyMatrixUseCase(
+            publication=PublicationAccess(allowed=True),
             storage=self.storage,
             question_suggestion_limiter=self.question_suggestion_limiter,
         )

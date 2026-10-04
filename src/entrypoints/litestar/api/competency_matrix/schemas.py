@@ -39,7 +39,6 @@ from core.competency_matrix.schemas import (
     ExistingExternalResourceAttachment,
     ExternalResource,
     ExternalResources,
-    MatrixQuestionClaimSummary,
     NewExternalResourceAttachment,
     QuestionQueueImportPreview,
     QuestionQueueImportPreviewIssue,
@@ -310,24 +309,6 @@ class PublicQuestionSuggestionRequestSchema(QuestionSuggestionRequestSchema):
     sheet: Annotated[RequiredShortText, Field(title="Sheet")]
 
 
-class QueuedQuestionClaimResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Claim identifier")]
-    agent_client_id: Annotated[str, Field(title="Agent client identifier")]
-    agent_client_name: Annotated[str, Field(title="Agent client name")]
-    claimed_at: Annotated[str, Field(title="Claim creation date")]
-    expires_at: Annotated[str, Field(title="Claim expiration date")]
-
-    @classmethod
-    def from_domain_schema(cls, *, schema: MatrixQuestionClaimSummary) -> Self:
-        return cls(
-            id=schema.id,
-            agent_client_id=schema.agent_client_id,
-            agent_client_name=schema.agent_client_name,
-            claimed_at=schema.claimed_at.isoformat(),
-            expires_at=schema.expires_at.isoformat(),
-        )
-
-
 class QueuedQuestionResponseSchema(CamelCaseSchema):
     id: Annotated[str, Field(title="Identifier")]
     question: Annotated[str, Field(title="Question")]
@@ -337,7 +318,6 @@ class QueuedQuestionResponseSchema(CamelCaseSchema):
     subsection: Annotated[str | None, Field(title="Subsection")]
     suggested_by_username: Annotated[str, Field(title="Suggested by")]
     created_at: Annotated[str, Field(title="Creation date")]
-    claim: Annotated[QueuedQuestionClaimResponseSchema | None, Field(title="Agent claim")]
 
     @classmethod
     def from_domain_schema(cls, *, schema: QueuedCompetencyMatrixQuestion) -> Self:
@@ -350,11 +330,6 @@ class QueuedQuestionResponseSchema(CamelCaseSchema):
             subsection=schema.subsection,
             suggested_by_username=schema.suggested_by_username,
             created_at=schema.created_at.isoformat(),
-            claim=(
-                QueuedQuestionClaimResponseSchema.from_domain_schema(schema=schema.claim)
-                if schema.claim is not None
-                else None
-            ),
         )
 
 

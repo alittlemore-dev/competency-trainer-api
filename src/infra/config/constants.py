@@ -60,7 +60,6 @@ class TaskiqConstants:
     manual_cache_warm_task_name: Literal["manual_cache_warm"] = "manual_cache_warm"
     cache_warm_operation_key_prefix: Literal["operation"] = "operation"
     cache_warm_latest_operation_key: Literal["latest"] = "latest"
-    agent_audit_prune_task_name: Literal["agent_audit_prune"] = "agent_audit_prune"
     file_orphan_prune_task_name: Literal["file_orphan_prune"] = "file_orphan_prune"
 
 
@@ -133,26 +132,6 @@ class AdminValidationConstants:
     matrix_long_text_max_length: int = 20_000
 
 
-class AgentAccessConstants:
-    api_path_prefix: str = "/internal/agent/v1"
-    claim_ttl_seconds: int = 7_200
-    minimum_resource_count: int = 1
-    maximum_resource_count: int = 3
-    certificate_lifetime_seconds: int = 90 * 24 * 60 * 60
-    certificate_rotation_window_seconds: int = 14 * 24 * 60 * 60
-    certificate_rotation_normal_access_overlap_seconds: int = 15 * 60
-    csr_pem_max_length: int = 16_384
-    request_body_max_size_bytes: int = 262_144
-    audit_page_max_size: int = 100
-    audit_retention_seconds: int = 365 * 24 * 60 * 60
-    trusted_client_certificate_header: str = "X-Agent-Client-Certificate"
-    request_id_header: str = "X-Request-ID"
-    access_classification: Literal["future internal"] = "future internal"
-    desktop_directory_mode: int = 0o700
-    desktop_private_key_mode: int = 0o600
-    desktop_pending_file_mode: int = 0o600
-
-
 class Constants:
     path: PathConstants = PathConstants()
     minio_buckets: MinioBucketNamesConstants = MinioBucketNamesConstants()
@@ -163,7 +142,6 @@ class Constants:
     search: SearchConstants = SearchConstants()
     question_queue_import: QuestionQueueImportConstants = QuestionQueueImportConstants()
     admin_validation: AdminValidationConstants = AdminValidationConstants()
-    agent_access: AgentAccessConstants = AgentAccessConstants()
 
 
 constants = Constants()

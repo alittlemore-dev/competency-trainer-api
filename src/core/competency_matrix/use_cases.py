@@ -1,10 +1,8 @@
 from dataclasses import dataclass
-from datetime import datetime
 
 from core.competency_matrix.exceptions import (
     CompetencyMatrixItemNotFoundError,
     CompetencyMatrixStructureContainsQuestionsError,
-    MatrixQuestionClaimConflictError,
     QuestionSuggestionAlreadyExistsError,
     QuestionSuggestionSheetUnavailableError,
 )
@@ -47,10 +45,12 @@ from core.competency_matrix.services import QuestionSuggestionLimiter
 from core.competency_matrix.storages import CompetencyMatrixStorage
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.identity import PublicationAccess
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class CompetencyMatrixUseCase:
+    publication: PublicationAccess
     storage: CompetencyMatrixStorage
     question_suggestion_limiter: QuestionSuggestionLimiter
 
@@ -151,7 +151,7 @@ class CompetencyMatrixUseCase:
         *,
         params: CompetencyMatrixItemGetParams,
     ) -> CompetencyMatrixItem:
-        item = await self.storage.get_competency_matrix_item(item_id=params.item_id)
+        item = await self.storage.get_competency_matrix_item(item_id=params.item_id, lock=False)
         if params.only_published and not item.is_available():
             raise CompetencyMatrixItemNotFoundError
         return item
@@ -205,6 +205,7 @@ class CompetencyMatrixUseCase:
         params: CompetencyMatrixItemCreateParams,
         suggested_by_username: str,
     ) -> CompetencyMatrixItem:
+        self.publication.ensure_allowed(params.publish_status)
         resource_ids_to_assign = params.get_resource_ids_to_assign()
         resources = (
             await self.storage.get_resources_by_ids(resource_ids=resource_ids_to_assign)
@@ -230,16 +231,12 @@ class CompetencyMatrixUseCase:
         self,
         *,
         params: QueuedCompetencyMatrixQuestionCreateItemParams,
-        current_datetime: datetime,
     ) -> CompetencyMatrixItem:
+        self.publication.ensure_allowed(params.item.publish_status)
         queued_question = await self.storage.get_queued_question(
             question_id=params.queued_question_id,
             lock=True,
         )
-        if queued_question.claim is not None and queued_question.claim.is_active(
-            current_datetime=current_datetime,
-        ):
-            raise MatrixQuestionClaimConflictError
         resource_ids_to_assign = params.item.get_resource_ids_to_assign()
         resources = (
             await self.storage.get_resources_by_ids(resource_ids=resource_ids_to_assign)
@@ -279,7 +276,8 @@ class CompetencyMatrixUseCase:
         structure = await self.storage.get_item_structure_by_subsection_id(
             subsection_id=params.subsection_id,
         )
-        existing_item = await self.storage.get_competency_matrix_item(item_id=params.id)
+        existing_item = await self.storage.get_competency_matrix_item(item_id=params.id, lock=True)
+        self.publication.ensure_allowed(existing_item.publish_status, params.publish_status)
         item = params.to_item(
             resources=resources,
             structure=structure,
@@ -291,6 +289,8 @@ class CompetencyMatrixUseCase:
         return await self.storage.update_competency_matrix_item(item=item)
 
     async def delete_item(self, *, item_id: str) -> None:
+        item = await self.storage.get_competency_matrix_item(item_id=item_id, lock=True)
+        self.publication.ensure_allowed(item.publish_status)
         await self.storage.delete_competency_matrix_item(item_id=item_id)
 
     async def switch_item_publish_status(
@@ -298,8 +298,9 @@ class CompetencyMatrixUseCase:
         *,
         params: CompetencyMatrixItemPublishStatusSwitchParams,
     ) -> None:
+        self.publication.ensure_allowed(PublishStatusEnum.PUBLISHED)
         if params.publish_status == PublishStatusEnum.PUBLISHED:
-            item = await self.storage.get_competency_matrix_item(item_id=params.item_id)
+            item = await self.storage.get_competency_matrix_item(item_id=params.item_id, lock=True)
             item.ensure_public_ready()
         await self.storage.update_competency_matrix_item_publish_status(
             item_id=params.item_id,
@@ -334,14 +335,8 @@ class CompetencyMatrixUseCase:
             suggested_by_username=params.suggested_by_username,
         )
 
-    async def list_queued_questions(
-        self,
-        *,
-        current_datetime: datetime,
-    ) -> QueuedCompetencyMatrixQuestions:
-        return await self.storage.list_queued_questions_with_active_claims(
-            active_at=current_datetime,
-        )
+    async def list_queued_questions(self) -> QueuedCompetencyMatrixQuestions:
+        return await self.storage.list_queued_questions()
 
     async def preview_queued_questions_import(
         self,
@@ -366,22 +361,9 @@ class CompetencyMatrixUseCase:
         self,
         *,
         question_id: str,
-        current_datetime: datetime,
     ) -> None:
-        queued_question = await self.storage.get_queued_question(
+        await self.storage.get_queued_question(
             question_id=question_id,
             lock=True,
         )
-        if queued_question.claim is not None and queued_question.claim.is_active(
-            current_datetime=current_datetime,
-        ):
-            raise MatrixQuestionClaimConflictError
         await self.storage.delete_queued_question(question_id=question_id)
-
-    async def release_queued_question_agent_claim(self, *, question_id: str) -> None:
-        queued_question = await self.storage.get_queued_question(
-            question_id=question_id,
-            lock=True,
-        )
-        if queued_question.claim is not None:
-            await self.storage.delete_question_claim(claim_id=queued_question.claim.id)

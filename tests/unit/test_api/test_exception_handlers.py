@@ -14,15 +14,6 @@ from verbose_http_exceptions import (
     UnauthorizedHTTPException,
 )
 
-from core.agent_access.exceptions import (
-    AgentAuditPaginationError,
-    AgentAuthenticationError,
-    AgentCertificateRequestError,
-    AgentClientNameConflictError,
-    AgentClientValidationError,
-    AgentScopeDeniedError,
-    MatrixQuestionDraftValidationError,
-)
 from core.articles.exceptions import (
     ArticleFolderAlreadyExistsError,
     ArticleFolderPriorityInvalidError,
@@ -32,7 +23,6 @@ from core.competency_matrix.exceptions import (
     CompetencyMatrixStructureAlreadyExistsError,
     CompetencyMatrixStructureContainsQuestionsError,
     CompetencyMatrixStructurePriorityInvalidError,
-    MatrixQuestionClaimConflictError,
     QuestionQueueImportInvalidError,
     QuestionQueueImportIssue,
     QuestionSuggestionAlreadyExistsError,
@@ -70,11 +60,6 @@ def raise_question_quota() -> None:
 @get("/question-duplicate", sync_to_thread=False)
 def raise_question_duplicate() -> None:
     raise QuestionSuggestionAlreadyExistsError
-
-
-@get("/agent-client-name-conflict", sync_to_thread=False)
-def raise_agent_client_name_conflict() -> None:
-    raise AgentClientNameConflictError
 
 
 @get("/question-sheet-unavailable", sync_to_thread=False)
@@ -140,13 +125,6 @@ def test_duplicate_question_domain_error_returns_verbose_409() -> None:
     assert response.json()["message"] == QuestionSuggestionAlreadyExistsError.message
 
 
-def test_duplicate_agent_client_name_returns_stable_verbose_409() -> None:
-    response = get_response("/agent-client-name-conflict")
-
-    assert response.status_code == codes.CONFLICT
-    assert response.json()["message"] == AgentClientNameConflictError.message
-
-
 def test_unavailable_question_sheet_domain_error_returns_verbose_400() -> None:
     response = get_response("/question-sheet-unavailable")
 
@@ -197,14 +175,6 @@ def test_domain_error_verbose_exception_mapping() -> None:
         EntryNotFoundError: NotFoundHTTPException,
         UnauthorizedError: UnauthorizedHTTPException,
         ForbiddenError: ForbiddenHTTPException,
-        AgentAuthenticationError: UnauthorizedHTTPException,
-        AgentScopeDeniedError: ForbiddenHTTPException,
-        AgentCertificateRequestError: BadRequestHTTPException,
-        AgentClientNameConflictError: ConflictHTTPException,
-        AgentClientValidationError: BadRequestHTTPException,
-        AgentAuditPaginationError: BadRequestHTTPException,
-        MatrixQuestionDraftValidationError: BadRequestHTTPException,
-        MatrixQuestionClaimConflictError: ConflictHTTPException,
         InvalidFileDataError: BadRequestHTTPException,
         FileInUseError: BadRequestHTTPException,
         FileClientInternalError: InternalServerErrorHTTPException,
@@ -238,7 +208,6 @@ def exception_route_handlers() -> Sequence[ControllerRouterHandler]:
         raise_forbidden,
         raise_question_quota,
         raise_question_duplicate,
-        raise_agent_client_name_conflict,
         raise_question_sheet_unavailable,
         raise_question_import,
         raise_python_error,

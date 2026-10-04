@@ -8,7 +8,6 @@ readme = "README.md"
 license = { text = "MIT" }
 dependencies = [
     "alittlemore-backend-sdk[litestar]>=0.2.0,<0.3.0",
-    "cryptography>=50.0.0",
     "granian>=2.8.1",
     "httpx>=0.28.1",
     "pydantic-settings>=2.15.0",
@@ -31,7 +30,6 @@ dependencies = [
     "taskiq-redis>=1.2.3",
     "types-aiobotocore-s3>=3.9.0",
     "msgpack>=1.2.1",
-    "mcp>=2.0.0,<3",
     "pillow>=12.3.0",
 ]
 

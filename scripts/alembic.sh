@@ -2,20 +2,24 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-backend_dir="$(cd -- "${script_dir}/.." && pwd)"
+# shellcheck source=common.sh
+. "$script_dir/common.sh"
 cd "$backend_dir"
-
-require_uv() {
-    if ! command -v uv >/dev/null 2>&1; then
-        echo "UV could not be found." >&2
-        exit 2
-    fi
-}
 
 action="${1:?action is required}"
 alembic_config="src/infra/postgresql/alembic/alembic.ini"
 
 require_uv
+
+if [ -n "${MIGRATION_ENV_FILE:-}" ]; then
+    ensure_backend_deps
+    TEST_ENV_FILE="$MIGRATION_ENV_FILE"
+    ensure_backend_test_db
+    trap cleanup_owned_test_db EXIT
+    if [ "$action" = "revision" ]; then
+        PYTHONPATH=src uv run alembic -c "$alembic_config" upgrade head
+    fi
+fi
 
 case "$action" in
     revision)

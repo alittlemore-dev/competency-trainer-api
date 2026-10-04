@@ -18,15 +18,6 @@ from verbose_http_exceptions.ext.litestar import (
 )
 from verbose_http_exceptions.ext.litestar.types import LitestarExceptionHandlersMap
 
-from core.agent_access.exceptions import (
-    AgentAuditPaginationError,
-    AgentAuthenticationError,
-    AgentCertificateRequestError,
-    AgentClientNameConflictError,
-    AgentClientValidationError,
-    AgentScopeDeniedError,
-    MatrixQuestionDraftValidationError,
-)
 from core.articles.exceptions import (
     ArticleFolderAlreadyExistsError,
     ArticleFolderPriorityInvalidError,
@@ -36,7 +27,6 @@ from core.competency_matrix.exceptions import (
     CompetencyMatrixStructureAlreadyExistsError,
     CompetencyMatrixStructureContainsQuestionsError,
     CompetencyMatrixStructurePriorityInvalidError,
-    MatrixQuestionClaimConflictError,
     QuestionQueueImportInvalidError,
     QuestionSuggestionAlreadyExistsError,
     QuestionSuggestionQuotaExceededError,
@@ -51,14 +41,6 @@ DOMAIN_ERROR_MAPPING: dict[type[DomainError], type[BaseVerboseHTTPException]] = 
     EntryNotFoundError: NotFoundHTTPException,
     UnauthorizedError: UnauthorizedHTTPException,
     ForbiddenError: ForbiddenHTTPException,
-    AgentAuthenticationError: UnauthorizedHTTPException,
-    AgentScopeDeniedError: ForbiddenHTTPException,
-    AgentCertificateRequestError: BadRequestHTTPException,
-    AgentClientNameConflictError: ConflictHTTPException,
-    AgentClientValidationError: BadRequestHTTPException,
-    AgentAuditPaginationError: BadRequestHTTPException,
-    MatrixQuestionDraftValidationError: BadRequestHTTPException,
-    MatrixQuestionClaimConflictError: ConflictHTTPException,
     InvalidFileDataError: BadRequestHTTPException,
     FileInUseError: BadRequestHTTPException,
     FileClientInternalError: InternalServerErrorHTTPException,

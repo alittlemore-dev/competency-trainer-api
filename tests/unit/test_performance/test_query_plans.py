@@ -640,7 +640,6 @@ class TestQueryCapture:
                     "resourceLinks": 25_000,
                     "queuedQuestions": 5_000,
                 },
-                "agentAccess": {"auditEvents": 10_000},
             },
             "relationCardinalities": query_plan_models.REALISTIC_PROFILE.relation_cardinalities,
         }
@@ -738,7 +737,6 @@ def make_query_plan_profile() -> query_plan_models.QueryPlanProfile:
                 resource_links=10,
                 queued_questions=101,
             ),
-            agent_access=query_plan_models.AgentAccessCardinalities(audit_events=10),
         ),
         timing_mode=query_plan_models.TimingMode.ENFORCE,
         explain_runs=1,

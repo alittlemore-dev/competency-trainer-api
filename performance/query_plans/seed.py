@@ -18,20 +18,10 @@ from sqlalchemy import cast as sql_cast
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.sql.selectable import Subquery
 
-from core.agent_access.enums import (
-    AgentActionEnum,
-    AgentAuditResultEnum,
-    AgentClientStatusEnum,
-    AgentScopeEnum,
-)
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.competency_matrix.schemas import CompetencyMatrixQuestionFingerprint
 from core.files.enums import FilePurpose
 from infra.postgresql.models import (
-    AgentAuditEventModel,
-    AgentCertificateModel,
-    AgentCertificateRotationModel,
-    AgentClientModel,
     ArticleDailyAnalyticsModel,
     ArticleFileUsageModel,
     ArticleFolderModel,
@@ -45,8 +35,6 @@ from infra.postgresql.models import (
     ContactMeModel,
     ExternalResourceModel,
     FileModel,
-    MatrixQuestionClaimModel,
-    MatrixQuestionDraftCompletionModel,
     QueuedQuestionModel,
     TagModel,
 )
@@ -72,12 +60,6 @@ EXISTING_MATRIX_ITEM_SEED_INDEX = 100
 ANALYTICS_DAY_BUCKET_COUNT = 1_095
 ANALYTICS_SOURCE_DAY_OFFSET = 61
 QUERY_PLAN_SEEDED_MODELS = (
-    AgentAuditEventModel,
-    MatrixQuestionDraftCompletionModel,
-    AgentCertificateRotationModel,
-    MatrixQuestionClaimModel,
-    AgentCertificateModel,
-    AgentClientModel,
     ResourceToItemSecondaryModel,
     QueuedQuestionModel,
     CompetencyMatrixItemModel,
@@ -126,7 +108,6 @@ async def seed_profile(*, connection: AsyncConnection, profile: QueryPlanProfile
     await insert_competency_matrix_items(connection=connection, profile=profile)
     await insert_competency_matrix_resource_links(connection=connection, profile=profile)
     await insert_queued_competency_matrix_questions(connection=connection, profile=profile)
-    await insert_agent_access_records(connection=connection, profile=profile)
 
 
 async def clear_seeded_tables(*, connection: AsyncConnection) -> None:
@@ -786,138 +767,6 @@ async def insert_queued_competency_matrix_questions(
     )
 
 
-async def insert_agent_access_records(
-    *,
-    connection: AsyncConnection,
-    profile: QueryPlanProfile,
-) -> None:
-    await connection.execute(
-        insert(AgentClientModel.__table__),
-        [
-            {
-                "id": hex_id(60_001 + value),
-                "name": f"query-plan-agent-{value}",
-                "status": AgentClientStatusEnum.ACTIVE,
-                "scopes": [AgentScopeEnum.MATRIX_QUEUE_CLAIM],
-                "created_at": SEED_NOW,
-                "revoked_at": None,
-            }
-            for value in range(4)
-        ],
-    )
-    await connection.execute(
-        insert(AgentCertificateModel.__table__),
-        [
-            {
-                "id": hex_id(62_001 + value),
-                "agent_client_id": hex_id(60_001 + value),
-                "fingerprint_sha256": f"{value + 1:064x}",
-                "serial_number": f"query-plan-{value + 1}",
-                "certificate_pem": "query-plan-certificate",
-                "valid_from": SEED_NOW - timedelta(days=1),
-                "expires_at": SEED_NOW + timedelta(days=14),
-                "created_at": SEED_NOW - timedelta(days=1),
-                "revoked_at": None,
-            }
-            for value in range(4)
-        ]
-        + [
-            {
-                "id": hex_id(62_011),
-                "agent_client_id": hex_id(60_001),
-                "fingerprint_sha256": f"{11:064x}",
-                "serial_number": "query-plan-replacement",
-                "certificate_pem": "query-plan-replacement-certificate",
-                "valid_from": SEED_NOW,
-                "expires_at": SEED_NOW + timedelta(days=90),
-                "created_at": SEED_NOW,
-                "revoked_at": None,
-            },
-        ],
-    )
-    await connection.execute(
-        insert(MatrixQuestionClaimModel.__table__),
-        [
-            {
-                "id": hex_id(61_001 + value),
-                "agent_client_id": hex_id(60_001 + value),
-                "queue_item_id": hex_id(100 + value),
-                "claimed_at": SEED_NOW,
-                "expires_at": SEED_NOW + timedelta(hours=2),
-            }
-            for value in range(2)
-        ],
-    )
-    await connection.execute(
-        insert(AgentCertificateRotationModel.__table__),
-        [
-            {
-                "rotation_id": "query-plan-pending-rotation",
-                "agent_client_id": hex_id(60_001),
-                "current_certificate_id": hex_id(62_001),
-                "replacement_certificate_id": hex_id(62_011),
-                "csr_digest": "c" * 64,
-                "created_at": SEED_NOW,
-                "normal_access_until": SEED_NOW + timedelta(minutes=15),
-                "confirmed_at": None,
-            },
-        ],
-    )
-    await connection.execute(
-        insert(MatrixQuestionDraftCompletionModel.__table__),
-        [
-            {
-                "claim_id": hex_id(63_001),
-                "agent_client_id": hex_id(60_001),
-                "queue_item_id": hex_id(100),
-                "matrix_item_id": hex_id(100),
-                "input_digest": "d" * 64,
-                "completed_at": SEED_NOW,
-            },
-        ],
-    )
-    audit_series = generate_series_subquery(
-        end=profile.cardinalities.agent_access.audit_events,
-        name="agent_audit_series",
-    )
-    audit_value = sql_cast(audit_series.c.value, Integer)
-    await connection.execute(
-        insert(AgentAuditEventModel.__table__).from_select(
-            [
-                "id",
-                "agent_client_id",
-                "certificate_id",
-                "action",
-                "queue_item_id",
-                "matrix_item_id",
-                "request_id",
-                "result",
-                "input_digest",
-                "created_at",
-            ],
-            select(
-                hex_id_expr(value=64_000 + audit_value),
-                literal(hex_id(60_001)),
-                literal(hex_id(62_001)),
-                sql_cast(
-                    literal(AgentActionEnum.GET_MATRIX_AUTHORING_CONTEXT.name),
-                    AgentAuditEventModel.__table__.c.action.type,
-                ),
-                literal(None),
-                literal(None),
-                func.concat(literal("query-plan-audit-"), audit_value),
-                sql_cast(
-                    literal(AgentAuditResultEnum.SUCCESS.name),
-                    AgentAuditEventModel.__table__.c.result.type,
-                ),
-                func.lpad(func.to_hex(audit_value), 64, literal("0")),
-                literal(SEED_NOW) - audit_value * literal(timedelta(minutes=1)),
-            ).select_from(audit_series),
-            include_defaults=False,
-        ),
-    )
-
-
 def generate_series_subquery(*, end: int, name: str) -> Subquery:
     return select(func.generate_series(1, end).label("value")).subquery(name)
 
@@ -955,11 +804,5 @@ async def vacuum_analyze_seeded_tables(*, connection: AsyncConnection) -> None:
         "competency_matrix__competency_matrix_item_model",
         "competency_matrix__resource_to_item_secondary_model",
         "competency_matrix__queued_question_model",
-        "agent_access__agent_client_model",
-        "agent_access__agent_certificate_model",
-        "agent_access__agent_certificate_rotation_model",
-        "agent_access__matrix_question_claim_model",
-        "agent_access__matrix_question_draft_completion_model",
-        "agent_access__agent_audit_event_model",
     ):
         await connection.execute(text(f"VACUUM ANALYZE {table_name}"))

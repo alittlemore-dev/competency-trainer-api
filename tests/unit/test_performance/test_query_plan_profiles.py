@@ -35,7 +35,6 @@ class TestQueryPlanProfiles:
                 resource_links=25_000,
                 queued_questions=5_000,
             ),
-            agent_access=query_plan_models.AgentAccessCardinalities(audit_events=10_000),
         )
 
     def test_stress_profile_has_explicit_large_cardinalities(self) -> None:
@@ -66,7 +65,6 @@ class TestQueryPlanProfiles:
                 resource_links=500_000,
                 queued_questions=50_000,
             ),
-            agent_access=query_plan_models.AgentAccessCardinalities(audit_events=250_000),
         )
 
     def test_profiles_expose_relation_cardinalities_for_plan_classification(self) -> None:
@@ -86,7 +84,6 @@ class TestQueryPlanProfiles:
             "competency_matrix__external_resource_model": 5_000,
             "competency_matrix__resource_to_item_secondary_model": 25_000,
             "competency_matrix__queued_question_model": 5_000,
-            "agent_access__agent_audit_event_model": 10_000,
         }
 
     def test_balanced_profile_is_not_supported(self) -> None:

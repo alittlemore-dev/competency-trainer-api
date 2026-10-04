@@ -12,12 +12,48 @@ class TestOpenApiMetadata:
             assert response.status_code == 200
             assert "/api/articles" in response.json()["paths"]
 
-    def test_public_openapi_schema_excludes_admin_routes(self, app: Litestar) -> None:
+    def test_openapi_schema_documents_protected_application_routes(self, app: Litestar) -> None:
         schema = app.openapi_schema.to_schema()
         admin_paths = sorted(path for path in schema["paths"] if path.startswith("/api/admin"))
 
-        assert admin_paths == []
+        assert "/api/admin/articles" in admin_paths
+        assert "/api/admin/competency-matrix/items" in admin_paths
         assert not any(path.startswith(("/api/auth", "/api/account")) for path in schema["paths"])
+
+    def test_protected_operations_document_bearer_authentication(
+        self, sdk_auth_app: Litestar
+    ) -> None:
+        schema = sdk_auth_app.openapi_schema.to_schema()
+        protected_operations = [
+            (path, method, operation)
+            for path, method, operation in self._iter_operations(schema=schema)
+            if path.startswith("/api/admin/")
+        ]
+
+        assert protected_operations
+        assert {
+            method for path, method, _ in protected_operations if path == "/api/admin/articles"
+        } >= {
+            "get",
+            "post",
+        }
+        assert [
+            f"{method.upper()} {path}"
+            for path, method, operation in protected_operations
+            if operation.get("security") != [{"bearerAuth": []}]
+        ] == []
+        assert schema["components"]["securitySchemes"]["bearerAuth"]["scheme"] == "bearer"
+
+    def test_public_operations_do_not_require_bearer_authentication(
+        self, sdk_auth_app: Litestar
+    ) -> None:
+        schema = sdk_auth_app.openapi_schema.to_schema()
+
+        assert [
+            f"{method.upper()} {path}"
+            for path, method, operation in self._iter_operations(schema=schema)
+            if not path.startswith("/api/admin/") and operation.get("security")
+        ] == []
 
     def test_visible_parameters_include_descriptions_and_examples(self, app: Litestar) -> None:
         schema = app.openapi_schema.to_schema()

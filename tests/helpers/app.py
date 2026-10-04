@@ -5,7 +5,6 @@ from unittest.mock import Mock
 
 from dishka import AsyncContainer
 
-from core.agent_access.use_cases import AgentAdminUseCase
 from core.articles.schemas import ArticleAnalyticsConfig
 from core.articles.use_cases import ArticleAnalyticsUseCase, ArticlesUseCase
 from core.cache_tools.schemas import CacheToolsPolicy
@@ -77,10 +76,6 @@ class IocContainerHelper:
 
     async def get_cache_tools_policy(self) -> CacheToolsPolicy:
         return await self.container.get(CacheToolsPolicy)
-
-    async def get_agent_admin_use_case(self) -> Mock:
-        use_case = await self.container.get(AgentAdminUseCase)
-        return cast("Mock", use_case)
 
     # FILES
     async def get_file_name_generator(self) -> Mock:

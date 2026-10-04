@@ -16,7 +16,6 @@ from core.competency_matrix.schemas import (
     CompetencyMatrixStructureSheet,
     CompetencyMatrixStructureSubsection,
     ExternalResource,
-    MatrixQuestionClaimSummary,
     QueuedCompetencyMatrixQuestion,
     QueuedCompetencyMatrixQuestionCreateParams,
 )
@@ -565,11 +564,7 @@ class QueuedQuestionModel(HexUuidIDMixin, BaseModel):
             created_at=schema.created_at,
         )
 
-    def to_domain_schema(
-        self,
-        *,
-        claim: MatrixQuestionClaimSummary | None,
-    ) -> QueuedCompetencyMatrixQuestion:
+    def to_domain_schema(self) -> QueuedCompetencyMatrixQuestion:
         return QueuedCompetencyMatrixQuestion(
             id=self.id,
             question=self.question,
@@ -579,7 +574,6 @@ class QueuedQuestionModel(HexUuidIDMixin, BaseModel):
             subsection=self.subsection,
             suggested_by_username=self.suggested_by_username,
             created_at=self.created_at,
-            claim=claim,
         )
 
 

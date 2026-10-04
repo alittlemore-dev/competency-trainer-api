@@ -5,14 +5,12 @@ import pytest
 
 from core.competency_matrix.enums import GradeEnum, QuestionQueueImportIssueCodeEnum
 from core.competency_matrix.exceptions import (
-    MatrixQuestionClaimConflictError,
     QuestionSuggestionAlreadyExistsError,
     QuestionSuggestionSheetUnavailableError,
     QueuedCompetencyMatrixQuestionNotFoundError,
 )
 from core.competency_matrix.schemas import (
     CompetencyMatrixQuestionFingerprint,
-    MatrixQuestionClaimSummary,
     QuestionQueueImportPreview,
     QuestionQueueImportPreviewRow,
     QuestionSuggestionCreateParams,
@@ -26,6 +24,7 @@ from core.competency_matrix.schemas import (
 from core.competency_matrix.services import QuestionSuggestionLimiter
 from core.competency_matrix.storages import CompetencyMatrixStorage
 from core.competency_matrix.use_cases import CompetencyMatrixUseCase
+from core.identity import PublicationAccess
 from tests.test_cases import TestCase
 
 
@@ -40,6 +39,7 @@ class TestQuestionSuggestionsUseCase(TestCase):
         self.storage.list_sheets.return_value = self.factory.core.sheets(values=["Python"])
         self.storage.question_suggestion_exists.return_value = False
         self.use_case = CompetencyMatrixUseCase(
+            publication=PublicationAccess(allowed=True),
             storage=self.storage,
             question_suggestion_limiter=self.question_suggestion_limiter,
         )
@@ -63,7 +63,6 @@ class TestQuestionSuggestionsUseCase(TestCase):
             subsection=None,
             suggested_by_username="anon",
             created_at=now,
-            claim=None,
         )
 
         params = QuestionSuggestionCreateParams(
@@ -178,7 +177,6 @@ class TestQuestionSuggestionsUseCase(TestCase):
             subsection=None,
             suggested_by_username="alice",
             created_at=now,
-            claim=None,
         )
         params = QuestionSuggestionCreateParams(
             question=QueuedCompetencyMatrixQuestionCreateParams(
@@ -337,7 +335,6 @@ class TestQuestionSuggestionsUseCase(TestCase):
         assert result.rows[1].selected_by_default is True
 
     async def test_create_item_from_queue_creates_item_then_removes_queue_entry(self) -> None:
-        current_datetime = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
         queued_question = QueuedCompetencyMatrixQuestion(
             id=self.factory.core.hex_id(7),
             question="What is PEP 8?",
@@ -347,7 +344,6 @@ class TestQuestionSuggestionsUseCase(TestCase):
             subsection="Style",
             suggested_by_username="alice",
             created_at=datetime(2026, 6, 7, 12, 0, tzinfo=UTC),
-            claim=None,
         )
         params = self.factory.core.competency_matrix_item_create_params(
             item_id=10,
@@ -370,7 +366,6 @@ class TestQuestionSuggestionsUseCase(TestCase):
                 queued_question_id=self.factory.core.hex_id(7),
                 item=params,
             ),
-            current_datetime=current_datetime,
         )
 
         assert item == created_item
@@ -405,92 +400,11 @@ class TestQuestionSuggestionsUseCase(TestCase):
                     queued_question_id=self.factory.core.hex_id(404),
                     item=self.factory.core.competency_matrix_item_create_params(item_id=1),
                 ),
-                current_datetime=datetime(2026, 7, 14, 12, 0, tzinfo=UTC),
             )
 
         self.storage.create_competency_matrix_item.assert_not_called()
         self.storage.delete_queued_question.assert_not_called()
         self.storage.get_queued_question.assert_called_once_with(
             question_id=self.factory.core.hex_id(404),
-            lock=True,
-        )
-
-    async def test_create_item_from_queue_rejects_active_agent_claim(self) -> None:
-        current_datetime = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
-        self.storage.get_queued_question.return_value = (
-            self.factory.core.queued_competency_matrix_question(
-                question_id=7,
-                claim=MatrixQuestionClaimSummary(
-                    id=self.factory.core.hex_id(8),
-                    agent_client_id=self.factory.core.hex_id(9),
-                    agent_client_name="codex-desktop",
-                    claimed_at=datetime(2026, 7, 14, 11, 0, tzinfo=UTC),
-                    expires_at=datetime(2026, 7, 14, 13, 0, tzinfo=UTC),
-                ),
-            )
-        )
-
-        with pytest.raises(MatrixQuestionClaimConflictError):
-            await self.use_case.create_item_from_queue(
-                params=QueuedCompetencyMatrixQuestionCreateItemParams(
-                    queued_question_id=self.factory.core.hex_id(7),
-                    item=self.factory.core.competency_matrix_item_create_params(item_id=1),
-                ),
-                current_datetime=current_datetime,
-            )
-
-        self.storage.create_competency_matrix_item.assert_not_called()
-        self.storage.delete_queued_question.assert_not_called()
-        self.storage.get_queued_question.assert_called_once_with(
-            question_id=self.factory.core.hex_id(7),
-            lock=True,
-        )
-
-    async def test_delete_queued_question_rejects_active_agent_claim(self) -> None:
-        current_datetime = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
-        self.storage.get_queued_question.return_value = (
-            self.factory.core.queued_competency_matrix_question(
-                question_id=7,
-                claim=MatrixQuestionClaimSummary(
-                    id=self.factory.core.hex_id(8),
-                    agent_client_id=self.factory.core.hex_id(9),
-                    agent_client_name="codex-desktop",
-                    claimed_at=datetime(2026, 7, 14, 11, 0, tzinfo=UTC),
-                    expires_at=datetime(2026, 7, 14, 13, 0, tzinfo=UTC),
-                ),
-            )
-        )
-
-        with pytest.raises(MatrixQuestionClaimConflictError):
-            await self.use_case.delete_queued_question(
-                question_id=self.factory.core.hex_id(7),
-                current_datetime=current_datetime,
-            )
-
-        self.storage.delete_queued_question.assert_not_called()
-        self.storage.get_queued_question.assert_called_once_with(
-            question_id=self.factory.core.hex_id(7),
-            lock=True,
-        )
-
-    async def test_release_agent_claim_deletes_locked_claim(self) -> None:
-        claim = MatrixQuestionClaimSummary(
-            id=self.factory.core.hex_id(8),
-            agent_client_id=self.factory.core.hex_id(9),
-            agent_client_name="codex-desktop",
-            claimed_at=datetime(2026, 7, 14, 11, 0, tzinfo=UTC),
-            expires_at=datetime(2026, 7, 14, 13, 0, tzinfo=UTC),
-        )
-        self.storage.get_queued_question.return_value = (
-            self.factory.core.queued_competency_matrix_question(question_id=7, claim=claim)
-        )
-
-        await self.use_case.release_queued_question_agent_claim(
-            question_id=self.factory.core.hex_id(7)
-        )
-
-        self.storage.delete_question_claim.assert_called_once_with(claim_id=claim.id)
-        self.storage.get_queued_question.assert_called_once_with(
-            question_id=self.factory.core.hex_id(7),
             lock=True,
         )

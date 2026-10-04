@@ -10,7 +10,7 @@
 | Категория | Технологии |
 |----------|------------|
 | Покрытие | ![coverage-backend](./badges/coverage-backend.svg) |
-| Backend | ![python](./badges/python.svg) ![litestar](./badges/litestar.svg) ![async](./badges/async.svg) ![pydantic](./badges/pydantic.svg) ![dishka](./badges/dishka.svg) ![taskiq](./badges/taskiq.svg) ![paseto](./badges/paseto.svg) ![argon2](./badges/argon2.svg) ![mcp](./badges/mcp.svg) |
+| Backend | ![python](./badges/python.svg) ![litestar](./badges/litestar.svg) ![async](./badges/async.svg) ![pydantic](./badges/pydantic.svg) ![dishka](./badges/dishka.svg) ![taskiq](./badges/taskiq.svg) ![paseto](./badges/paseto.svg) ![argon2](./badges/argon2.svg) |
 | База данных | ![postgresql](./badges/postgresql.svg) ![sqlalchemy](./badges/sqlalchemy.svg) ![alembic](./badges/alembic.svg) |
 | Кэш | ![valkey](./badges/valkey.svg) |
 | Тестирование | ![pytest](./badges/pytest.svg) |
@@ -31,8 +31,6 @@
   анонимными реакциями
 - Ролевое пространство для управления статьями, вопросами матрицы, публикацией и редакционной
   командой
-- Ограниченный доступ для AI-агентов через приватный mTLS-интерфейс и MCP только для работы с
-  черновиками
 
 ## Начало работы
 

@@ -14,6 +14,23 @@ require_uv() {
     fi
 }
 
+install_local_backend_sdk() {
+    local sdk_wheel="${LOCAL_BACKEND_SDK_WHEEL:-}"
+    if [ -z "$sdk_wheel" ]; then
+        return
+    fi
+    case "$sdk_wheel" in
+        /*.whl) ;;
+        *) echo "LOCAL_BACKEND_SDK_WHEEL must be an absolute wheel path." >&2; exit 2 ;;
+    esac
+    if [ ! -f "$sdk_wheel" ]; then
+        echo "Local backend SDK wheel does not exist; run make build in backend-sdk." >&2
+        exit 2
+    fi
+    uv pip install --python .venv/bin/python --no-deps "$sdk_wheel"
+    export UV_NO_SYNC=1
+}
+
 ensure_backend_deps() {
     local marker=".venv/.self-contained-all-groups"
 
@@ -23,12 +40,14 @@ ensure_backend_deps() {
         && [ -f "$marker" ] \
         && [ ! pyproject.toml -nt "$marker" ] \
         && [ ! uv.lock -nt "$marker" ]; then
+        install_local_backend_sdk
         return
     fi
 
     uv sync --locked --all-groups
     mkdir -p .venv
     touch "$marker"
+    install_local_backend_sdk
 }
 
 invalidate_backend_deps_marker() {

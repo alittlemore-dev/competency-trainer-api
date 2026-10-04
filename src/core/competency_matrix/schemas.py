@@ -231,18 +231,6 @@ class Subsections(ValuedDataclass[str]): ...
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class MatrixQuestionClaimSummary:
-    id: str
-    agent_client_id: str
-    agent_client_name: str
-    claimed_at: datetime
-    expires_at: datetime
-
-    def is_active(self, *, current_datetime: datetime) -> bool:
-        return self.expires_at > current_datetime
-
-
-@dataclass(frozen=True, slots=True, kw_only=True)
 class QueuedCompetencyMatrixQuestion:
     id: str
     question: str
@@ -252,7 +240,6 @@ class QueuedCompetencyMatrixQuestion:
     subsection: str | None
     suggested_by_username: str
     created_at: datetime
-    claim: MatrixQuestionClaimSummary | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

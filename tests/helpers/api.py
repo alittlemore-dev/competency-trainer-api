@@ -34,9 +34,6 @@ class APIHelper:
     def get_health_ready(self) -> Response:
         return self.client.get("/api/healthcheck/ready")
 
-    def get_admin_agent_clients(self) -> Response:
-        return self.client.get("/api/admin/agent-clients")
-
     def get_admin_tools_cache(self) -> Response:
         return self.client.get("/api/admin/tools/cache")
 
@@ -48,34 +45,6 @@ class APIHelper:
 
     def get_admin_tools_cache_warm_operation(self, *, operation_id: str) -> Response:
         return self.client.get(f"/api/admin/tools/cache/warm/{operation_id}")
-
-    def post_admin_agent_client(self, *, data: dict[str, Any]) -> Response:
-        return self.client.post("/api/admin/agent-clients", json=data)
-
-    def post_revoke_admin_agent_client(self, *, client_id: str) -> Response:
-        return self.client.post(f"/api/admin/agent-clients/{client_id}/revoke")
-
-    def get_admin_agent_client_audit(
-        self,
-        *,
-        client_id: str,
-        page_size: int | None,
-        cursor_created_at: str | None = None,
-        cursor_event_id: str | None = None,
-    ) -> Response:
-        params: dict[str, str | int] = {
-            key: value
-            for key, value in (
-                ("pageSize", page_size),
-                ("cursorCreatedAt", cursor_created_at),
-                ("cursorEventId", cursor_event_id),
-            )
-            if value is not None
-        }
-        return self.client.get(
-            f"/api/admin/agent-clients/{client_id}/audit",
-            params=params,
-        )
 
     def get_sitemap_xml(self) -> Response:
         return self.client.get("/sitemap.xml")
@@ -290,12 +259,6 @@ class APIHelper:
     def delete_queued_matrix_question(self, question_id: int | str) -> Response:
         return self.client.delete(
             f"/api/admin/competency-matrix/queued-questions/{self._entity_id(question_id)}",
-        )
-
-    def post_release_queued_matrix_question_claim(self, question_id: int | str) -> Response:
-        return self.client.post(
-            "/api/admin/competency-matrix/queued-questions/"
-            f"{self._entity_id(question_id)}/release-agent-claim",
         )
 
     def post_create_item_from_queue(

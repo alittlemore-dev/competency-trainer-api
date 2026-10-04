@@ -1,4 +1,6 @@
+from backend_sdk.integrations.litestar import AuthContext
 from dishka import Provider, Scope, provide
+from litestar import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from valkey.asyncio import Valkey
 
@@ -9,6 +11,7 @@ from core.competency_matrix.schemas import QuestionSuggestionLimiterConfig
 from core.competency_matrix.services import QuestionSuggestionLimiter
 from core.competency_matrix.storages import CompetencyMatrixStorage, QuestionSuggestionQuotaStorage
 from core.competency_matrix.use_cases import CompetencyMatrixUseCase
+from core.identity import PublicationAccess
 from infra.config.constants import constants
 from infra.config.settings import settings
 from infra.openpyxl.readers import OpenpyxlQuestionQueueImportExcelReader
@@ -77,10 +80,18 @@ class CompetencyMatrixProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def provide_competency_matrix_use_case(
         self,
+        request: Request,
         storage: CompetencyMatrixStorage,
         question_suggestion_limiter: QuestionSuggestionLimiter,
     ) -> CompetencyMatrixUseCase:
+        credential_context = request.scope.get("auth")
         return CompetencyMatrixUseCase(
+            publication=PublicationAccess(
+                allowed=(
+                    not isinstance(credential_context, AuthContext)
+                    or credential_context.allows_permissions("competency.matrix.publish")
+                ),
+            ),
             storage=storage,
             question_suggestion_limiter=question_suggestion_limiter,
         )

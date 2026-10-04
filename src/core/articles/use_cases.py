@@ -37,10 +37,12 @@ from core.files.clients import FileClient
 from core.files.enums import FilePurpose
 from core.files.services import FileService
 from core.i18n.enums import LanguageEnum
+from core.identity import PublicationAccess
 
 
 @dataclass(kw_only=True, slots=True, frozen=True)
 class ArticlesUseCase:
+    publication: PublicationAccess
     storage: ArticlesStorage
     file_service: FileService
     file_client: FileClient
@@ -110,6 +112,7 @@ class ArticlesUseCase:
         params: ArticleCreateParams,
         current_datetime: datetime,
     ) -> Article:
+        self.publication.ensure_allowed(params.publish_status)
         tags = await self.storage.get_tags_by_ids(
             tag_ids=params.tag_ids,
         )
@@ -162,6 +165,7 @@ class ArticlesUseCase:
             slug=slug,
             lock=True,
         )
+        self.publication.ensure_allowed(existing_article.publish_status, params.publish_status)
         tags = await self.storage.get_tags_by_ids(
             tag_ids=params.tag_ids,
         )
@@ -208,6 +212,7 @@ class ArticlesUseCase:
 
     async def delete_article(self, *, slug: str, current_datetime: datetime) -> None:
         article = await self.storage.get_article_by_slug(slug=slug, lock=True)
+        self.publication.ensure_allowed(article.publish_status)
         await self.file_service.lock_file_usage_transitions(
             file_ids=article.managed_file_ids,
         )
@@ -224,6 +229,7 @@ class ArticlesUseCase:
         slug: str,
         publish_status: PublishStatusEnum,
     ) -> None:
+        self.publication.ensure_allowed(PublishStatusEnum.PUBLISHED)
         await self.storage.update_article_publish_status(slug=slug, publish_status=publish_status)
 
     async def list_tags(

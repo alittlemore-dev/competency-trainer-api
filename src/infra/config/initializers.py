@@ -1,4 +1,5 @@
 import asyncio
+from typing import TYPE_CHECKING
 
 import sentry_sdk
 from sentry_sdk.integrations.litestar import LitestarIntegration
@@ -6,6 +7,17 @@ from sentry_sdk.integrations.litestar import LitestarIntegration
 from infra.config.loggers import logger
 from infra.config.settings import settings
 from infra.postgresql.utils import migrate
+
+if TYPE_CHECKING:
+    from sentry_sdk._types import Event, Hint
+
+
+def scrub_request_data(event: Event, _hint: Hint) -> Event:
+    request = event.get("request")
+    if isinstance(request, dict):
+        for field in ("cookies", "data", "headers", "query_string"):
+            request.pop(field, None)
+    return event
 
 
 def init_sentry() -> None:
@@ -16,7 +28,11 @@ def init_sentry() -> None:
         return
     sentry_sdk.init(
         dsn=settings.sentry.dsn,
-        send_default_pii=True,
+        send_default_pii=False,
+        include_local_variables=False,
+        max_request_body_size="never",
+        before_send=scrub_request_data,
+        before_send_transaction=scrub_request_data,
         traces_sample_rate=1.0,
         enable_logs=True,
         profile_lifecycle="trace",

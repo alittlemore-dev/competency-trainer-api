@@ -45,15 +45,9 @@ class MatrixCardinalities:
 
 
 @dataclass(frozen=True, slots=True)
-class AgentAccessCardinalities:
-    audit_events: int
-
-
-@dataclass(frozen=True, slots=True)
 class ProfileCardinalities:
     articles: ArticleCardinalities
     matrix: MatrixCardinalities
-    agent_access: AgentAccessCardinalities
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,7 +92,6 @@ class QueryPlanProfile:
             "competency_matrix__external_resource_model": matrix.resources,
             "competency_matrix__resource_to_item_secondary_model": matrix.resource_links,
             "competency_matrix__queued_question_model": matrix.queued_questions,
-            "agent_access__agent_audit_event_model": cardinalities.agent_access.audit_events,
         }
 
 
@@ -213,7 +206,6 @@ REALISTIC_PROFILE = QueryPlanProfile(
             resource_links=25_000,
             queued_questions=5_000,
         ),
-        agent_access=AgentAccessCardinalities(audit_events=10_000),
     ),
     timing_mode=TimingMode.ENFORCE,
     explain_runs=3,
@@ -243,7 +235,6 @@ STRESS_PROFILE = QueryPlanProfile(
             resource_links=500_000,
             queued_questions=50_000,
         ),
-        agent_access=AgentAccessCardinalities(audit_events=250_000),
     ),
     timing_mode=TimingMode.OBSERVE,
     explain_runs=3,

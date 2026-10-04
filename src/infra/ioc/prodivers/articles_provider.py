@@ -1,4 +1,6 @@
+from backend_sdk.integrations.litestar import AuthContext
 from dishka import Provider, Scope, provide
+from litestar import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.articles.event_dispatchers import ArticleAnalyticsErrorReporter
@@ -10,6 +12,7 @@ from core.articles.use_cases import (
 )
 from core.files.clients import FileClient
 from core.files.services import FileService
+from core.identity import PublicationAccess
 from infra.articles.event_dispatchers import StructlogArticleAnalyticsErrorReporter
 from infra.config.settings import settings
 from infra.postgresql.storages.articles import (
@@ -47,11 +50,19 @@ class ArticlesProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def provide_articles_use_case(
         self,
+        request: Request,
         storage: ArticlesStorage,
         file_service: FileService,
         file_client: FileClient,
     ) -> ArticlesUseCase:
+        credential_context = request.scope.get("auth")
         return ArticlesUseCase(
+            publication=PublicationAccess(
+                allowed=(
+                    not isinstance(credential_context, AuthContext)
+                    or credential_context.allows_permissions("competency.articles.publish")
+                ),
+            ),
             storage=storage,
             file_service=file_service,
             file_client=file_client,

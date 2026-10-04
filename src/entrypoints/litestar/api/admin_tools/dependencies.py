@@ -1,8 +1,13 @@
 from typing import Annotated
 
-from litestar.params import PathParameter
+from entrypoints.litestar.api.parameters import api_path_parameter
 
 CacheWarmOperationIdPath = Annotated[
     str,
-    PathParameter(name="operation_id", min_length=1, max_length=64),
+    api_path_parameter(
+        name="operation_id",
+        title="Cache warm operation ID",
+        description="Identifier returned by a manual cache warm request.",
+        examples=("operation-example",),
+    ),
 ]

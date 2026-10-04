@@ -49,10 +49,6 @@ class QueuedCompetencyMatrixQuestionNotFoundError(EntryNotFoundError):
     message = "Queued competency matrix question not found"
 
 
-class MatrixQuestionClaimConflictError(DomainError):
-    message = "Queued competency matrix question is claimed by an agent"
-
-
 class QuestionSuggestionQuotaExceededError(DomainError):
     message = "Question suggestion daily quota exceeded"
 

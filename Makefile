@@ -4,6 +4,10 @@ TEST_ENV_FILE ?= .env.test
 TEST_ENV_OVERRIDES ?=
 QUERY_PLANS_ENV_FILE ?= .env.test
 
+.PHONY: lock
+lock:
+	bash scripts/install.sh lock
+
 .PHONY: install
 install:
 	bash scripts/install.sh install

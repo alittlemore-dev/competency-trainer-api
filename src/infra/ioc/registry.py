@@ -3,9 +3,6 @@ from collections.abc import Iterable
 from dishka import Provider
 from dishka.integrations.litestar import LitestarProvider
 
-from infra.config.settings import settings
-from infra.ioc.prodivers.agent_access_provider import AgentAccessProvider
-from infra.ioc.prodivers.agent_admin_provider import AgentAdminProvider
 from infra.ioc.prodivers.articles_provider import ArticlesProvider
 from infra.ioc.prodivers.competency_matrix_provider import CompetencyMatrixProvider
 from infra.ioc.prodivers.contacts_provider import ContactsProvider
@@ -22,10 +19,6 @@ def get_providers() -> Iterable[Provider]:
         GeneralProvider(),
         FilesProvider(),
         DatabaseProvider(),
-        AgentAdminProvider(
-            settings=settings.agent_access,
-        ),
-        AgentAccessProvider(),
         LitestarProvider(),
         CompetencyMatrixProvider(),
         ContactsProvider(),
