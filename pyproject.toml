@@ -7,7 +7,7 @@ requires-python = "==3.14.*,<4.0"
 readme = "README.md"
 license = { text = "MIT" }
 dependencies = [
-    "alittlemore-backend-sdk[litestar]>=0.2.0,<0.3.0",
+    "alittlemore-backend-sdk[litestar]>=0.3.0,<0.4.0",
     "granian>=2.8.1",
     "httpx>=0.28.1",
     "pydantic-settings>=2.15.0",

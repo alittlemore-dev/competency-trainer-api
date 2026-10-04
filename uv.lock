@@ -132,11 +132,11 @@ wheels = [
 
 [[package]]
 name = "alittlemore-backend-sdk"
-version = "0.2.0"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6e/6a/5ca67b81ff9dbb976950c74fcd9ebb46bbf52c255cd529870b80cd3f17f4/alittlemore_backend_sdk-0.2.0.tar.gz", hash = "sha256:531227edd5fb01eb4919fc47c04d615e94be9c72210e3deb4b8b13a193d033ba", size = 13699, upload-time = "2026-09-17T16:24:43.618Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2b/eb/2f4c3577889140b97689e213194a8110df13f522cfb1d9deb6b0aa7e698e/alittlemore_backend_sdk-0.3.0.tar.gz", hash = "sha256:5aa8d1309d20ce5b63004682c6b06944454f02beea5ce77f49ce28c51f91eeef", size = 15535, upload-time = "2026-10-04T08:32:45.726Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/e5/b23a2cf01b80b5909e292a5c1b9d8a45c4f16ab27ef67d707dec823b529c/alittlemore_backend_sdk-0.2.0-py3-none-any.whl", hash = "sha256:ea06ecd911857280593f447d610ca99b9a113fbe3e9f1eede11aec0de4710922", size = 10281, upload-time = "2026-09-17T16:24:42.307Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/96/4313d4b2db58c9c3a3350c6a9d00e1e1dfc71dc7ba6b789b26526c4d2d76/alittlemore_backend_sdk-0.3.0-py3-none-any.whl", hash = "sha256:38a9dbcf39906652f1dac99b4360887623ee6a2333ea8d3e6269ad2ee151f1b7", size = 11108, upload-time = "2026-10-04T08:32:44.415Z" },
 ]
 
 [package.optional-dependencies]
@@ -492,7 +492,7 @@ local = [
 requires-dist = [
     { name = "aiobotocore", specifier = ">=3.9.0" },
     { name = "alembic", specifier = ">=1.19.1" },
-    { name = "alittlemore-backend-sdk", extras = ["litestar"], specifier = ">=0.2.0,<0.3.0" },
+    { name = "alittlemore-backend-sdk", extras = ["litestar"], specifier = ">=0.3.0,<0.4.0" },
     { name = "argon2-cffi", specifier = ">=25.1.0" },
     { name = "dishka", specifier = ">=1.10.1" },
     { name = "ecs-logging", specifier = ">=2.3.0" },
