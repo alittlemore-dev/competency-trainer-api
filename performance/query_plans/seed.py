@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from hashlib import md5
 from sys import stdout
 
@@ -18,10 +18,13 @@ from sqlalchemy import cast as sql_cast
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.sql.selectable import Subquery
 
+from core.analytics.enums import AnalyticsKind
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.competency_matrix.schemas import CompetencyMatrixQuestionFingerprint
 from core.files.enums import FilePurpose
 from infra.postgresql.models import (
+    AnalyticsDailyModel,
+    AnalyticsReceiptModel,
     ArticleDailyAnalyticsModel,
     ArticleFileUsageModel,
     ArticleFolderModel,
@@ -60,6 +63,8 @@ EXISTING_MATRIX_ITEM_SEED_INDEX = 100
 ANALYTICS_DAY_BUCKET_COUNT = 1_095
 ANALYTICS_SOURCE_DAY_OFFSET = 61
 QUERY_PLAN_SEEDED_MODELS = (
+    AnalyticsReceiptModel,
+    AnalyticsDailyModel,
     ResourceToItemSecondaryModel,
     QueuedQuestionModel,
     CompetencyMatrixItemModel,
@@ -106,6 +111,7 @@ async def seed_profile(*, connection: AsyncConnection, profile: QueryPlanProfile
     await insert_resources(connection=connection, profile=profile)
     await insert_competency_matrix_structure(connection=connection, profile=profile)
     await insert_competency_matrix_items(connection=connection, profile=profile)
+    await insert_anonymous_analytics(connection=connection)
     await insert_competency_matrix_resource_links(connection=connection, profile=profile)
     await insert_queued_competency_matrix_questions(connection=connection, profile=profile)
 
@@ -386,6 +392,93 @@ async def insert_article_analytics(
             ).select_from(series),
             include_defaults=False,
         ),
+    )
+
+
+async def insert_anonymous_analytics(*, connection: AsyncConnection) -> None:
+    old = ArticleDailyAnalyticsModel.__table__
+    await connection.execute(
+        insert(AnalyticsDailyModel.__table__).from_select(
+            [
+                "date",
+                "kind",
+                "target_id",
+                "source",
+                "views",
+                "engaged",
+                "reactions",
+                "suggestions",
+                "visitors",
+            ],
+            select(
+                old.c.date,
+                sql_cast(
+                    literal(AnalyticsKind.ARTICLES.name), AnalyticsDailyModel.__table__.c.kind.type
+                ),
+                old.c.article_id,
+                old.c.source_category,
+                literal(0),
+                literal(0),
+                literal(1),
+                literal(0),
+                literal(0),
+            ),
+            include_defaults=False,
+        )
+    )
+    matrix = CompetencyMatrixItemModel.__table__
+    await connection.execute(
+        insert(AnalyticsDailyModel.__table__).from_select(
+            [
+                "date",
+                "kind",
+                "target_id",
+                "source",
+                "views",
+                "engaged",
+                "reactions",
+                "suggestions",
+                "visitors",
+            ],
+            select(
+                literal(date(2026, 1, 31)),
+                sql_cast(
+                    literal(AnalyticsKind.MATRIX.name), AnalyticsDailyModel.__table__.c.kind.type
+                ),
+                matrix.c.id,
+                sql_cast(
+                    literal(ArticleViewSourceCategory.DIRECT.name),
+                    AnalyticsDailyModel.__table__.c.source.type,
+                ),
+                literal(5),
+                literal(1),
+                literal(0),
+                literal(0),
+                literal(0),
+            ),
+            include_defaults=False,
+        )
+    )
+    # Recent receipts make deduplication and pruning queries exercise occupied indexes.
+    series = generate_series_subquery(end=10_000, name="analytics_receipts")
+    value = sql_cast(series.c.value, Integer)
+    await connection.execute(
+        insert(AnalyticsReceiptModel.__table__).from_select(
+            ["date", "scope", "digest", "source", "engaged"],
+            select(
+                literal(date(2026, 1, 31)),
+                literal("Site:articles"),
+                func.concat(
+                    func.md5(sql_cast(value, String())), func.md5(sql_cast(value, String()))
+                ),
+                sql_cast(
+                    literal(ArticleViewSourceCategory.DIRECT.name),
+                    AnalyticsReceiptModel.__table__.c.source.type,
+                ),
+                literal(value=False),
+            ).select_from(series),
+            include_defaults=False,
+        )
     )
 
 

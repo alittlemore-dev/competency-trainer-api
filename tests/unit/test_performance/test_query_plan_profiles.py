@@ -71,6 +71,8 @@ class TestQueryPlanProfiles:
         profile = query_plan_models.REALISTIC_PROFILE
 
         assert profile.relation_cardinalities == {
+            "analytics__analytics_daily_model": 110_000,
+            "analytics__analytics_receipt_model": 10_000,
             "articles__article_folder_model": 20,
             "articles__article_model": 5_000,
             "articles__tag_model": 500,

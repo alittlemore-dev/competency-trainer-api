@@ -79,6 +79,9 @@ class QueryPlanProfile:
         section_count = matrix.sheets * matrix.sections_per_sheet
         subsection_count = section_count * matrix.subsections_per_section
         return {
+            "analytics__analytics_daily_model": cardinalities.articles.daily_analytics
+            + matrix.items,
+            "analytics__analytics_receipt_model": 10_000,
             "articles__article_folder_model": cardinalities.articles.folders,
             "articles__article_model": cardinalities.articles.articles,
             "articles__tag_model": cardinalities.articles.tags,

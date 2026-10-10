@@ -1,3 +1,5 @@
+from .analytics import AnalyticsDailyModel as AnalyticsDailyModel
+from .analytics import AnalyticsReceiptModel as AnalyticsReceiptModel
 from .articles import ArticleDailyAnalyticsModel as ArticleDailyAnalyticsModel
 from .articles import ArticleFileUsageModel as ArticleFileUsageModel
 from .articles import ArticleFolderModel as ArticleFolderModel

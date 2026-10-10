@@ -34,7 +34,7 @@ Documents technical decisions through Clean Architecture, API-first backend desi
 1. **Competency matrix** — localized interactive Q&A with normalized sheet/section/subsection taxonomy, topic filtering, detailed answers, and linked resources
 2. **Articles** — localized content, folders, tags, search/filtering, and publish visibility
 3. **Protected admin content workspace** — content management lives in `/admin-panel`, while public article and matrix pages stay read-only
-4. **Privacy-safe article analytics** — public counters and anonymous reactions
+4. **Privacy-safe analytics** — public article counters and anonymous reactions, period reports for articles and matrix questions, and anonymous daily public-site audience.
 
 ## Highlights
 
@@ -45,3 +45,33 @@ Documents technical decisions through Clean Architecture, API-first backend desi
 ## Goal
 
 Public portfolio for IT colleagues and readers, plus an article archive and engineering notebook for continued development.
+
+
+## Anonymous analytics contracts
+
+`competency-trainer` owns public-site traffic and matrix-reading aggregates; identity remains in
+`auth-api`. `POST /api/analytics/visits` accepts only finite public-page categories or published
+matrix targets (`sheetKey/slug`). Administrative reports live at `/api/admin/analytics/report`
+and require moderator access. The report has an inclusive UTC date range of at most 1,096 days,
+with optional source, content, folder/sheet, section and literal-title filters. Reports stay uncached.
+
+Site and question views use random visit tokens for retry deduplication. Engagement requires an
+existing view, is counted once, and keeps that view's source. The browser sends it after 15 seconds
+in a visible tab; article reading retains its existing 30-second threshold. New article requests
+send the browser's coarse source category. Older article engagement remains unattributed.
+
+For visits, only daily aggregates persist long term. Receipts contain an HMAC scoped to the UTC day and target,
+never raw tokens, IPs, account identifiers, user-agent strings, referrer URLs or query strings.
+Receipts older than the previous UTC day are pruned on ingestion. Browser tokens rotate daily;
+persistent local storage uses existing consent, otherwise session storage or memory is used.
+The new site and matrix events exclude Do Not Track and content-manager visits at both browser
+and API boundaries.
+
+The site audience is an anonymous estimate of browsers per UTC day (sessions when persistence is
+unavailable), not verified people. A month sums browser-days, not unique monthly users. Source
+attribution for audience uses the browser's first tracked public visit that day. Article reaction
+activity counts actual additions, replacements and withdrawals, separately from the public current
+reaction totals. Reaction activity is unattributed and starts at deployment; no historical reaction
+activity is fabricated. Individual queue submissions retain anonymous daily counts by sheet after
+moderation/deletion; bulk queue imports do not count as user submissions. Structure labels in reports
+follow the current content taxonomy. Deleted content retains anonymous counters under its identifier.

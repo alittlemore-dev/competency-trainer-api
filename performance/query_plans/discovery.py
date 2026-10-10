@@ -8,6 +8,7 @@ STORAGE_MODULE_NAMES = (
     "infra.postgresql.storages.competency_matrix",
     "infra.postgresql.storages.contacts",
     "infra.postgresql.storages.articles",
+    "infra.postgresql.storages.analytics",
 )
 
 

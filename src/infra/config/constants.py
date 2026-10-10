@@ -132,7 +132,13 @@ class AdminValidationConstants:
     matrix_long_text_max_length: int = 20_000
 
 
+class AnalyticsConstants:
+    receipt_retention_days: int = 1
+    maximum_range_days: int = 1095
+
+
 class Constants:
+    analytics: AnalyticsConstants = AnalyticsConstants()
     path: PathConstants = PathConstants()
     minio_buckets: MinioBucketNamesConstants = MinioBucketNamesConstants()
     valkey: ValkeyConstants = ValkeyConstants()

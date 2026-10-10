@@ -21,6 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, defer, selectinload
 from sqlalchemy.sql.elements import ColumnElement
 
+from core.analytics.enums import AnalyticsKind
+from core.articles.enums import ArticleViewSourceCategory
 from core.competency_matrix.enums import (
     CompetencyMatrixWorkspaceSortEnum,
     InterviewFrequencyEnum,
@@ -80,6 +82,7 @@ from infra.postgresql.models.competency_matrix import (
     QueuedQuestionModel,
     ResourceToItemSecondaryModel,
 )
+from infra.postgresql.storages.analytics import AnalyticsDatabaseStorage
 
 type PriorityStructureModel = type[
     CompetencyMatrixSheetModel | CompetencyMatrixSectionModel | CompetencyMatrixSubsectionModel
@@ -1276,6 +1279,17 @@ class CompetencyMatrixDatabaseStorage(CompetencyMatrixStorage):
             suggested_by_username=suggested_by_username,
         )
         self.session.add(question)
+        await AnalyticsDatabaseStorage(session=self.session).increment(
+            day=question.created_at.date(),
+            kind=AnalyticsKind.SUGGESTIONS,
+            target_id=params.sheet or "unassigned",
+            source=ArticleViewSourceCategory.UNKNOWN,
+            views=0,
+            engaged=0,
+            reactions=0,
+            suggestions=1,
+            visitors=0,
+        )
         await self.session.flush()
         return question.to_domain_schema()
 

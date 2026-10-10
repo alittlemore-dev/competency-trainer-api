@@ -5,6 +5,8 @@ from hashlib import md5
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.analytics.enums import AnalyticsEvent, AnalyticsKind
+from core.analytics.schemas import AnalyticsConfig, AnalyticsFilters, AnalyticsVisit
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.articles.schemas import Article, ArticleFilters, ArticleFolder, ArticleMetadata, Tag, Tags
 from core.competency_matrix.enums import (
@@ -33,6 +35,8 @@ from core.competency_matrix.schemas import (
 from core.contacts.schemas import ContactMe
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
+from core.schemas import Secret
+from infra.postgresql.storages.analytics import AnalyticsDatabaseStorage
 from infra.postgresql.storages.articles import (
     ArticleAnalyticsDatabaseStorage,
     ArticlesDatabaseStorage,
@@ -406,6 +410,58 @@ async def run_get_daily_stats(session: AsyncSession) -> None:
         date_from=date(2026, 1, 1),
         date_to=date(2026, 1, 31),
         language=LanguageEnum.EN,
+    )
+
+
+async def run_analytics_increment(session: AsyncSession) -> None:
+    await AnalyticsDatabaseStorage(session=session).increment(
+        day=date(2026, 1, 31),
+        kind=AnalyticsKind.SITE,
+        target_id="articles",
+        source=ArticleViewSourceCategory.SEARCH,
+        views=1,
+        engaged=0,
+        reactions=0,
+        suggestions=0,
+        visitors=0,
+    )
+
+
+async def run_analytics_visit(session: AsyncSession) -> None:
+    await AnalyticsDatabaseStorage(session=session).record_visit(
+        visit=AnalyticsVisit(
+            kind=AnalyticsKind.SITE,
+            target_id="articles",
+            event=AnalyticsEvent.VIEW,
+            source=ArticleViewSourceCategory.SEARCH,
+            visitor_token=NEW_ARTICLE_ANALYTICS_VOTER,
+            visit_token=NEW_ARTICLE_ANALYTICS_VOTER,
+        ),
+        day=date(2026, 1, 31),
+        config=AnalyticsConfig(secret=Secret("query-plan-test-secret"), receipt_retention_days=1),
+    )
+
+
+async def run_analytics_report(session: AsyncSession) -> None:
+    await AnalyticsDatabaseStorage(session=session).get_daily(
+        filters=AnalyticsFilters(
+            kind=AnalyticsKind.ARTICLES,
+            date_from=date(2026, 1, 1),
+            date_to=date(2026, 1, 31),
+            language=LanguageEnum.EN,
+        )
+    )
+
+
+async def run_analytics_matrix_report(session: AsyncSession) -> None:
+    await AnalyticsDatabaseStorage(session=session).get_daily(
+        filters=AnalyticsFilters(
+            kind=AnalyticsKind.MATRIX,
+            date_from=date(2026, 1, 1),
+            date_to=date(2026, 1, 31),
+            language=LanguageEnum.EN,
+            source=ArticleViewSourceCategory.DIRECT,
+        )
     )
 
 
@@ -1101,6 +1157,46 @@ STORAGE_SCENARIOS = (
         forbidden_seq_scan_relations=("articles__tag_model",),
         allow_seq_scan_reason=None,
         run=run_delete_tag,
+    ),
+    scenario(
+        name="anonymous_analytics_increment",
+        storage_class="AnalyticsDatabaseStorage",
+        method_name="increment",
+        group=QueryThresholdGroup.SMALL_WRITE,
+        expected_index_names=(),
+        forbidden_seq_scan_relations=(),
+        allow_seq_scan_reason=None,
+        run=run_analytics_increment,
+    ),
+    scenario(
+        name="anonymous_analytics_visit",
+        storage_class="AnalyticsDatabaseStorage",
+        method_name="record_visit",
+        group=QueryThresholdGroup.SMALL_WRITE,
+        expected_index_names=(),
+        forbidden_seq_scan_relations=(),
+        allow_seq_scan_reason=None,
+        run=run_analytics_visit,
+    ),
+    scenario(
+        name="anonymous_analytics_article_report",
+        storage_class="AnalyticsDatabaseStorage",
+        method_name="get_daily",
+        group=QueryThresholdGroup.AGGREGATE,
+        expected_index_names=(),
+        forbidden_seq_scan_relations=(),
+        allow_seq_scan_reason=None,
+        run=run_analytics_report,
+    ),
+    scenario(
+        name="anonymous_analytics_matrix_report",
+        storage_class="AnalyticsDatabaseStorage",
+        method_name="get_daily",
+        group=QueryThresholdGroup.AGGREGATE,
+        expected_index_names=(),
+        forbidden_seq_scan_relations=(),
+        allow_seq_scan_reason=None,
+        run=run_analytics_matrix_report,
     ),
     scenario(
         name="article_analytics_increment_view",

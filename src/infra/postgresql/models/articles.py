@@ -513,6 +513,7 @@ class ArticleDailyAnalyticsModel(HexUuidIDMixin, BaseModel):
     @classmethod
     def __table_args__(cls) -> TableArgs:
         return (
+            Index("articles_daily_analytics_date_idx", cls.date, cls.article_id),
             UniqueConstraint(
                 cls.article_id,
                 cls.date,

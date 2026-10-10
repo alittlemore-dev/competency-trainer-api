@@ -21,6 +21,7 @@ from tests.helpers.identity import (
     TestIdentityMiddleware,
     TestIdentityProvider,
 )
+from tests.unit.mocks.providers.analytics import MockAnalyticsProvider
 from tests.unit.mocks.providers.articles import MockArticlesProvider
 from tests.unit.mocks.providers.cache_tools import MockCacheToolsProvider
 from tests.unit.mocks.providers.competency_matrix import MockCompetencyMatrixProvider
@@ -66,6 +67,7 @@ async def container(
         MockFilesProvider(random_suffix=random_suffix),
         MockCompetencyMatrixProvider(),
         MockArticlesProvider(),
+        MockAnalyticsProvider(),
         MockContactsProvider(),
         TestIdentityProvider(controller=identity_controller),
         MockCacheToolsProvider(),

@@ -7,6 +7,7 @@ from dishka.integrations.litestar import DishkaRouter, FromDishka
 from litestar import Controller, Request, delete, get, post, put, status_codes
 from litestar.datastructures import State
 from litestar.di import NamedDependency, Provide
+from litestar.params import QueryParameter
 
 from core.articles.enums import ArticleViewSourceCategory
 from core.articles.schemas import ArticleAnalyticsConfig, ArticleFilters
@@ -44,6 +45,7 @@ from entrypoints.litestar.api.parameters import (
     SearchNameQuery,
     TagIdPath,
     api_json_body,
+    build_examples,
 )
 from entrypoints.litestar.response_cache import (
     ResponseCacheDomain,
@@ -138,7 +140,7 @@ class PublicArticlesApiController(Controller):
         status_code=status_codes.HTTP_204_NO_CONTENT,
         opt={"auth_optional": True, "pat_permissions": ("competency.articles.record_view",)},
     )
-    async def track_public_view(
+    async def track_public_view(  # noqa: PLR0913
         self,
         slug: ArticleSlugPath,
         request: Request[Principal, object | None, State],
@@ -146,15 +148,26 @@ class PublicArticlesApiController(Controller):
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
         config: FromDishka[ArticleAnalyticsConfig],
         _language: LanguageQuery,
+        source_category: Annotated[
+            ArticleViewSourceCategory | None,
+            QueryParameter(
+                name="sourceCategory",
+                description="Coarse referrer category supplied by the reading browser",
+                examples=build_examples("Search"),
+            ),
+        ] = None,
     ) -> None:
         if request.user.can_manage_content:
             return
         article = await use_case.get_article(slug=slug, only_published=True)
-        await analytics_use_case.track_public_view(
-            article=article,
-            referrer=request.headers.get("referer"),
-            config=config,
-        )
+        if source_category is not None:
+            await analytics_use_case.track_view(article=article, source_category=source_category)
+        else:
+            await analytics_use_case.track_public_view(
+                article=article,
+                referrer=request.headers.get("referer"),
+                config=config,
+            )
 
     @post(
         "/detail/{slug:str}/analytics/engaged-view",
@@ -172,12 +185,20 @@ class PublicArticlesApiController(Controller):
         request: Request[Principal, object | None, State],
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
         _language: LanguageQuery,
+        source_category: Annotated[
+            ArticleViewSourceCategory | None,
+            QueryParameter(
+                name="sourceCategory",
+                description="Coarse referrer category supplied by the reading browser",
+                examples=build_examples("Search"),
+            ),
+        ] = None,
     ) -> None:
         if request.user.can_manage_content:
             return
         await analytics_use_case.track_engaged_view(
             slug=slug,
-            source_category=ArticleViewSourceCategory.UNKNOWN,
+            source_category=source_category or ArticleViewSourceCategory.UNKNOWN,
         )
 
     @post(

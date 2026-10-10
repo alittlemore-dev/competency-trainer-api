@@ -67,6 +67,26 @@ class TestArticleAnalyticsAPI(ApiTestCase):
         self.articles_use_case.get_article.assert_not_called()
         self.analytics_use_case.track_public_view.assert_not_called()
 
+    def test_browser_source_is_used_instead_of_the_api_request_referrer(
+        self, sdk_auth_api: APIHelper
+    ) -> None:
+        article = self.factory.core.article(
+            article_id="00000000000040008000000000000041",
+            title="Public article",
+            slug="public-article",
+        )
+        self.articles_use_case.get_article.return_value = article
+        response = sdk_auth_api.client.post(
+            "/api/articles/detail/public-article/analytics/view",
+            params={"language": "ru", "sourceCategory": "Search"},
+            headers={"referer": "https://alittlemore.dev/ru/competency/articles/public-article"},
+        )
+        assert response.status_code == codes.NO_CONTENT, response.content
+        self.analytics_use_case.track_view.assert_called_once_with(
+            article=article, source_category=ArticleViewSourceCategory.SEARCH
+        )
+        self.analytics_use_case.track_public_view.assert_not_called()
+
     def test_track_engaged_view(self, sdk_auth_api: APIHelper) -> None:
         response = sdk_auth_api.post_article_engaged_view(slug="public-article")
 
@@ -91,6 +111,16 @@ class TestArticleAnalyticsAPI(ApiTestCase):
 
         assert response.status_code == codes.NO_CONTENT, response.content
         self.analytics_use_case.track_engaged_view.assert_not_called()
+
+    def test_engagement_keeps_the_browser_source(self, sdk_auth_api: APIHelper) -> None:
+        response = sdk_auth_api.client.post(
+            "/api/articles/detail/public-article/analytics/engaged-view",
+            params={"language": "ru", "sourceCategory": "Search"},
+        )
+        assert response.status_code == codes.NO_CONTENT, response.content
+        self.analytics_use_case.track_engaged_view.assert_called_once_with(
+            slug="public-article", source_category=ArticleViewSourceCategory.SEARCH
+        )
 
     def test_set_reaction(self) -> None:
         response = self.no_auth_api.post_article_reaction(

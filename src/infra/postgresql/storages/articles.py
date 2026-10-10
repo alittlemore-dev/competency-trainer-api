@@ -19,6 +19,7 @@ from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, joinedload, load_only, selectinload
 
+from core.analytics.enums import AnalyticsKind
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.articles.exceptions import (
     ArticleFolderNotFoundError,
@@ -51,6 +52,7 @@ from infra.postgresql.models import (
     ArticleToTagSecondaryModel,
     TagModel,
 )
+from infra.postgresql.storages.analytics import AnalyticsDatabaseStorage
 
 _SelectT = TypeVar("_SelectT")
 
@@ -734,6 +736,20 @@ class ArticleAnalyticsDatabaseStorage(ArticleAnalyticsStorage):
             )
             .with_for_update(),
         )
+        if (model is None and reaction_kind is not None) or (
+            model is not None and model.reaction_kind != reaction_kind
+        ):
+            await AnalyticsDatabaseStorage(session=self.session).increment(
+                day=datetime.now(UTC).date(),
+                kind=AnalyticsKind.ARTICLES,
+                target_id=article_id,
+                source=ArticleViewSourceCategory.UNKNOWN,
+                views=0,
+                engaged=0,
+                reactions=1,
+                suggestions=0,
+                visitors=0,
+            )
         if reaction_kind is None:
             if model is not None:
                 await self.session.delete(model)

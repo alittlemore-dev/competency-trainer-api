@@ -17,6 +17,8 @@ from sqlalchemy.pool import NullPool
 from infra.config.settings import Settings
 from infra.postgresql import meta
 from infra.postgresql.models import (
+    AnalyticsDailyModel,
+    AnalyticsReceiptModel,
     ArticleDailyAnalyticsModel,
     ArticleFileUsageModel,
     ArticleModel,
@@ -132,6 +134,8 @@ def setup_migrations(
 @pytest_asyncio.fixture
 async def clear_tables(engine: AsyncEngine) -> None:
     async with engine.begin() as conn:
+        await conn.execute(delete(AnalyticsReceiptModel))
+        await conn.execute(delete(AnalyticsDailyModel))
         await conn.execute(delete(QueuedQuestionModel))
         await conn.execute(delete(ExternalResourceModel))
         await conn.execute(delete(CompetencyMatrixItemModel))

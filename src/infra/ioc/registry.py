@@ -3,6 +3,7 @@ from collections.abc import Iterable
 from dishka import Provider
 from dishka.integrations.litestar import LitestarProvider
 
+from infra.ioc.prodivers.analytics_provider import AnalyticsProvider
 from infra.ioc.prodivers.articles_provider import ArticlesProvider
 from infra.ioc.prodivers.competency_matrix_provider import CompetencyMatrixProvider
 from infra.ioc.prodivers.contacts_provider import ContactsProvider
@@ -23,6 +24,7 @@ def get_providers() -> Iterable[Provider]:
         CompetencyMatrixProvider(),
         ContactsProvider(),
         ArticlesProvider(),
+        AnalyticsProvider(),
         WikiLinksProvider(),
         ResponseCacheWarmProvider(),
         HealthcheckProvider(),

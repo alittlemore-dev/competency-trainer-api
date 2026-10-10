@@ -142,3 +142,10 @@ def migrated_to_0020() -> Generator[None]:
     migrate(revision="0020")
     yield
     downgrade(revision="base")
+
+
+@pytest.fixture
+def migrated_to_0021() -> Generator[None]:
+    migrate(revision="0021")
+    yield
+    downgrade(revision="base")
