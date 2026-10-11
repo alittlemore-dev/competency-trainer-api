@@ -279,6 +279,9 @@ class ArticlesUseCase:
         priority = await self.storage.next_folder_priority()
         return await self.storage.create_folder(folder=params.to_folder(priority=priority))
 
+    async def delete_folder(self, *, folder_id: str) -> None:
+        await self.storage.delete_folder(folder_id=folder_id)
+
     async def update_folder_priorities(self, *, params: ArticleFolderPriorityUpdateParams) -> None:
         folders = await self.storage.list_folders(language=LanguageEnum.EN)
         folders.ensure_priority_order_matches(ordered_ids=params.ordered_ids)

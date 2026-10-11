@@ -16,6 +16,7 @@ from verbose_http_exceptions import (
 
 from core.articles.exceptions import (
     ArticleFolderAlreadyExistsError,
+    ArticleFolderInUseError,
     ArticleFolderPriorityInvalidError,
 )
 from core.competency_matrix.exceptions import (
@@ -187,6 +188,7 @@ def test_domain_error_verbose_exception_mapping() -> None:
         QuestionSuggestionSheetUnavailableError: BadRequestHTTPException,
         QuestionQueueImportInvalidError: BadRequestHTTPException,
         ArticleFolderAlreadyExistsError: BadRequestHTTPException,
+        ArticleFolderInUseError: ConflictHTTPException,
         ArticleFolderPriorityInvalidError: BadRequestHTTPException,
     }
     assert expected_mapping == exception_handlers.DOMAIN_ERROR_MAPPING

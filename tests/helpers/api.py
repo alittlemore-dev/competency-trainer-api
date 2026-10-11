@@ -494,6 +494,9 @@ class APIHelper:
             params["language"] = language
         return self.client.post("/api/admin/articles/folders", params=params, json=data)
 
+    def delete_article_folder(self, folder_id: str) -> Response:
+        return self.client.delete(f"/api/admin/articles/folders/{folder_id}")
+
     def put_update_article_folder_priorities(self, ordered_ids: list[int | str]) -> Response:
         return self.client.put(
             "/api/admin/articles/folders/priorities",

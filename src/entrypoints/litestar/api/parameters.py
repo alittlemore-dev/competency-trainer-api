@@ -534,6 +534,15 @@ FileIdPath: TypeAlias = Annotated[
         examples=("00000000000000000000000000000003",),
     ),
 ]
+ArticleFolderIdPath: TypeAlias = Annotated[
+    str,
+    api_path_parameter(
+        name="folder_id",
+        title="Article folder identifier",
+        description="Article folder identifier.",
+        examples=("00000000000000000000000000000005",),
+    ),
+]
 TagIdPath: TypeAlias = Annotated[
     str,
     api_path_parameter(

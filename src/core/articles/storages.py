@@ -83,6 +83,10 @@ class ArticlesStorage(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def delete_folder(self, *, folder_id: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def update_folder_priorities(self, *, ordered_ids: tuple[str, ...]) -> None:
         raise NotImplementedError
 

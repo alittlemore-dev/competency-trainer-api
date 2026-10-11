@@ -1,8 +1,10 @@
 import pytest
 import pytest_asyncio
+from backend_sdk.auth import RoleEnum
+from backend_sdk.auth.testing import FakeAuthenticationClient
 from httpx import codes
 
-from core.articles.exceptions import ArticleNotFoundError
+from core.articles.exceptions import ArticleFolderInUseError, ArticleNotFoundError
 from core.articles.schemas import (
     ArticleCreateParams,
     ArticleFolderCreateParams,
@@ -13,6 +15,7 @@ from core.articles.schemas import (
 from core.enums import PublishStatusEnum
 from core.i18n.enums import LanguageEnum
 from entrypoints.litestar.response_cache import ResponseCacheDomain
+from tests.helpers.api import APIHelper
 from tests.test_cases import ApiTestCase
 from tests.unit.mocks.providers.general import test_current_datetime
 
@@ -327,6 +330,21 @@ class TestAdminArticlesAPI(ApiTestCase):
             ),
         )
 
+    def test_delete_article_folder(self) -> None:
+        response = self.api.delete_article_folder(self.folder_id)
+        assert response.status_code == codes.NO_CONTENT, response.content
+        self.use_case.delete_folder.assert_called_once_with(folder_id=self.folder_id)
+
+    def test_anonymous_cannot_delete_article_folder(self) -> None:
+        response = self.no_auth_api.delete_article_folder(self.folder_id)
+        assert response.status_code == codes.UNAUTHORIZED
+        self.use_case.delete_folder.assert_not_called()
+
+    def test_delete_occupied_folder_returns_conflict(self) -> None:
+        self.use_case.delete_folder.side_effect = ArticleFolderInUseError
+        response = self.api.delete_article_folder(self.folder_id)
+        assert response.status_code == codes.CONFLICT
+
     def test_update_article_folder_priorities(self) -> None:
         response = self.api.put_update_article_folder_priorities(ordered_ids=[2, 1])
 
@@ -463,3 +481,18 @@ class TestAdminArticlesAPI(ApiTestCase):
             codes.NO_CONTENT,
         ]
         assert invalidated_domains == [ResponseCacheDomain.ARTICLES] * 5
+
+
+@pytest.mark.parametrize(
+    ("role", "status"), [("user", 403), ("moderator", 204), ("admin", 204), ("owner", 204)]
+)
+def test_delete_folder_role_boundary(
+    sdk_auth_api: APIHelper,
+    sdk_authentication_client: FakeAuthenticationClient,
+    role: str,
+    status: int,
+) -> None:
+    sdk_authentication_client.set_authenticated(username="visitor", role=RoleEnum(role))
+    sdk_auth_api.client.headers["Authorization"] = "Bearer test-token"
+    response = sdk_auth_api.delete_article_folder("00000000000000000000000000000005")
+    assert response.status_code == status, response.content

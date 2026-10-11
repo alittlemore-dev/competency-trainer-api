@@ -19,6 +19,7 @@
     "article_analytics_set_reaction__002": 0.0695,
     "article_analytics_set_reaction__003": 0.131,
     "article_folders_create__001": 0.0395,
+    "article_folders_delete__001": 0.394,
     "article_folders_detail_by_id__001": 0.0385,
     "article_folders_key_exists__001": 0.045,
     "article_folders_list__001": 0.068,

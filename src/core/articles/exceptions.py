@@ -19,3 +19,7 @@ class ArticleFolderAlreadyExistsError(DomainError):
 
 class ArticleFolderPriorityInvalidError(DomainError):
     message = "Article folder priority order is invalid"
+
+
+class ArticleFolderInUseError(DomainError):
+    message = "Article folder contains articles"

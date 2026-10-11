@@ -3,6 +3,7 @@ from dataclasses import replace
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import Connection
 
@@ -251,6 +252,28 @@ class TestQueryCapture:
 
         assert article.id == article_id(99)
         assert {tag.id for tag in article.tags} == {hex_id(91), hex_id(97), hex_id(103)}
+
+    @pytest.mark.parametrize(
+        "control_sql", ["SAVEPOINT sa_savepoint_1", "RELEASE SAVEPOINT sa_savepoint_1"]
+    )
+    def test_runtime_capture_excludes_transaction_control(self, control_sql: str) -> None:
+        capture = RuntimeQueryCapture(clock=FakeClock(1_000_000, 26_000_000))
+        capture.start_scenario(
+            storage_class="ArticlesDatabaseStorage",
+            method_name="delete_folder",
+            scenario_name="article_folders_delete",
+            expectation=PlanExpectation(
+                max_execution_ms=100.0,
+                threshold_source="group:small_write",
+                expected_indexes=(),
+                forbidden_seq_scan_relations=(),
+                allow_seq_scan_reason=None,
+            ),
+        )
+        connection = cast("Connection", FakeConnection())
+        capture.before_cursor_execute(connection, object(), control_sql, {}, None, False)
+        capture.after_cursor_execute(connection, ExplodingCursor(), control_sql, {}, None, False)
+        assert capture.captured_queries == ()
 
     def test_runtime_capture_records_statement_without_touching_cursor(self) -> None:
         capture = RuntimeQueryCapture(clock=FakeClock(1_000_000, 26_000_000))

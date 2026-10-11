@@ -7,6 +7,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from core.articles.exceptions import (
+    ArticleFolderInUseError,
     ArticleFolderNotFoundError,
     ArticleNotFoundError,
     TagNotFoundError,
@@ -25,6 +26,27 @@ class TestArticlesDatabaseStorage(StorageTestCase):
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self) -> None:
         self.storage = ArticlesDatabaseStorage(session=self.db_session)
+
+    async def test_delete_empty_folder_and_report_missing_folder(self) -> None:
+        folder = self.factory.core.article_folder(key="empty-folder")
+        await self.storage_helper.ensure_article_folder(folder=folder)
+        await self.storage.delete_folder(folder_id=folder.id)
+        with pytest.raises(ArticleFolderNotFoundError):
+            await self.storage.get_folder_by_id(folder_id=folder.id)
+        with pytest.raises(ArticleFolderNotFoundError):
+            await self.storage.delete_folder(folder_id=folder.id)
+
+    async def test_delete_folder_with_articles_preserves_folder_and_articles(self) -> None:
+        article = self.factory.core.article(slug="folder-article")
+        await self.storage_helper.create_article(article=article)
+        with pytest.raises(ArticleFolderInUseError):
+            await self.storage.delete_folder(folder_id=article.folder.id)
+        assert (
+            await self.storage.get_folder_by_id(folder_id=article.folder.id)
+        ).id == article.folder.id
+        assert (
+            await self.storage.get_article_by_slug(slug=article.slug, lock=False)
+        ).id == article.id
 
     async def test_get_article_by_slug_success(self) -> None:
         tag = self.factory.core.tag(tag_id=self.factory.core.hex_id(1), slug="python")

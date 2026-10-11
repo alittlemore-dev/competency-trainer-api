@@ -16,12 +16,14 @@ from sqlalchemy import (
     update,
 )
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, joinedload, load_only, selectinload
 
 from core.analytics.enums import AnalyticsKind
 from core.articles.enums import ArticleReactionKind, ArticleViewSourceCategory
 from core.articles.exceptions import (
+    ArticleFolderInUseError,
     ArticleFolderNotFoundError,
     ArticleNotFoundError,
     TagNotFoundError,
@@ -433,6 +435,21 @@ class ArticlesDatabaseStorage(ArticlesStorage):
         self.session.add(model)
         await self.session.flush()
         return model.to_domain_schema()
+
+    async def delete_folder(self, *, folder_id: str) -> None:
+        try:
+            async with self.session.begin_nested():
+                deleted_id = await self.session.scalar(
+                    delete(ArticleFolderModel)
+                    .where(ArticleFolderModel.id == folder_id)
+                    .returning(ArticleFolderModel.id),
+                )
+                if deleted_id is None:
+                    raise ArticleFolderNotFoundError
+        except IntegrityError as error:
+            if getattr(error.orig, "sqlstate", None) in {"23001", "23503"}:
+                raise ArticleFolderInUseError from error
+            raise
 
     async def update_folder_priorities(self, *, ordered_ids: tuple[str, ...]) -> None:
         if not ordered_ids:

@@ -50,6 +50,7 @@ PYTHON_ID = 1
 POSTGRESQL_ID = 2
 PYDANTIC_ID = 3
 GENERAL_TAG_START_ID = 4
+DELETABLE_ARTICLE_FOLDER_ID = "30000000000040008000000000000002"
 ARTICLE_FOLDER_ID = "30000000000040008000000000000001"
 EXISTING_ARTICLE_CONTENT_FILE_ID = "00000000000000000000000000000001"
 EXISTING_ARTICLE_WITH_CONTENT_FILE_ID = md5(b"99", usedforsecurity=False).hexdigest()
@@ -183,6 +184,16 @@ async def insert_article_folders(
                 ),
                 value,
             ).select_from(series),
+        ),
+    )
+
+    await connection.execute(
+        insert(ArticleFolderModel.__table__).values(
+            id=DELETABLE_ARTICLE_FOLDER_ID,
+            key="deletable-folder",
+            name_ru="Пустая папка",
+            name_en="Empty folder",
+            priority=profile.cardinalities.articles.folders + 1,
         ),
     )
 

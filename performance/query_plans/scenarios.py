@@ -56,6 +56,7 @@ from performance.query_plans.models import (
     QueryThresholdGroup,
     StorageMethod,
 )
+from performance.query_plans.seed import DELETABLE_ARTICLE_FOLDER_ID
 
 ScenarioRunner = Callable[[AsyncSession], Awaitable[None]]
 
@@ -291,6 +292,12 @@ async def run_article_folder_key_exists(session: AsyncSession) -> None:
 
 async def run_create_article_folder(session: AsyncSession) -> None:
     await ArticlesDatabaseStorage(session=session).create_folder(folder=write_article_folder())
+
+
+async def run_delete_article_folder(session: AsyncSession) -> None:
+    await ArticlesDatabaseStorage(session=session).delete_folder(
+        folder_id=DELETABLE_ARTICLE_FOLDER_ID,
+    )
 
 
 async def run_update_article_folder_priorities(session: AsyncSession) -> None:
@@ -1031,6 +1038,16 @@ STORAGE_SCENARIOS = (
         forbidden_seq_scan_relations=(),
         allow_seq_scan_reason=None,
         run=run_create_article_folder,
+    ),
+    scenario(
+        name="article_folders_delete",
+        storage_class="ArticlesDatabaseStorage",
+        method_name="delete_folder",
+        group=QueryThresholdGroup.SMALL_WRITE,
+        expected_index_names=("articles__article_folder_model_pkey",),
+        forbidden_seq_scan_relations=("articles__article_folder_model",),
+        allow_seq_scan_reason=None,
+        run=run_delete_article_folder,
     ),
     scenario(
         name="article_folders_update_priorities",

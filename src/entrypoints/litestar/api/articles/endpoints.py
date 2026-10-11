@@ -35,6 +35,7 @@ from entrypoints.litestar.api.articles.schemas import (
     TagsResponseSchema,
 )
 from entrypoints.litestar.api.parameters import (
+    ArticleFolderIdPath,
     ArticleIdsQuery,
     ArticleSlugPath,
     DateFromQuery,
@@ -427,6 +428,31 @@ class AdminArticlesApiController(Controller):
         return ArticleFolderResponseSchema.from_domain_schema(
             schema=folder,
             language=language,
+        )
+
+    @delete(
+        "/folders/{folder_id:str}",
+        description=(
+            "Delete an empty article folder. Folders containing articles return 409.\n\n"
+            "Personal API token permissions: competency.articles.delete, "
+            "competency.articles.publish."
+        ),
+        name="admin-articles-folders-delete-api-handler",
+        status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"pat_permissions": ("competency.articles.delete", "competency.articles.publish")},
+    )
+    async def delete_folder(
+        self,
+        folder_id: ArticleFolderIdPath,
+        request: Request[Principal, object | None, State],
+        use_case: FromDishka[ArticlesUseCase],
+        post_commit_actions: FromDishka[PostCommitActions],
+    ) -> None:
+        await use_case.delete_folder(folder_id=folder_id)
+        await invalidate_response_cache_domain_for_mutation(
+            request=request,
+            domain=ResponseCacheDomain.ARTICLES,
+            post_commit_actions=post_commit_actions,
         )
 
     @put(

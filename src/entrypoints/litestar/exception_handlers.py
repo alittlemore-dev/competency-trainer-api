@@ -20,6 +20,7 @@ from verbose_http_exceptions.ext.litestar.types import LitestarExceptionHandlers
 
 from core.articles.exceptions import (
     ArticleFolderAlreadyExistsError,
+    ArticleFolderInUseError,
     ArticleFolderPriorityInvalidError,
 )
 from core.competency_matrix.exceptions import (
@@ -53,6 +54,7 @@ DOMAIN_ERROR_MAPPING: dict[type[DomainError], type[BaseVerboseHTTPException]] = 
     QuestionSuggestionSheetUnavailableError: BadRequestHTTPException,
     QuestionQueueImportInvalidError: BadRequestHTTPException,
     ArticleFolderAlreadyExistsError: BadRequestHTTPException,
+    ArticleFolderInUseError: ConflictHTTPException,
     ArticleFolderPriorityInvalidError: BadRequestHTTPException,
 }
 

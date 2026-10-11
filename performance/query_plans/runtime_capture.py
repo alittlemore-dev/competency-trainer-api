@@ -114,6 +114,14 @@ class RuntimeQueryCapture:
             queries=self._captured_queries,
             scenario_name=active_context.scenario_name,
         )
+        if (
+            statement.lstrip()
+            .upper()
+            .startswith(
+                ("SAVEPOINT ", "RELEASE SAVEPOINT ", "ROLLBACK TO SAVEPOINT "),
+            )
+        ):
+            return
         self._captured_queries.append(
             CapturedQuery(
                 name=f"{active_context.scenario_name}__{ordinal:03d}",
