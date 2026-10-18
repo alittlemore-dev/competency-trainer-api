@@ -45,9 +45,30 @@ ARTICLE_EXCERPT_CHARACTER_LIMIT = 180
 
 
 class TagResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    name: Annotated[str, Field(title="Name")]
-    slug: Annotated[str, Field(title="Slug")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Python"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
     translations: Annotated[TagTranslationsResponseSchema, Field(title="Translations")]
 
     @classmethod
@@ -61,7 +82,14 @@ class TagResponseSchema(CamelCaseSchema):
 
 
 class TagTranslationSchema(CamelCaseSchema):
-    name: Annotated[RequiredShortText, Field(title="Name")]
+    name: Annotated[
+        RequiredShortText,
+        Field(
+            title="Name",
+            examples=["Python"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
 
 
 class TagTranslationsSchema(CamelCaseSchema):
@@ -95,7 +123,14 @@ class TagsResponseSchema(CamelCaseSchema):
 
 
 class TagRequestSchema(CamelCaseSchema):
-    slug: Annotated[SlugString, Field(title="Slug")]
+    slug: Annotated[
+        SlugString,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
     translations: Annotated[TagTranslationsSchema, Field(title="Translations")]
 
     def to_create_schema(self, *, tag_id: str) -> TagCreateParams:
@@ -115,11 +150,11 @@ class TagRequestSchema(CamelCaseSchema):
 
 
 class ArticleReactionCountsResponseSchema(CamelCaseSchema):
-    heart: Annotated[int, Field(title="Reaction: liked")]
-    fire: Annotated[int, Field(title="Reaction: want more")]
-    thinking: Annotated[int, Field(title="Reaction: thought-provoking")]
-    neutral: Annotated[int, Field(title="Reaction: neutral")]
-    poop: Annotated[int, Field(title="Reaction: disliked")]
+    heart: Annotated[int, Field(title="Reaction: liked", examples=[17])]
+    fire: Annotated[int, Field(title="Reaction: want more", examples=[8])]
+    thinking: Annotated[int, Field(title="Reaction: thought-provoking", examples=[5])]
+    neutral: Annotated[int, Field(title="Reaction: neutral", examples=[2])]
+    poop: Annotated[int, Field(title="Reaction: disliked", examples=[0])]
 
     @classmethod
     def from_domain_schema(cls, *, schema: ArticleReactionCounts) -> Self:
@@ -135,17 +170,28 @@ class ArticleReactionCountsResponseSchema(CamelCaseSchema):
 class ArticleMetadataRequestSchema(CamelCaseSchema):
     seo_title_ru: Annotated[
         str | None,
-        Field(title="RU SEO title", max_length=constants.admin_validation.short_text_max_length),
+        Field(
+            title="RU SEO title",
+            max_length=constants.admin_validation.short_text_max_length,
+            examples=["Как работает asyncio.gather"],
+        ),
     ]
     seo_title_en: Annotated[
         str | None,
-        Field(title="EN SEO title", max_length=constants.admin_validation.short_text_max_length),
+        Field(
+            title="EN SEO title",
+            max_length=constants.admin_validation.short_text_max_length,
+            examples=["Understanding asyncio.gather"],
+        ),
     ]
     seo_description_ru: Annotated[
         str | None,
         Field(
             title="RU SEO description",
             max_length=constants.admin_validation.seo_description_max_length,
+            examples=[
+                "Как asyncio.gather запускает конкурентные задачи и обрабатывает результаты."
+            ],
         ),
     ]
     seo_description_en: Annotated[
@@ -153,14 +199,25 @@ class ArticleMetadataRequestSchema(CamelCaseSchema):
         Field(
             title="EN SEO description",
             max_length=constants.admin_validation.seo_description_max_length,
+            examples=["How asyncio.gather schedules concurrent tasks and handles their results."],
         ),
     ]
-    cover_image_file_id: Annotated[str | None, Field(title="Cover image file ID")]
+    cover_image_file_id: Annotated[
+        str | None,
+        Field(
+            title="Cover image file ID",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description=(
+                "Existing managed cover-image file identifier, or null when no cover is selected."
+            ),
+        ),
+    ]
     cover_image_alt_ru: Annotated[
         str | None,
         Field(
             title="RU cover image alt",
             max_length=constants.admin_validation.short_text_max_length,
+            examples=["Параллельные задачи в цикле событий"],
         ),
     ]
     cover_image_alt_en: Annotated[
@@ -168,6 +225,7 @@ class ArticleMetadataRequestSchema(CamelCaseSchema):
         Field(
             title="EN cover image alt",
             max_length=constants.admin_validation.short_text_max_length,
+            examples=["Concurrent tasks on an event loop"],
         ),
     ]
 
@@ -186,7 +244,15 @@ class ArticleMetadataRequestSchema(CamelCaseSchema):
 
 
 class ArticleMetadataResponseSchema(ArticleMetadataRequestSchema):
-    cover_image_url: Annotated[OptionalHttpUrlString, Field(title="Cover image URL")]
+    cover_image_url: Annotated[
+        OptionalHttpUrlString,
+        Field(
+            title="Cover image URL",
+            examples=[
+                "https://media.alittlemore.dev/article-cover-images/2026/10/asyncio-cover.webp"
+            ],
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: ArticleMetadata) -> Self:
@@ -203,17 +269,65 @@ class ArticleMetadataResponseSchema(ArticleMetadataRequestSchema):
 
 
 class ArticleSummaryResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    title: Annotated[str, Field(title="Title")]
-    slug: Annotated[str, Field(title="Slug")]
-    folder: Annotated[str, Field(title="Folder")]
-    folder_id: Annotated[str, Field(title="Folder identifier")]
-    folder_key: Annotated[str, Field(title="Folder key")]
-    author_username: Annotated[str, Field(title="Author")]
-    published_at: Annotated[str | None, Field(title="Publication date")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
-    updated_at: Annotated[str, Field(title="Update date")]
-    excerpt: Annotated[str, Field(title="Short preview")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    title: Annotated[str, Field(title="Title", examples=["Understanding asyncio.gather"])]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    folder: Annotated[str, Field(title="Folder", examples=["Python"])]
+    folder_id: Annotated[
+        str,
+        Field(
+            title="Folder identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Identifier of the existing article folder.",
+        ),
+    ]
+    folder_key: Annotated[str, Field(title="Folder key", examples=["python"])]
+    author_username: Annotated[str, Field(title="Author", examples=["dmitriy"])]
+    published_at: Annotated[
+        str | None,
+        Field(
+            title="Publication date",
+            examples=["2026-10-13T10:00:00+00:00"],
+            description="Publication timestamp in ISO 8601 format, or null when unpublished.",
+        ),
+    ]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
+    updated_at: Annotated[
+        str,
+        Field(
+            title="Update date",
+            examples=["2026-10-15T14:20:00+00:00"],
+            description="Last update timestamp in ISO 8601 format.",
+        ),
+    ]
+    excerpt: Annotated[
+        str,
+        Field(
+            title="Short preview",
+            examples=["Run independent asynchronous operations concurrently with asyncio.gather."],
+        ),
+    ]
     metadata: Annotated[ArticleMetadataResponseSchema, Field(title="SEO metadata")]
     tags: Annotated[list[TagResponseSchema], Field(title="Tags")]
 
@@ -259,8 +373,27 @@ class ArticleSummaryResponseSchema(CamelCaseSchema):
 
 
 class ArticleDetailResponseSchema(ArticleSummaryResponseSchema):
-    content: Annotated[str, Field(title="Content")]
-    created_at: Annotated[str, Field(title="Creation date")]
+    content: Annotated[
+        str,
+        Field(
+            title="Content",
+            examples=[
+                (
+                    "## Concurrent tasks\n\nUse `asyncio.gather()` to await independent "
+                    "operations together."
+                )
+            ],
+            description="Article body in Markdown for this translation.",
+        ),
+    ]
+    created_at: Annotated[
+        str,
+        Field(
+            title="Creation date",
+            examples=["2026-10-12T09:30:00+00:00"],
+            description="Creation timestamp in ISO 8601 format.",
+        ),
+    ]
     translations: Annotated[ArticleTranslationsResponseSchema, Field(title="Translations")]
 
     @classmethod
@@ -283,8 +416,22 @@ class ArticleDetailResponseSchema(ArticleSummaryResponseSchema):
 
 
 class ArticleListResponseSchema(CamelCaseSchema):
-    total_count: Annotated[int, Field(title="Article count")]
-    total_pages: Annotated[int, Field(title="Page count")]
+    total_count: Annotated[
+        int,
+        Field(
+            title="Article count",
+            examples=[42],
+            description="Total matching records before pagination.",
+        ),
+    ]
+    total_pages: Annotated[
+        int,
+        Field(
+            title="Page count",
+            examples=[3],
+            description="Number of pages for the requested pageSize; zero when no records match.",
+        ),
+    ]
     articles: Annotated[list[ArticleSummaryResponseSchema], Field(title="Articles")]
 
     @classmethod
@@ -308,8 +455,15 @@ class ArticleListResponseSchema(CamelCaseSchema):
 
 
 class ArticlePublicStatsResponseSchema(CamelCaseSchema):
-    article_id: Annotated[str, Field(title="Article identifier")]
-    view_count: Annotated[int, Field(title="View count")]
+    article_id: Annotated[
+        str,
+        Field(
+            title="Article identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable article identifier.",
+        ),
+    ]
+    view_count: Annotated[int, Field(title="View count", examples=[120])]
     reaction_counts: Annotated[ArticleReactionCountsResponseSchema, Field(title="Reactions")]
 
     @classmethod
@@ -337,8 +491,22 @@ class ArticlePublicStatsCollectionResponseSchema(CamelCaseSchema):
 
 
 class ArticleTranslationSchema(CamelCaseSchema):
-    title: Annotated[RequiredShortText, Field(title="Title")]
-    content: Annotated[ArticleContentText, Field(title="Content")]
+    title: Annotated[
+        RequiredShortText, Field(title="Title", examples=["Understanding asyncio.gather"])
+    ]
+    content: Annotated[
+        ArticleContentText,
+        Field(
+            title="Content",
+            examples=[
+                (
+                    "## Concurrent tasks\n\nUse `asyncio.gather()` to await independent "
+                    "operations together."
+                )
+            ],
+            description="Article body in Markdown for this translation.",
+        ),
+    ]
 
 
 class ArticleTranslationsSchema(CamelCaseSchema):
@@ -365,10 +533,33 @@ class ArticleTranslationsResponseSchema(CamelCaseSchema):
 
 
 class ArticleRequestSchema(CamelCaseSchema):
-    slug: Annotated[SlugString, Field(title="Slug")]
-    folder_id: Annotated[RequiredShortText, Field(title="Folder identifier")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
-    tag_ids: Annotated[list[str], Field(title="Tag identifiers")]
+    slug: Annotated[
+        SlugString,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    folder_id: Annotated[
+        RequiredShortText,
+        Field(
+            title="Folder identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Identifier of the existing article folder.",
+        ),
+    ]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
+    tag_ids: Annotated[
+        list[str], Field(title="Tag identifiers", examples=[["1b734fe27bc04ace9f2c18fa26ad5081"]])
+    ]
     translations: Annotated[ArticleTranslationsSchema, Field(title="Translations")]
     metadata: Annotated[ArticleMetadataRequestSchema, Field(title="SEO metadata")]
 
@@ -407,19 +598,63 @@ class ArticleRequestSchema(CamelCaseSchema):
 
 
 class ArticleReactionRequestSchema(CamelCaseSchema):
-    reaction_kind: Annotated[ArticleReactionKind | None, Field(title="Reaction")]
+    reaction_kind: Annotated[
+        ArticleReactionKind | None,
+        Field(
+            title="Reaction",
+            examples=["heart"],
+            description="Selected reaction, or null to remove this client’s existing reaction.",
+        ),
+    ]
     client_token: Annotated[
         str,
-        Field(title="Anonymous client token", min_length=1, max_length=255),
+        Field(
+            title="Anonymous client token",
+            min_length=1,
+            max_length=255,
+            examples=["f09b1464-bd20-41d2-9c9a-ccf0e0d0b614"],
+            description=(
+                "Non-empty browser-scoped anonymous reaction identifier; reuse it "
+                "to replace or clear a reaction."
+            ),
+        ),
     ]
 
 
 class ArticleTreeItemResponseSchema(CamelCaseSchema):
-    title: Annotated[str, Field(title="Title")]
-    slug: Annotated[str, Field(title="Slug")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
-    published_at: Annotated[str | None, Field(title="Publication date")]
-    updated_at: Annotated[str, Field(title="Update date")]
+    title: Annotated[str, Field(title="Title", examples=["Understanding asyncio.gather"])]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
+    published_at: Annotated[
+        str | None,
+        Field(
+            title="Publication date",
+            examples=["2026-10-13T10:00:00+00:00"],
+            description="Publication timestamp in ISO 8601 format, or null when unpublished.",
+        ),
+    ]
+    updated_at: Annotated[
+        str,
+        Field(
+            title="Update date",
+            examples=["2026-10-15T14:20:00+00:00"],
+            description="Last update timestamp in ISO 8601 format.",
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: ArticleTreeItem) -> Self:
@@ -435,9 +670,16 @@ class ArticleTreeItemResponseSchema(CamelCaseSchema):
 
 
 class ArticleTreeFolderResponseSchema(CamelCaseSchema):
-    folder_id: Annotated[str, Field(title="Folder identifier")]
-    folder_key: Annotated[str, Field(title="Folder key")]
-    folder: Annotated[str, Field(title="Folder")]
+    folder_id: Annotated[
+        str,
+        Field(
+            title="Folder identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Identifier of the existing article folder.",
+        ),
+    ]
+    folder_key: Annotated[str, Field(title="Folder key", examples=["python"])]
+    folder: Annotated[str, Field(title="Folder", examples=["Python"])]
     articles: Annotated[list[ArticleTreeItemResponseSchema], Field(title="Articles")]
 
     @classmethod
@@ -467,7 +709,14 @@ class ArticleTreeResponseSchema(CamelCaseSchema):
 
 
 class ArticleFolderNameSchema(CamelCaseSchema):
-    name: Annotated[RequiredShortText, Field(title="Name")]
+    name: Annotated[
+        RequiredShortText,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
 
 
 class ArticleFolderTranslationsSchema(CamelCaseSchema):
@@ -476,10 +725,38 @@ class ArticleFolderTranslationsSchema(CamelCaseSchema):
 
 
 class ArticleFolderResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    key: Annotated[str, Field(title="Key")]
-    name: Annotated[str, Field(title="Name")]
-    priority: Annotated[int, Field(title="Priority")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    key: Annotated[
+        str,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    priority: Annotated[
+        int,
+        Field(
+            title="Priority",
+            examples=[2],
+            description="Position used to order items within their parent.",
+        ),
+    ]
     translations: Annotated[ArticleFolderTranslationsSchema, Field(title="Translations")]
 
     @classmethod
@@ -513,7 +790,14 @@ class ArticleFoldersResponseSchema(CamelCaseSchema):
 
 
 class ArticleFolderRequestSchema(CamelCaseSchema):
-    key: Annotated[SlugString, Field(title="Key")]
+    key: Annotated[
+        SlugString,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
     translations: Annotated[ArticleFolderTranslationsSchema, Field(title="Translations")]
 
     def to_create_schema(self, *, folder_id: str) -> ArticleFolderCreateParams:
@@ -526,16 +810,26 @@ class ArticleFolderRequestSchema(CamelCaseSchema):
 
 
 class ArticleFolderPriorityUpdateRequestSchema(CamelCaseSchema):
-    ordered_ids: Annotated[list[str], Field(title="Ordered identifiers")]
+    ordered_ids: Annotated[
+        list[str],
+        Field(
+            title="Ordered identifiers",
+            examples=[["1b734fe27bc04ace9f2c18fa26ad5081", "26226d65583d45ec8aee065d773d595f"]],
+            description=(
+                "Complete ordered identifiers of all siblings; omitted, duplicate,"
+                " or foreign identifiers are rejected."
+            ),
+        ),
+    ]
 
     def to_schema(self) -> ArticleFolderPriorityUpdateParams:
         return ArticleFolderPriorityUpdateParams(ordered_ids=tuple(self.ordered_ids))
 
 
 class ArticleAnalyticsTotalsResponseSchema(CamelCaseSchema):
-    view_count: Annotated[int, Field(title="View count")]
-    engaged_view_count: Annotated[int, Field(title="Engaged view count")]
-    reaction_count: Annotated[int, Field(title="Reaction count")]
+    view_count: Annotated[int, Field(title="View count", examples=[120])]
+    engaged_view_count: Annotated[int, Field(title="Engaged view count", examples=[78])]
+    reaction_count: Annotated[int, Field(title="Reaction count", examples=[32])]
 
     @classmethod
     def from_domain_schema(cls, *, schema: ArticleAnalyticsTotals) -> Self:
@@ -547,11 +841,25 @@ class ArticleAnalyticsTotalsResponseSchema(CamelCaseSchema):
 
 
 class ArticleAnalyticsArticleStatsResponseSchema(CamelCaseSchema):
-    article_id: Annotated[str, Field(title="Article identifier")]
-    title: Annotated[str, Field(title="Title")]
-    slug: Annotated[str, Field(title="Slug")]
-    view_count: Annotated[int, Field(title="View count")]
-    engaged_view_count: Annotated[int, Field(title="Engaged view count")]
+    article_id: Annotated[
+        str,
+        Field(
+            title="Article identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable article identifier.",
+        ),
+    ]
+    title: Annotated[str, Field(title="Title", examples=["Understanding asyncio.gather"])]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    view_count: Annotated[int, Field(title="View count", examples=[120])]
+    engaged_view_count: Annotated[int, Field(title="Engaged view count", examples=[78])]
     reaction_counts: Annotated[ArticleReactionCountsResponseSchema, Field(title="Reactions")]
 
     @classmethod
@@ -569,13 +877,29 @@ class ArticleAnalyticsArticleStatsResponseSchema(CamelCaseSchema):
 
 
 class ArticleAnalyticsDailyStatsResponseSchema(CamelCaseSchema):
-    article_id: Annotated[str, Field(title="Article identifier")]
-    title: Annotated[str, Field(title="Title")]
-    slug: Annotated[str, Field(title="Slug")]
-    date: Annotated[date, Field(title="Date")]
-    source_category: Annotated[ArticleViewSourceCategory, Field(title="Source")]
-    view_count: Annotated[int, Field(title="View count")]
-    engaged_view_count: Annotated[int, Field(title="Engaged view count")]
+    article_id: Annotated[
+        str,
+        Field(
+            title="Article identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable article identifier.",
+        ),
+    ]
+    title: Annotated[str, Field(title="Title", examples=["Understanding asyncio.gather"])]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["understanding-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    date: Annotated[date, Field(title="Date", examples=["2026-10-15"])]
+    source_category: Annotated[
+        ArticleViewSourceCategory, Field(title="Source", examples=["Search"])
+    ]
+    view_count: Annotated[int, Field(title="View count", examples=[120])]
+    engaged_view_count: Annotated[int, Field(title="Engaged view count", examples=[78])]
 
     @classmethod
     def from_domain_schema(cls, *, schema: ArticleAnalyticsDailyStats) -> Self:
@@ -591,8 +915,8 @@ class ArticleAnalyticsDailyStatsResponseSchema(CamelCaseSchema):
 
 
 class ArticleAnalyticsStatsResponseSchema(CamelCaseSchema):
-    date_from: Annotated[date, Field(title="Start date")]
-    date_to: Annotated[date, Field(title="End date")]
+    date_from: Annotated[date, Field(title="Start date", examples=["2026-10-01"])]
+    date_to: Annotated[date, Field(title="End date", examples=["2026-10-15"])]
     totals: Annotated[ArticleAnalyticsTotalsResponseSchema, Field(title="Totals")]
     articles: Annotated[list[ArticleAnalyticsArticleStatsResponseSchema], Field(title="Articles")]
     daily: Annotated[list[ArticleAnalyticsDailyStatsResponseSchema], Field(title="Days")]

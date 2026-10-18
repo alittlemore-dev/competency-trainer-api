@@ -32,11 +32,24 @@ class FilesApiController(Controller):
     @post(
         "",
         description=(
-            "Upload a managed file.\n\nPersonal API token permissions: competency.files.create."
+            "Upload binary content as multipart/form-data. Returns managed "
+            "metadata and access URLs; "
+            "it does not attach the file to an article. Images may be resized and optimized, so "
+            "the stored MIME type, size, and URL may differ from the upload. "
+            "Supply the actual Content-Type on the file part.\n\n"
+            "Personal API token permissions: competency.files.create."
         ),
         name="admin-files-upload-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
-        opt={"pat_permissions": ("competency.files.create",)},
+        opt={
+            "pat_permissions": ("competency.files.create",),
+            "openapi_errors": {
+                400: (
+                    "The filename, MIME type, file contents, or size is invalid for "
+                    "the selected purpose."
+                )
+            },
+        },
     )
     async def upload_file(
         self,
@@ -96,7 +109,10 @@ class FilesApiController(Controller):
             "Get managed file metadata.\n\nPersonal API token permissions: competency.files.read."
         ),
         name="admin-files-detail-api-handler",
-        opt={"pat_permissions": ("competency.files.read",)},
+        opt={
+            "pat_permissions": ("competency.files.read",),
+            "openapi_errors": {404: "The managed file does not exist."},
+        },
     )
     async def get_file(
         self,
@@ -114,7 +130,10 @@ class FilesApiController(Controller):
             "competency.files.update."
         ),
         name="admin-files-update-api-handler",
-        opt={"pat_permissions": ("competency.files.update",)},
+        opt={
+            "pat_permissions": ("competency.files.update",),
+            "openapi_errors": {404: "The managed file does not exist."},
+        },
     )
     async def update_file(
         self,
@@ -123,7 +142,9 @@ class FilesApiController(Controller):
             FileUpdateRequestSchema,
             api_json_body(
                 title="File metadata update request",
-                description="Managed file metadata replacement payload.",
+                description=(
+                    "Replace the display name while keeping the stored file content and purpose."
+                ),
                 examples=({"name": "Article cover"},),
             ),
         ],
@@ -145,7 +166,13 @@ class FilesApiController(Controller):
         ),
         name="admin-files-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.files.delete",)},
+        opt={
+            "pat_permissions": ("competency.files.delete",),
+            "openapi_errors": {
+                404: "The managed file does not exist.",
+                400: "The file is still referenced by content and cannot be deleted.",
+            },
+        },
     )
     async def delete_file(
         self,

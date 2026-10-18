@@ -27,7 +27,13 @@ class PublicAnalyticsController(Controller):
 
     @post(
         "/visits",
-        description="Record a bounded anonymous public page or matrix question visit.",
+        description=(
+            "Record View or Engaged activity for a known public site page or a"
+            " matrix target formatted as sheet-key/question-slug. Reuse daily "
+            "visitor and per-visit UUIDs for deduplication. Requests from "
+            "content managers or with DNT: 1 are ignored successfully. Returns"
+            " no body."
+        ),
         status_code=204,
         opt={"auth_optional": True},
     )
@@ -71,7 +77,13 @@ class AdminAnalyticsController(Controller):
 
     @get(
         "/report",
-        description="Get private aggregate statistics for an inclusive UTC date range.",
+        description=(
+            "Read private daily aggregates for the selected analytics domain. "
+            "dateFrom and dateTo are inclusive UTC dates, must be ordered, may"
+            " span at most three years, and must not end in the future. "
+            "Optional target, group, section, source, and title filters narrow"
+            " the report."
+        ),
         dependencies={"filters": Provide(provide_analytics_filters, sync_to_thread=False)},
         opt={"pat_permissions": ("competency.articles.read", "competency.matrix.read")},
     )

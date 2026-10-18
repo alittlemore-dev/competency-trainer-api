@@ -14,9 +14,9 @@ from entrypoints.litestar.api.schemas import CamelCaseSchema
 
 
 class CacheWarmSummaryResponseSchema(CamelCaseSchema):
-    attempted: Annotated[int, Field(title="Attempted cache targets")]
-    written: Annotated[int, Field(title="Written cache targets")]
-    skipped: Annotated[int, Field(title="Skipped cache targets")]
+    attempted: Annotated[int, Field(title="Attempted cache targets", examples=[24])]
+    written: Annotated[int, Field(title="Written cache targets", examples=[22])]
+    skipped: Annotated[int, Field(title="Skipped cache targets", examples=[2])]
 
     @classmethod
     def from_domain_schema(
@@ -32,9 +32,20 @@ class CacheWarmSummaryResponseSchema(CamelCaseSchema):
 
 
 class CacheWarmOperationResponseSchema(CamelCaseSchema):
-    operation_id: Annotated[str, Field(title="Cache warm operation ID")]
-    status: Annotated[CacheWarmOperationStatusEnum, Field(title="Cache warm status")]
-    queued_at: Annotated[datetime, Field(title="Queue timestamp")]
+    operation_id: Annotated[
+        str, Field(title="Cache warm operation ID", examples=["a7d8cb528652496eac9f0abbf5136fcb"])
+    ]
+    status: Annotated[
+        CacheWarmOperationStatusEnum, Field(title="Cache warm status", examples=["succeeded"])
+    ]
+    queued_at: Annotated[
+        datetime,
+        Field(
+            title="Queue timestamp",
+            examples=["2026-10-15T14:20:00+00:00"],
+            description="Time the background operation was queued, in ISO 8601 format.",
+        ),
+    ]
     summary: Annotated[
         CacheWarmSummaryResponseSchema | None,
         Field(title="Completed cache warm summary"),
@@ -59,13 +70,17 @@ class CacheWarmOperationResponseSchema(CamelCaseSchema):
 
 
 class CacheDomainStatusResponseSchema(CamelCaseSchema):
-    domain: Annotated[CacheDomainEnum, Field(title="Cache domain")]
-    key_count: Annotated[int, Field(title="Current key count")]
+    domain: Annotated[CacheDomainEnum, Field(title="Cache domain", examples=["articles"])]
+    key_count: Annotated[int, Field(title="Current key count", examples=[24])]
     minimum_remaining_ttl_seconds: Annotated[
         int | None,
-        Field(title="Minimum remaining key TTL in seconds"),
+        Field(
+            title="Minimum remaining key TTL in seconds",
+            examples=[6200],
+            description="Smallest remaining cache TTL, or null when no expiring keys exist.",
+        ),
     ]
-    non_expiring_key_count: Annotated[int, Field(title="Non-expiring key count")]
+    non_expiring_key_count: Annotated[int, Field(title="Non-expiring key count", examples=[0])]
 
     @classmethod
     def from_domain_schema(
@@ -82,11 +97,13 @@ class CacheDomainStatusResponseSchema(CamelCaseSchema):
 
 
 class CacheStatusResponseSchema(CamelCaseSchema):
-    enabled: Annotated[bool, Field(title="Response cache enabled")]
-    configured_ttl_seconds: Annotated[int, Field(title="Configured response cache TTL")]
+    enabled: Annotated[bool, Field(title="Response cache enabled", examples=[True])]
+    configured_ttl_seconds: Annotated[
+        int, Field(title="Configured response cache TTL", examples=[86400])
+    ]
     scheduled_warm_interval_seconds: Annotated[
         int,
-        Field(title="Scheduled cache warm interval in seconds"),
+        Field(title="Scheduled cache warm interval in seconds", examples=[3600]),
     ]
     domains: Annotated[list[CacheDomainStatusResponseSchema], Field(title="Cache domains")]
     last_manual_warm_operation: Annotated[

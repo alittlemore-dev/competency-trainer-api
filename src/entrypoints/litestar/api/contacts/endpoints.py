@@ -19,7 +19,13 @@ class ContactsApiController(Controller):
     @post(
         "",
         status_code=status.HTTP_204_NO_CONTENT,
-        description="Create a contact request.",
+        description=(
+            "Submit a contact message. name, email, and telegram keys are "
+            "required but nullable; at least one must be non-null. The message"
+            " must contain 1–10000 characters. Successful submission stores "
+            "the request and returns HTTP 204 with no body. When contact requests are disabled, "
+            "the same successful empty response is returned without storing the message."
+        ),
     )
     async def contact_me_request(
         self,

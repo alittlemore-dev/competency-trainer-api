@@ -63,7 +63,13 @@ class PublicArticlesApiController(Controller):
 
     @get(
         "",
-        description="Get the public article list.",
+        description=(
+            "List published articles with required page, pageSize, and "
+            "language. Optional filters narrow the matching records before "
+            "pagination. Returns localized summaries, tags, totalCount, and "
+            "totalPages; article bodies are available from the detail "
+            "operation."
+        ),
         name="public-articles-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
@@ -83,7 +89,11 @@ class PublicArticlesApiController(Controller):
 
     @get(
         "/tree",
-        description="Get the public article folder tree.",
+        description=(
+            "List article folders and their published article links in the "
+            "selected language. This navigation tree is not paginated and does"
+            " not expose draft articles."
+        ),
         name="public-articles-tree-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
@@ -99,11 +109,16 @@ class PublicArticlesApiController(Controller):
 
     @get(
         "/detail/{slug:str}",
-        description="Get public article details.",
+        description=(
+            "Read one published article by its stable slug in the selected "
+            "language, including Markdown content, author, tags, SEO metadata,"
+            " and translations. Draft or unknown articles return HTTP 404."
+        ),
         name="public-articles-detail-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
         cache_key_builder=ResponseCacheDomain.ARTICLES.cache_key_builder,
+        opt={"openapi_errors": {404: "The article does not exist or is not publicly available."}},
     )
     async def get_article(
         self,
@@ -119,7 +134,11 @@ class PublicArticlesApiController(Controller):
 
     @get(
         "/public-stats",
-        description="Get public article statistics.",
+        description=(
+            "Read public view and reaction totals for the supplied articleIds."
+            " The response contains aggregate counts and does not expose "
+            "visitor identities."
+        ),
         name="public-articles-public-stats-api-handler",
         status_code=status_codes.HTTP_200_OK,
     )
@@ -139,7 +158,11 @@ class PublicArticlesApiController(Controller):
         ),
         name="public-articles-track-public-view-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"auth_optional": True, "pat_permissions": ("competency.articles.record_view",)},
+        opt={
+            "auth_optional": True,
+            "pat_permissions": ("competency.articles.record_view",),
+            "openapi_errors": {404: "The article does not exist or is not publicly available."},
+        },
     )
     async def track_public_view(  # noqa: PLR0913
         self,
@@ -178,7 +201,11 @@ class PublicArticlesApiController(Controller):
         ),
         name="public-articles-track-engaged-view-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"auth_optional": True, "pat_permissions": ("competency.articles.record_view",)},
+        opt={
+            "auth_optional": True,
+            "pat_permissions": ("competency.articles.record_view",),
+            "openapi_errors": {404: "The article does not exist or is not publicly available."},
+        },
     )
     async def track_engaged_view(
         self,
@@ -204,9 +231,15 @@ class PublicArticlesApiController(Controller):
 
     @post(
         "/detail/{slug:str}/reaction",
-        description="Set or clear an anonymous article reaction.",
+        description=(
+            "Set the reaction associated with this article and browser-scoped "
+            "clientToken. Reusing the token replaces that client’s previous "
+            "reaction; reactionKind=null clears it. Returns HTTP 204 without a body. "
+            "Read the public statistics operation for updated counters."
+        ),
         name="public-articles-set-reaction-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
+        opt={"openapi_errors": {404: "The article does not exist or is not publicly available."}},
     )
     async def set_reaction(
         self,
@@ -216,7 +249,16 @@ class PublicArticlesApiController(Controller):
             api_json_body(
                 title="Article reaction request",
                 description="Anonymous article reaction state for one browser-scoped client.",
-                examples=({"reactionKind": "heart", "clientToken": "article-client-token"},),
+                examples=(
+                    {
+                        "reactionKind": "heart",
+                        "clientToken": "f09b1464-bd20-41d2-9c9a-ccf0e0d0b614",
+                    },
+                    {
+                        "reactionKind": None,
+                        "clientToken": "f09b1464-bd20-41d2-9c9a-ccf0e0d0b614",
+                    },
+                ),
             ),
         ],
         analytics_use_case: FromDishka[ArticleAnalyticsUseCase],
@@ -232,7 +274,10 @@ class PublicArticlesApiController(Controller):
 
     @get(
         "/tags",
-        description="Get the public tag list.",
+        description=(
+            "List localized article tags with their stable identifiers and URL"
+            " slugs. This collection is not paginated."
+        ),
         name="public-articles-tags-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
@@ -286,7 +331,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
-        opt={"pat_permissions": ("competency.articles.create",)},
+        opt={
+            "pat_permissions": ("competency.articles.create",),
+            "openapi_errors": {404: "The article, folder, tag, or referenced file does not exist."},
+        },
     )
     async def create_article(  # noqa: PLR0913
         self,
@@ -439,7 +487,13 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-folders-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.articles.delete", "competency.articles.publish")},
+        opt={
+            "pat_permissions": ("competency.articles.delete", "competency.articles.publish"),
+            "openapi_errors": {
+                404: "The article folder does not exist.",
+                409: "The folder still contains articles and cannot be deleted.",
+            },
+        },
     )
     async def delete_folder(
         self,
@@ -464,7 +518,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-folders-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.articles.update", "competency.articles.publish")},
+        opt={
+            "pat_permissions": ("competency.articles.update", "competency.articles.publish"),
+            "openapi_errors": {400: "The ordered IDs must contain every folder exactly once."},
+        },
     )
     async def update_folder_priorities(
         self,
@@ -495,7 +552,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-detail-api-handler",
         status_code=status_codes.HTTP_200_OK,
-        opt={"pat_permissions": ("competency.articles.read",)},
+        opt={
+            "pat_permissions": ("competency.articles.read",),
+            "openapi_errors": {404: "The article does not exist or is not publicly available."},
+        },
     )
     async def get_article(
         self,
@@ -543,7 +603,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-update-api-handler",
         status_code=status_codes.HTTP_200_OK,
-        opt={"pat_permissions": ("competency.articles.update",)},
+        opt={
+            "pat_permissions": ("competency.articles.update",),
+            "openapi_errors": {404: "The article, folder, tag, or referenced file does not exist."},
+        },
     )
     async def update_article(  # noqa: PLR0913
         self,
@@ -608,7 +671,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.articles.delete",)},
+        opt={
+            "pat_permissions": ("competency.articles.delete",),
+            "openapi_errors": {404: "The article does not exist or is not publicly available."},
+        },
     )
     async def delete_article(
         self,
@@ -636,7 +702,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-set-draft-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.articles.publish",)},
+        opt={
+            "pat_permissions": ("competency.articles.publish",),
+            "openapi_errors": {404: "The article does not exist or is not publicly available."},
+        },
     )
     async def set_draft_status_to_article(
         self,
@@ -663,7 +732,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-set-published-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.articles.publish",)},
+        opt={
+            "pat_permissions": ("competency.articles.publish",),
+            "openapi_errors": {404: "The article does not exist or is not publicly available."},
+        },
     )
     async def set_published_status_to_article(
         self,
@@ -777,7 +849,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-tags-update-api-handler",
         status_code=status_codes.HTTP_200_OK,
-        opt={"pat_permissions": ("competency.articles.update", "competency.articles.publish")},
+        opt={
+            "pat_permissions": ("competency.articles.update", "competency.articles.publish"),
+            "openapi_errors": {404: "The article tag does not exist."},
+        },
     )
     async def update_tag(  # noqa: PLR0913
         self,
@@ -822,7 +897,10 @@ class AdminArticlesApiController(Controller):
         ),
         name="admin-articles-tags-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.articles.delete", "competency.articles.publish")},
+        opt={
+            "pat_permissions": ("competency.articles.delete", "competency.articles.publish"),
+            "openapi_errors": {404: "The article tag does not exist."},
+        },
     )
     async def delete_tag(
         self,

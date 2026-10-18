@@ -211,6 +211,10 @@ files at the project root. Shared runtime and deployment infrastructure belongs 
 
 ## HTTP and Schemas
 
+- Keep OpenAPI synchronized with HTTP contract changes. Document operation intent, authorization,
+  required and nullable inputs, constraints, pagination, actual MIME types, applicable errors, and
+  realistic schema-valid examples. Verify generated schemas and relevant HTTP behavior through
+  Make-backed checks.
 - Controllers must receive dependencies through `FromDishka[...]`, typed as the concrete use case
   class registered in Dishka.
 - Endpoint/controller modules must not define `@staticmethod`, `@classmethod`, or private helper

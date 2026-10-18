@@ -91,7 +91,10 @@ class AdminToolsApiController(Controller):
         name="admin-tools-cache-warm-operation-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=False,
-        opt={"pat_permissions": ("competency.tools.read",)},
+        opt={
+            "pat_permissions": ("competency.tools.read",),
+            "openapi_errors": {404: "The cache warm operation does not exist or has expired."},
+        },
     )
     async def get_cache_warm_operation(
         self,

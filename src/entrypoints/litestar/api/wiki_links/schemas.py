@@ -9,9 +9,25 @@ from entrypoints.litestar.api.schemas import CamelCaseSchema
 
 
 class WikiLinkTargetResponseSchema(CamelCaseSchema):
-    slug: Annotated[str, Field(title="Target slug")]
-    title: Annotated[str, Field(title="Localized target title")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
+    slug: Annotated[
+        str,
+        Field(
+            title="Target slug",
+            examples=["python-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    title: Annotated[
+        str, Field(title="Localized target title", examples=["Understanding asyncio.gather"])
+    ]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: WikiLinkTarget) -> Self:
@@ -23,7 +39,7 @@ class WikiLinkTargetResponseSchema(CamelCaseSchema):
 
 
 class WikiLinkTargetGroupResponseSchema(CamelCaseSchema):
-    type: Annotated[WikiLinkTargetTypeEnum, Field(title="Target type")]
+    type: Annotated[WikiLinkTargetTypeEnum, Field(title="Target type", examples=["articles"])]
     items: Annotated[list[WikiLinkTargetResponseSchema], Field(title="Targets")]
 
     @classmethod

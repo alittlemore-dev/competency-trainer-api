@@ -55,6 +55,7 @@ from core.competency_matrix.schemas import (
 from core.enums import PublishStatusEnum
 from core.generators import HexUuidIdGenerator
 from core.i18n.enums import LanguageEnum
+from entrypoints.litestar.api.parameters import MultipartFileMediaTypes
 from entrypoints.litestar.api.schemas import CamelCaseSchema
 from entrypoints.litestar.api.validation import (
     MatrixLongText,
@@ -65,7 +66,14 @@ from entrypoints.litestar.api.validation import (
 
 
 class ResourceTranslationSchema(CamelCaseSchema):
-    name: Annotated[RequiredShortText, Field(title="Name")]
+    name: Annotated[
+        RequiredShortText,
+        Field(
+            title="Name",
+            examples=["Python asyncio documentation"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
 
 
 class ResourceTranslationsSchema(CamelCaseSchema):
@@ -74,7 +82,14 @@ class ResourceTranslationsSchema(CamelCaseSchema):
 
 
 class StructureNameTranslationSchema(CamelCaseSchema):
-    name: Annotated[RequiredShortText, Field(title="Name")]
+    name: Annotated[
+        RequiredShortText,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
 
 
 class StructureNameTranslationsSchema(CamelCaseSchema):
@@ -83,9 +98,30 @@ class StructureNameTranslationsSchema(CamelCaseSchema):
 
 
 class MatrixStructureSubsectionResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    name: Annotated[str, Field(title="Name")]
-    priority: Annotated[int, Field(title="Priority")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    priority: Annotated[
+        int,
+        Field(
+            title="Priority",
+            examples=[2],
+            description="Position used to order items within their parent.",
+        ),
+    ]
     translations: Annotated[StructureNameTranslationsSchema, Field(title="Translations")]
 
     @classmethod
@@ -107,12 +143,34 @@ class MatrixStructureSubsectionResponseSchema(CamelCaseSchema):
 
 
 class MatrixStructureSectionResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    name: Annotated[str, Field(title="Name")]
-    priority: Annotated[int, Field(title="Priority")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    priority: Annotated[
+        int,
+        Field(
+            title="Priority",
+            examples=[2],
+            description="Position used to order items within their parent.",
+        ),
+    ]
     translations: Annotated[StructureNameTranslationsSchema, Field(title="Translations")]
     subsections: Annotated[
-        list[MatrixStructureSubsectionResponseSchema], Field(title="Subsections")
+        list[MatrixStructureSubsectionResponseSchema],
+        Field(title="Subsections"),
     ]
 
     @classmethod
@@ -141,12 +199,43 @@ class MatrixStructureSectionResponseSchema(CamelCaseSchema):
 
 
 class MatrixStructureSheetResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    key: Annotated[str, Field(title="Key")]
-    name: Annotated[str, Field(title="Name")]
-    priority: Annotated[int, Field(title="Priority")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    key: Annotated[
+        str,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    priority: Annotated[
+        int,
+        Field(
+            title="Priority",
+            examples=[2],
+            description="Position used to order items within their parent.",
+        ),
+    ]
     translations: Annotated[StructureNameTranslationsSchema, Field(title="Translations")]
-    sections: Annotated[list[MatrixStructureSectionResponseSchema], Field(title="Sections")]
+    sections: Annotated[
+        list[MatrixStructureSectionResponseSchema],
+        Field(title="Sections"),
+    ]
 
     @classmethod
     def from_domain_schema(
@@ -196,7 +285,14 @@ class MatrixStructureResponseSchema(CamelCaseSchema):
 
 
 class MatrixSheetCreateRequestSchema(CamelCaseSchema):
-    key: Annotated[SlugString, Field(title="Key")]
+    key: Annotated[
+        SlugString,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
     translations: Annotated[StructureNameTranslationsSchema, Field(title="Translations")]
 
     def to_schema(self) -> CompetencyMatrixSheetCreateParams:
@@ -230,7 +326,17 @@ class MatrixSubsectionCreateRequestSchema(CamelCaseSchema):
 
 
 class MatrixStructurePriorityUpdateRequestSchema(CamelCaseSchema):
-    ordered_ids: Annotated[list[str], Field(title="Ordered identifiers")]
+    ordered_ids: Annotated[
+        list[str],
+        Field(
+            title="Ordered identifiers",
+            examples=[["1b734fe27bc04ace9f2c18fa26ad5081", "26226d65583d45ec8aee065d773d595f"]],
+            description=(
+                "Complete ordered identifiers of all siblings; omitted, duplicate,"
+                " or foreign identifiers are rejected."
+            ),
+        ),
+    ]
 
     def to_sheet_schema(self) -> CompetencyMatrixSheetPriorityUpdateParams:
         return CompetencyMatrixSheetPriorityUpdateParams(
@@ -255,8 +361,24 @@ class MatrixStructurePriorityUpdateRequestSchema(CamelCaseSchema):
 
 
 class QuestionSuggestionRequestSchema(CamelCaseSchema):
-    question: Annotated[RequiredShortText, Field(title="Question")]
-    sheet: Annotated[RequiredShortText | None, Field(title="Sheet")]
+    model_config = ConfigDict(json_schema_extra={"required": ["question"]})
+
+    question: Annotated[
+        RequiredShortText,
+        Field(
+            title="Question",
+            examples=["How does asyncio.gather handle concurrent awaitables?"],
+            description="Question text in the selected language, or in this explicit translation.",
+        ),
+    ]
+    sheet: Annotated[
+        RequiredShortText | None,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Optional queue sheet label; omitted or blank means no sheet.",
+        ),
+    ]
 
     @model_validator(mode="before")
     @classmethod
@@ -306,18 +428,62 @@ class QuestionSuggestionRequestSchema(CamelCaseSchema):
 
 
 class PublicQuestionSuggestionRequestSchema(QuestionSuggestionRequestSchema):
-    sheet: Annotated[RequiredShortText, Field(title="Sheet")]
+    model_config = ConfigDict(json_schema_extra={"required": ["question", "sheet"]})
+
+    sheet: Annotated[
+        RequiredShortText,
+        Field(
+            title="Sheet",
+            examples=["python"],
+            description="Existing language-neutral sheet key. Unknown keys return HTTP 400.",
+        ),
+    ]
 
 
 class QueuedQuestionResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    question: Annotated[str, Field(title="Question")]
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
-    sheet: Annotated[str | None, Field(title="Sheet")]
-    section: Annotated[str | None, Field(title="Section")]
-    subsection: Annotated[str | None, Field(title="Subsection")]
-    suggested_by_username: Annotated[str, Field(title="Suggested by")]
-    created_at: Annotated[str, Field(title="Creation date")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    question: Annotated[
+        str,
+        Field(
+            title="Question",
+            examples=["How does asyncio.gather handle concurrent awaitables?"],
+            description="Question text in the selected language, or in this explicit translation.",
+        ),
+    ]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
+    sheet: Annotated[
+        str | None,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
+    section: Annotated[str | None, Field(title="Section", examples=["Concurrency"])]
+    subsection: Annotated[str | None, Field(title="Subsection", examples=["Async IO"])]
+    suggested_by_username: Annotated[str, Field(title="Suggested by", examples=["reader42"])]
+    created_at: Annotated[
+        str,
+        Field(
+            title="Creation date",
+            examples=["2026-10-12T09:30:00+00:00"],
+            description="Creation timestamp in ISO 8601 format.",
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: QueuedCompetencyMatrixQuestion) -> Self:
@@ -349,16 +515,59 @@ class QueuedQuestionsResponseSchema(CamelCaseSchema):
 class QueuedQuestionsImportPreviewRequestSchema(CamelCaseSchema):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    file: Annotated[UploadFile, Field(title="Import file")]
+    file: Annotated[
+        UploadFile,
+        MultipartFileMediaTypes(
+            content_types=(
+                "text/plain",
+                "text/csv",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-excel.sheet.macroEnabled.12",
+            ),
+        ),
+        Field(
+            title="Import file",
+            description=(
+                "Binary .txt, .csv, .xlsx, or .xlsm upload with a filename. Legacy"
+                " .xls is rejected. "
+                "Format selection uses the filename extension. Supply the actual MIME type for "
+                "the uploaded format; this is a file part, not a local filesystem path."
+            ),
+        ),
+    ]
 
 
 class QueuedQuestionsImportConfirmationRequestSchema(CamelCaseSchema):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    file: Annotated[UploadFile, Field(title="Import file")]
+    file: Annotated[
+        UploadFile,
+        MultipartFileMediaTypes(
+            content_types=(
+                "text/plain",
+                "text/csv",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.ms-excel.sheet.macroEnabled.12",
+            ),
+        ),
+        Field(
+            title="Import file",
+            description=(
+                "Binary .txt, .csv, .xlsx, or .xlsm upload with a filename. Legacy"
+                " .xls is rejected. "
+                "Format selection uses the filename extension. Supply the actual MIME type for "
+                "the uploaded format; this is a file part, not a local filesystem path."
+            ),
+        ),
+    ]
     selected_row_numbers: Annotated[
         list[int],
-        Field(title="Selected row numbers", min_length=1),
+        Field(
+            title="Selected row numbers",
+            min_length=1,
+            examples=[[2, 3]],
+            description="Non-empty list of one-based source row numbers selected after preview.",
+        ),
     ]
 
     @field_validator("selected_row_numbers", mode="before")
@@ -370,12 +579,21 @@ class QueuedQuestionsImportConfirmationRequestSchema(CamelCaseSchema):
 
 
 class QueuedQuestionsImportPreviewIssueResponseSchema(CamelCaseSchema):
-    code: Annotated[QuestionQueueImportIssueCodeEnum, Field(title="Issue code")]
+    code: Annotated[
+        QuestionQueueImportIssueCodeEnum, Field(title="Issue code", examples=["duplicateInQueue"])
+    ]
     severity: Annotated[
         QuestionQueueImportIssueSeverityEnum,
-        Field(title="Issue severity"),
+        Field(title="Issue severity", examples=["warning"]),
     ]
-    related_row_numbers: Annotated[list[int], Field(title="Related row numbers")]
+    related_row_numbers: Annotated[
+        list[int],
+        Field(
+            title="Related row numbers",
+            examples=[[4]],
+            description="Other source rows involved in this duplicate warning.",
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(
@@ -391,12 +609,60 @@ class QueuedQuestionsImportPreviewIssueResponseSchema(CamelCaseSchema):
 
 
 class QueuedQuestionsImportPreviewRowResponseSchema(CamelCaseSchema):
-    row_number: Annotated[int, Field(title="Source row number")]
-    question: Annotated[str, Field(title="Question")]
-    sheet: Annotated[str, Field(title="Sheet")]
-    grade: Annotated[str, Field(title="Grade")]
-    can_import: Annotated[bool, Field(title="Whether the row can be imported")]
-    selected_by_default: Annotated[bool, Field(title="Whether the row is selected by default")]
+    row_number: Annotated[
+        int,
+        Field(
+            title="Source row number",
+            examples=[2],
+            description=(
+                "One-based row number in the source file, including the header row where present."
+            ),
+        ),
+    ]
+    question: Annotated[
+        str,
+        Field(
+            title="Question",
+            examples=["How does asyncio.gather handle concurrent awaitables?"],
+            description="Question text in the selected language, or in this explicit translation.",
+        ),
+    ]
+    sheet: Annotated[
+        str,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
+    grade: Annotated[
+        str,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description=(
+                "Raw grade text from the source row; empty when the file does not supply a grade."
+            ),
+        ),
+    ]
+    can_import: Annotated[
+        bool,
+        Field(
+            title="Whether the row can be imported",
+            examples=[True],
+            description="Whether this row passes validation and can be included in confirmation.",
+        ),
+    ]
+    selected_by_default: Annotated[
+        bool,
+        Field(
+            title="Whether the row is selected by default",
+            examples=[True],
+            description=(
+                "Initial selection suggested by the preview; duplicate warnings can clear it."
+            ),
+        ),
+    ]
     issues: Annotated[
         list[QueuedQuestionsImportPreviewIssueResponseSchema],
         Field(title="Validation errors and duplicate warnings"),
@@ -439,9 +705,29 @@ class QueuedQuestionsImportPreviewResponseSchema(CamelCaseSchema):
 
 
 class ResourceResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    name: Annotated[str, Field(title="Name")]
-    url: Annotated[str, Field(title="URL")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Python asyncio documentation"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    url: Annotated[
+        str,
+        Field(
+            title="URL",
+            examples=["https://docs.python.org/3/library/asyncio-task.html#asyncio.gather"],
+        ),
+    ]
     translations: Annotated[ResourceTranslationsSchema, Field(title="Translations")]
 
     @classmethod
@@ -458,7 +744,13 @@ class ResourceResponseSchema(CamelCaseSchema):
 
 
 class ResourceRequestSchema(CamelCaseSchema):
-    url: Annotated[RequiredHttpUrlString, Field(title="URL")]
+    url: Annotated[
+        RequiredHttpUrlString,
+        Field(
+            title="URL",
+            examples=["https://docs.python.org/3/library/asyncio-task.html#asyncio.gather"],
+        ),
+    ]
     translations: Annotated[ResourceTranslationsSchema, Field(title="Translations")]
 
     def to_schema(self, resource_id: str) -> ExternalResource:
@@ -471,7 +763,14 @@ class ResourceRequestSchema(CamelCaseSchema):
 
 
 class AttachmentContextTranslationSchema(CamelCaseSchema):
-    context: Annotated[MatrixLongText, Field(title="Context")]
+    context: Annotated[
+        MatrixLongText,
+        Field(
+            title="Context",
+            examples=["Read the section about concurrent task execution."],
+            description="Why this external resource is relevant to the question.",
+        ),
+    ]
 
 
 class AttachmentContextTranslationsSchema(CamelCaseSchema):
@@ -480,8 +779,22 @@ class AttachmentContextTranslationsSchema(CamelCaseSchema):
 
 
 class AttachedResourceTranslationSchema(CamelCaseSchema):
-    name: Annotated[str, Field(title="Name")]
-    context: Annotated[str, Field(title="Context")]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Python asyncio documentation"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    context: Annotated[
+        str,
+        Field(
+            title="Context",
+            examples=["Read the section about concurrent task execution."],
+            description="Why this external resource is relevant to the question.",
+        ),
+    ]
 
 
 class AttachedResourceTranslationsSchema(CamelCaseSchema):
@@ -490,10 +803,37 @@ class AttachedResourceTranslationsSchema(CamelCaseSchema):
 
 
 class AttachedResourceResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    name: Annotated[str, Field(title="Name")]
-    url: Annotated[str, Field(title="URL")]
-    context: Annotated[str, Field(title="Context")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Python asyncio documentation"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
+    url: Annotated[
+        str,
+        Field(
+            title="URL",
+            examples=["https://docs.python.org/3/library/asyncio-task.html#asyncio.gather"],
+        ),
+    ]
+    context: Annotated[
+        str,
+        Field(
+            title="Context",
+            examples=["Read the section about concurrent task execution."],
+            description="Why this external resource is relevant to the question.",
+        ),
+    ]
     translations: Annotated[AttachedResourceTranslationsSchema, Field(title="Translations")]
 
     @classmethod
@@ -522,7 +862,14 @@ class AttachedResourceResponseSchema(CamelCaseSchema):
 
 
 class ExistingResourceAttachmentRequestSchema(CamelCaseSchema):
-    resource_id: Annotated[str, Field(title="Identifier")]
+    resource_id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Identifier of an existing external resource to attach.",
+        ),
+    ]
     translations: Annotated[AttachmentContextTranslationsSchema, Field(title="Translations")]
 
     def to_schema(self) -> ExistingExternalResourceAttachment:
@@ -549,11 +896,36 @@ class NewResourceAttachmentRequestSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixItemTranslationSchema(CamelCaseSchema):
-    question: Annotated[RequiredShortText, Field(title="Question")]
-    answer: Annotated[MatrixLongText, Field(title="Answer")]
+    question: Annotated[
+        RequiredShortText,
+        Field(
+            title="Question",
+            examples=["How does asyncio.gather handle concurrent awaitables?"],
+            description="Question text in the selected language, or in this explicit translation.",
+        ),
+    ]
+    answer: Annotated[
+        MatrixLongText,
+        Field(
+            title="Answer",
+            examples=[
+                (
+                    "`asyncio.gather()` schedules awaitables concurrently and returns "
+                    "results in input order."
+                )
+            ],
+            description=(
+                "Markdown answer in the selected language, or in this explicit translation."
+            ),
+        ),
+    ]
     interview_answer_explanation: Annotated[
         MatrixLongText,
-        Field(title="Interview answer explanation"),
+        Field(
+            title="Interview answer explanation",
+            examples=["Explain result ordering and how return_exceptions changes error handling."],
+            description="Guidance on what an interview answer should explain.",
+        ),
     ]
 
 
@@ -578,11 +950,29 @@ class CompetencyMatrixItemTranslationsSchema(CamelCaseSchema):
 
 
 class PublicCompetencyMatrixItemResponseSchema(CamelCaseSchema):
-    slug: Annotated[str, Field(title="Slug")]
-    question: Annotated[str, Field(title="Question")]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["python-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    question: Annotated[
+        str,
+        Field(
+            title="Question",
+            examples=["How does asyncio.gather handle concurrent awaitables?"],
+            description="Question text in the selected language, or in this explicit translation.",
+        ),
+    ]
     interview_frequency: Annotated[
         InterviewFrequencyEnum | None,
-        Field(title="Interview frequency"),
+        Field(
+            title="Interview frequency",
+            examples=["often"],
+            description="How frequently this question appears in interviews.",
+        ),
     ]
 
     @classmethod
@@ -595,7 +985,14 @@ class PublicCompetencyMatrixItemResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixItemResponseSchema(PublicCompetencyMatrixItemResponseSchema):
-    id: Annotated[str, Field(title="Identifier")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: CompetencyMatrixItem, language: LanguageEnum) -> Self:
@@ -610,17 +1007,66 @@ class CompetencyMatrixItemResponseSchema(PublicCompetencyMatrixItemResponseSchem
 
 
 class PublicCompetencyMatrixItemDetailResponseSchema(PublicCompetencyMatrixItemResponseSchema):
-    answer: Annotated[str, Field(title="Answer")]
-    interview_answer_explanation: Annotated[str, Field(title="Interview answer explanation")]
-    sheet_key: Annotated[str, Field(title="Sheet key")]
-    sheet: Annotated[str, Field(title="Sheet")]
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
-    section: Annotated[str, Field(title="Section")]
-    subsection: Annotated[str, Field(title="Subsection")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
+    answer: Annotated[
+        str,
+        Field(
+            title="Answer",
+            examples=[
+                (
+                    "`asyncio.gather()` schedules awaitables concurrently and returns "
+                    "results in input order."
+                )
+            ],
+            description=(
+                "Markdown answer in the selected language, or in this explicit translation."
+            ),
+        ),
+    ]
+    interview_answer_explanation: Annotated[
+        str,
+        Field(
+            title="Interview answer explanation",
+            examples=["Explain result ordering and how return_exceptions changes error handling."],
+            description="Guidance on what an interview answer should explain.",
+        ),
+    ]
+    sheet_key: Annotated[
+        str,
+        Field(
+            title="Sheet key",
+            examples=["python"],
+            description="Stable language-neutral sheet key, independent of the selected language.",
+        ),
+    ]
+    sheet: Annotated[
+        str,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
+    section: Annotated[str, Field(title="Section", examples=["Concurrency"])]
+    subsection: Annotated[str, Field(title="Subsection", examples=["Async IO"])]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
     resources: Annotated[list[AttachedResourceResponseSchema], Field(title="Resources")]
     translations: Annotated[CompetencyMatrixItemTranslationsSchema, Field(title="Translations")]
-    suggested_by_username: Annotated[str, Field(title="Suggested by")]
+    suggested_by_username: Annotated[str, Field(title="Suggested by", examples=["reader42"])]
 
     @classmethod
     def from_domain_schema(
@@ -658,18 +1104,76 @@ class PublicCompetencyMatrixItemDetailResponseSchema(PublicCompetencyMatrixItemR
 
 
 class CompetencyMatrixItemDetailResponseSchema(CompetencyMatrixItemResponseSchema):
-    answer: Annotated[str, Field(title="Answer")]
-    interview_answer_explanation: Annotated[str, Field(title="Interview answer explanation")]
-    subsection_id: Annotated[str, Field(title="Subsection identifier")]
-    sheet_key: Annotated[str, Field(title="Sheet key")]
-    sheet: Annotated[str, Field(title="Sheet")]
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
-    section: Annotated[str, Field(title="Section")]
-    subsection: Annotated[str, Field(title="Subsection")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
+    answer: Annotated[
+        str,
+        Field(
+            title="Answer",
+            examples=[
+                (
+                    "`asyncio.gather()` schedules awaitables concurrently and returns "
+                    "results in input order."
+                )
+            ],
+            description=(
+                "Markdown answer in the selected language, or in this explicit translation."
+            ),
+        ),
+    ]
+    interview_answer_explanation: Annotated[
+        str,
+        Field(
+            title="Interview answer explanation",
+            examples=["Explain result ordering and how return_exceptions changes error handling."],
+            description="Guidance on what an interview answer should explain.",
+        ),
+    ]
+    subsection_id: Annotated[
+        str,
+        Field(
+            title="Subsection identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description=(
+                "Identifier of the existing matrix subsection to which the question belongs."
+            ),
+        ),
+    ]
+    sheet_key: Annotated[
+        str,
+        Field(
+            title="Sheet key",
+            examples=["python"],
+            description="Stable language-neutral sheet key, independent of the selected language.",
+        ),
+    ]
+    sheet: Annotated[
+        str,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
+    section: Annotated[str, Field(title="Section", examples=["Concurrency"])]
+    subsection: Annotated[str, Field(title="Subsection", examples=["Async IO"])]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
     resources: Annotated[list[AttachedResourceResponseSchema], Field(title="Resources")]
     translations: Annotated[CompetencyMatrixItemTranslationsSchema, Field(title="Translations")]
-    suggested_by_username: Annotated[str, Field(title="Suggested by")]
+    suggested_by_username: Annotated[str, Field(title="Suggested by", examples=["reader42"])]
 
     @classmethod
     def from_domain_schema(
@@ -708,14 +1212,48 @@ class CompetencyMatrixItemDetailResponseSchema(CompetencyMatrixItemResponseSchem
 
 
 class CompetencyMatrixItemRequestSchema(CamelCaseSchema):
-    slug: Annotated[SlugString, Field(title="Slug")]
-    subsection_id: Annotated[str, Field(title="Subsection identifier")]
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
+    slug: Annotated[
+        SlugString,
+        Field(
+            title="Slug",
+            examples=["python-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    subsection_id: Annotated[
+        str,
+        Field(
+            title="Subsection identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description=(
+                "Identifier of the existing matrix subsection to which the question belongs."
+            ),
+        ),
+    ]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
     interview_frequency: Annotated[
         InterviewFrequencyEnum | None,
-        Field(title="Interview frequency"),
+        Field(
+            title="Interview frequency",
+            examples=["often"],
+            description="How frequently this question appears in interviews.",
+        ),
     ]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
     translations: Annotated[CompetencyMatrixItemTranslationsSchema, Field(title="Translations")]
     resources: Annotated[
         list[ExistingResourceAttachmentRequestSchema | NewResourceAttachmentRequestSchema],
@@ -791,7 +1329,14 @@ class CompetencyMatrixItemRequestSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixGroupedGradesResponseSchema(CamelCaseSchema):
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
     items: Annotated[list[CompetencyMatrixItemResponseSchema], Field(title="List")]
 
     @classmethod
@@ -815,8 +1360,11 @@ class CompetencyMatrixGroupedGradesResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixGroupedSubsectionsResponseSchema(CamelCaseSchema):
-    subsection: Annotated[str, Field(title="Subsection")]
-    grades: Annotated[list[CompetencyMatrixGroupedGradesResponseSchema], Field(title="List")]
+    subsection: Annotated[str, Field(title="Subsection", examples=["Async IO"])]
+    grades: Annotated[
+        list[CompetencyMatrixGroupedGradesResponseSchema],
+        Field(title="List"),
+    ]
 
     @classmethod
     def from_domain_schema(
@@ -840,7 +1388,7 @@ class CompetencyMatrixGroupedSubsectionsResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixGroupedSectionsResponseSchema(CamelCaseSchema):
-    section: Annotated[str, Field(title="Section")]
+    section: Annotated[str, Field(title="Section", examples=["Concurrency"])]
     subsections: Annotated[
         list[CompetencyMatrixGroupedSubsectionsResponseSchema],
         Field(title="List"),
@@ -871,8 +1419,22 @@ class CompetencyMatrixGroupedSectionsResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixItemsListResponseSchema(CamelCaseSchema):
-    sheet_key: Annotated[str, Field(title="Sheet key")]
-    sheet: Annotated[str, Field(title="Sheet")]
+    sheet_key: Annotated[
+        str,
+        Field(
+            title="Sheet key",
+            examples=["python"],
+            description="Stable language-neutral sheet key, independent of the selected language.",
+        ),
+    ]
+    sheet: Annotated[
+        str,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
     sections: Annotated[
         list[CompetencyMatrixGroupedSectionsResponseSchema],
         Field(title="List"),
@@ -912,7 +1474,14 @@ class CompetencyMatrixItemsListResponseSchema(CamelCaseSchema):
 
 
 class PublicCompetencyMatrixGroupedGradesResponseSchema(CamelCaseSchema):
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
     items: Annotated[list[PublicCompetencyMatrixItemResponseSchema], Field(title="List")]
 
     @classmethod
@@ -936,7 +1505,7 @@ class PublicCompetencyMatrixGroupedGradesResponseSchema(CamelCaseSchema):
 
 
 class PublicCompetencyMatrixGroupedSubsectionsResponseSchema(CamelCaseSchema):
-    subsection: Annotated[str, Field(title="Subsection")]
+    subsection: Annotated[str, Field(title="Subsection", examples=["Async IO"])]
     grades: Annotated[
         list[PublicCompetencyMatrixGroupedGradesResponseSchema],
         Field(title="List"),
@@ -964,7 +1533,7 @@ class PublicCompetencyMatrixGroupedSubsectionsResponseSchema(CamelCaseSchema):
 
 
 class PublicCompetencyMatrixGroupedSectionsResponseSchema(CamelCaseSchema):
-    section: Annotated[str, Field(title="Section")]
+    section: Annotated[str, Field(title="Section", examples=["Concurrency"])]
     subsections: Annotated[
         list[PublicCompetencyMatrixGroupedSubsectionsResponseSchema],
         Field(title="List"),
@@ -995,8 +1564,22 @@ class PublicCompetencyMatrixGroupedSectionsResponseSchema(CamelCaseSchema):
 
 
 class PublicCompetencyMatrixItemsListResponseSchema(CamelCaseSchema):
-    sheet_key: Annotated[str, Field(title="Sheet key")]
-    sheet: Annotated[str, Field(title="Sheet")]
+    sheet_key: Annotated[
+        str,
+        Field(
+            title="Sheet key",
+            examples=["python"],
+            description="Stable language-neutral sheet key, independent of the selected language.",
+        ),
+    ]
+    sheet: Annotated[
+        str,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
     sections: Annotated[
         list[PublicCompetencyMatrixGroupedSectionsResponseSchema],
         Field(title="List"),
@@ -1036,8 +1619,22 @@ class PublicCompetencyMatrixItemsListResponseSchema(CamelCaseSchema):
 
 
 class SheetResponseSchema(CamelCaseSchema):
-    key: Annotated[str, Field(title="Key")]
-    name: Annotated[str, Field(title="Name")]
+    key: Annotated[
+        str,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
+    name: Annotated[
+        str,
+        Field(
+            title="Name",
+            examples=["Async IO"],
+            description="Display name in the selected language, or in this explicit translation.",
+        ),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: Sheet, language: LanguageEnum) -> Self:
@@ -1076,11 +1673,13 @@ class CompetencyMatrixResourcesResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixWorkspaceSummaryResponseSchema(CamelCaseSchema):
-    total: Annotated[int, Field(title="Total")]
-    draft: Annotated[int, Field(title="Draft")]
-    missing_draft: Annotated[int, Field(title="Draft items with missing fields")]
-    dangerous_published: Annotated[int, Field(title="Published items with missing fields")]
-    ready_published: Annotated[int, Field(title="Ready published items")]
+    total: Annotated[int, Field(title="Total", examples=[42])]
+    draft: Annotated[int, Field(title="Draft", examples=[12])]
+    missing_draft: Annotated[int, Field(title="Draft items with missing fields", examples=[4])]
+    dangerous_published: Annotated[
+        int, Field(title="Published items with missing fields", examples=[1])
+    ]
+    ready_published: Annotated[int, Field(title="Ready published items", examples=[29])]
 
     @classmethod
     def from_domain_schema(cls, *, schema: CompetencyMatrixWorkspaceSummary) -> Self:
@@ -1094,23 +1693,87 @@ class CompetencyMatrixWorkspaceSummaryResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixWorkspaceItemResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Identifier")]
-    slug: Annotated[str, Field(title="Slug")]
-    question: Annotated[str, Field(title="Question")]
-    sheet_key: Annotated[str, Field(title="Sheet key")]
-    sheet: Annotated[str, Field(title="Sheet")]
-    grade: Annotated[GradeEnum | None, Field(title="Grade")]
+    id: Annotated[
+        str,
+        Field(
+            title="Identifier",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    slug: Annotated[
+        str,
+        Field(
+            title="Slug",
+            examples=["python-asyncio-gather"],
+            description="Stable URL slug; lowercase words separated by hyphens.",
+        ),
+    ]
+    question: Annotated[
+        str,
+        Field(
+            title="Question",
+            examples=["How does asyncio.gather handle concurrent awaitables?"],
+            description="Question text in the selected language, or in this explicit translation.",
+        ),
+    ]
+    sheet_key: Annotated[
+        str,
+        Field(
+            title="Sheet key",
+            examples=["python"],
+            description="Stable language-neutral sheet key, independent of the selected language.",
+        ),
+    ]
+    sheet: Annotated[
+        str,
+        Field(
+            title="Sheet",
+            examples=["Python"],
+            description="Sheet display name, or the sheet value read from an imported row.",
+        ),
+    ]
+    grade: Annotated[
+        GradeEnum | None,
+        Field(
+            title="Grade",
+            examples=["Middle"],
+            description="Competency grade; null means the grade has not been assigned.",
+        ),
+    ]
     interview_frequency: Annotated[
         InterviewFrequencyEnum | None,
-        Field(title="Interview frequency"),
+        Field(
+            title="Interview frequency",
+            examples=["often"],
+            description="How frequently this question appears in interviews.",
+        ),
     ]
-    section: Annotated[str, Field(title="Section")]
-    subsection: Annotated[str, Field(title="Subsection")]
-    publish_status: Annotated[PublishStatusEnum, Field(title="Publication status")]
-    published_at: Annotated[str | None, Field(title="Publication date")]
+    section: Annotated[str, Field(title="Section", examples=["Concurrency"])]
+    subsection: Annotated[str, Field(title="Subsection", examples=["Async IO"])]
+    publish_status: Annotated[
+        PublishStatusEnum,
+        Field(
+            title="Publication status",
+            examples=["Draft"],
+            description="Publication state. Published content must satisfy publication validation.",
+        ),
+    ]
+    published_at: Annotated[
+        str | None,
+        Field(
+            title="Publication date",
+            examples=["2026-10-13T10:00:00+00:00"],
+            description="Publication timestamp in ISO 8601 format, or null when unpublished.",
+        ),
+    ]
     missing_fields: Annotated[
         list[CompetencyMatrixMissingFieldEnum],
-        Field(title="Missing fields"),
+        Field(
+            title="Missing fields",
+            examples=[["answerEn"]],
+            description="Publication requirements that are currently incomplete.",
+        ),
     ]
 
     @classmethod
@@ -1134,8 +1797,22 @@ class CompetencyMatrixWorkspaceItemResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixWorkspaceResponseSchema(CamelCaseSchema):
-    total_count: Annotated[int, Field(title="Question count")]
-    total_pages: Annotated[int, Field(title="Page count")]
+    total_count: Annotated[
+        int,
+        Field(
+            title="Question count",
+            examples=[42],
+            description="Total matching records before pagination.",
+        ),
+    ]
+    total_pages: Annotated[
+        int,
+        Field(
+            title="Page count",
+            examples=[3],
+            description="Number of pages for the requested pageSize; zero when no records match.",
+        ),
+    ]
     summary: Annotated[CompetencyMatrixWorkspaceSummaryResponseSchema, Field(title="Summary")]
     items: Annotated[list[CompetencyMatrixWorkspaceItemResponseSchema], Field(title="Questions")]
 
@@ -1155,8 +1832,15 @@ class CompetencyMatrixWorkspaceResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixFilterOptionResponseSchema(CamelCaseSchema):
-    key: Annotated[str, Field(title="Key")]
-    label: Annotated[str, Field(title="Label")]
+    key: Annotated[
+        str,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
+    label: Annotated[str, Field(title="Label", examples=["Python"])]
 
     @classmethod
     def from_domain_schema(cls, *, schema: CompetencyMatrixFilterOption) -> Self:
@@ -1164,8 +1848,15 @@ class CompetencyMatrixFilterOptionResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixFilterSubsectionOptionResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Subsection ID")]
-    label: Annotated[str, Field(title="Subsection")]
+    id: Annotated[
+        str,
+        Field(
+            title="Subsection ID",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    label: Annotated[str, Field(title="Subsection", examples=["Python"])]
 
     @classmethod
     def from_domain_schema(cls, *, schema: CompetencyMatrixFilterSubsectionOption) -> Self:
@@ -1173,8 +1864,15 @@ class CompetencyMatrixFilterSubsectionOptionResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixFilterSectionOptionResponseSchema(CamelCaseSchema):
-    id: Annotated[str, Field(title="Section ID")]
-    label: Annotated[str, Field(title="Section")]
+    id: Annotated[
+        str,
+        Field(
+            title="Section ID",
+            examples=["1b734fe27bc04ace9f2c18fa26ad5081"],
+            description="Stable entity identifier.",
+        ),
+    ]
+    label: Annotated[str, Field(title="Section", examples=["Python"])]
     subsections: Annotated[
         list[CompetencyMatrixFilterSubsectionOptionResponseSchema],
         Field(title="Subsections"),
@@ -1195,8 +1893,15 @@ class CompetencyMatrixFilterSectionOptionResponseSchema(CamelCaseSchema):
 
 
 class CompetencyMatrixFilterSheetOptionResponseSchema(CamelCaseSchema):
-    key: Annotated[str, Field(title="Key")]
-    label: Annotated[str, Field(title="Label")]
+    key: Annotated[
+        str,
+        Field(
+            title="Key",
+            examples=["python"],
+            description="Stable language-neutral key used to reference this structure node.",
+        ),
+    ]
+    label: Annotated[str, Field(title="Label", examples=["Python"])]
     sections: Annotated[
         list[CompetencyMatrixFilterSectionOptionResponseSchema],
         Field(title="Sections"),
@@ -1218,14 +1923,17 @@ class CompetencyMatrixFilterSheetOptionResponseSchema(CamelCaseSchema):
 
 class CompetencyMatrixFilterOptionsResponseSchema(CamelCaseSchema):
     sheets: Annotated[list[CompetencyMatrixFilterSheetOptionResponseSchema], Field(title="Sheets")]
-    grades: Annotated[list[GradeEnum], Field(title="Grades")]
+    grades: Annotated[list[GradeEnum], Field(title="Grades", examples=[["Middle", "Senior"]])]
     interview_frequencies: Annotated[
         list[InterviewFrequencyEnum],
-        Field(title="Interview frequencies"),
+        Field(title="Interview frequencies", examples=[["often"]]),
     ]
-    sections: Annotated[list[str], Field(title="Sections")]
-    subsections: Annotated[list[str], Field(title="Subsections")]
-    publish_statuses: Annotated[list[PublishStatusEnum], Field(title="Publication statuses")]
+    sections: Annotated[list[str], Field(title="Sections", examples=[["Concurrency"]])]
+    subsections: Annotated[list[str], Field(title="Subsections", examples=[["Async IO"]])]
+    publish_statuses: Annotated[
+        list[PublishStatusEnum],
+        Field(title="Publication statuses", examples=[["Draft", "Published"]]),
+    ]
 
     @classmethod
     def from_domain_schema(cls, *, schema: CompetencyMatrixFilterOptions) -> Self:

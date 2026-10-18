@@ -1,5 +1,6 @@
 # ruff: noqa: UP040
 # Litestar 2.23 does not unwrap PEP 695 aliases in handler signatures.
+from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, TypeAlias
 
@@ -15,10 +16,16 @@ from core.competency_matrix.enums import (
 from core.enums import PublishStatusEnum
 from core.files.enums import FilePurpose
 from core.i18n.enums import LanguageEnum
+from entrypoints.litestar.openapi_errors import JSONExample
+
+
+@dataclass(frozen=True)
+class MultipartFileMediaTypes:
+    content_types: tuple[str, ...]
 
 
 def build_examples(*values: object) -> list[Example]:
-    return [Example(value=value) for value in values]
+    return [JSONExample(value=value) for value in values]
 
 
 def api_query_parameter(  # noqa: PLR0913
@@ -96,7 +103,9 @@ PageQuery: TypeAlias = Annotated[
     api_query_parameter(
         name="page",
         title="Page",
-        description="One-based page number.",
+        description=(
+            "Required one-based page number (minimum 1). No default; omission returns HTTP 400."
+        ),
         examples=(1,),
         ge=1,
         le=None,
@@ -109,7 +118,7 @@ PageSizeQuery: TypeAlias = Annotated[
     api_query_parameter(
         name="pageSize",
         title="Page size",
-        description="Number of items to return per page.",
+        description="Required page size from 1 to 100. No default; omission returns HTTP 400.",
         examples=(20,),
         ge=1,
         le=100,

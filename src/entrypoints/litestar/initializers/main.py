@@ -69,8 +69,23 @@ def create_stores() -> dict[str, Store]:
 
 def create_openapi_config() -> OpenAPIConfig:
     return OpenAPIConfig(
-        title="docs",
-        version="0.1.0",
+        title="Competency Trainer API",
+        version="1.0.0",
+        description=(
+            "Public articles, competency matrix questions, contact requests, and anonymous "
+            "analytics, together with protected content-management operations. "
+            "Localized response fields use the explicitly supplied language (ru or en); "
+            "authoring payloads carry fixed RU/EN translations. "
+            "Paginated lists require both page (one-based, minimum 1) and pageSize (1–100); "
+            "there are no implicit pagination defaults. List-specific filters are described "
+            "on each operation. JSON errors use code, type, message, location, attr and optional "
+            "nested_errors; request validation returns HTTP 400. "
+            "Content management requires at least a moderator role; cache tools require at least "
+            "an administrator role. Higher roles, including owner, are allowed. Supply a bearer "
+            "identity and the "
+            "listed personal API token permissions when authenticating with such a token."
+        ),
+        create_examples=False,
         openapi_router=Router(
             "/api/docs",
             route_handlers=[],

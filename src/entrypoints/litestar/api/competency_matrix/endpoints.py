@@ -85,7 +85,11 @@ class PublicCompetencyMatrixApiController(Controller):
 
     @get(
         "/sheets",
-        description="Get the public competency matrix sheet list.",
+        description=(
+            "List configured competency matrix sheets with stable "
+            "language-neutral keys and names in the requested language. Use a "
+            "key to request questions for one sheet."
+        ),
         name="public-competency-matrix-sheets-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
@@ -104,7 +108,12 @@ class PublicCompetencyMatrixApiController(Controller):
 
     @get(
         "/items",
-        description="Get the public competency matrix question list.",
+        description=(
+            "List published questions for the required sheetKey, grouped by "
+            "localized section, subsection, and grade. This grouped collection"
+            " is not paginated. Use the public detail operation for answers "
+            "and attached resources."
+        ),
         name="public-competency-matrix-items-list-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
@@ -126,7 +135,12 @@ class PublicCompetencyMatrixApiController(Controller):
 
     @get(
         "/items/public/{sheet_key:str}/{slug:str}",
-        description="Get public competency matrix question details by sheet and slug.",
+        description=(
+            "Read one published competency question by sheet key and slug in "
+            "the requested language, including its Markdown answer, interview "
+            "guidance, and external resources. Unknown or unpublished "
+            "questions return HTTP 404."
+        ),
         name="public-competency-matrix-public-item-detail-api-handler",
         status_code=status_codes.HTTP_200_OK,
         cache=settings.app.get_cache_duration(constants.response_cache.default_ttl_seconds),
@@ -137,6 +151,7 @@ class PublicCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
+        opt={"openapi_errors": {404: "The question or referenced structure entry does not exist."}},
     )
     async def get_public_competency_matrix_item(
         self,
@@ -158,7 +173,15 @@ class PublicCompetencyMatrixApiController(Controller):
         ),
         name="public-competency-matrix-question-suggestion-create-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"auth_optional": True, "pat_permissions": ("competency.matrix.suggest",)},
+        opt={
+            "auth_optional": True,
+            "pat_permissions": ("competency.matrix.suggest",),
+            "openapi_errors": {
+                400: "The selected sheet is not publicly available.",
+                409: "The question already exists in the matrix or suggestion queue.",
+                429: "The daily suggestion quota for this client has been exceeded.",
+            },
+        },
         dependencies={
             "limit": Provide(
                 provide_question_suggestion_limit_params,
@@ -251,7 +274,10 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-sheet-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
-        opt={"pat_permissions": ("competency.matrix.create", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.create", "competency.matrix.publish"),
+            "openapi_errors": {400: "The structure key or name already exists within its parent."},
+        },
     )
     async def create_competency_matrix_sheet(
         self,
@@ -288,7 +314,13 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-section-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
-        opt={"pat_permissions": ("competency.matrix.create", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.create", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The question or referenced structure entry does not exist.",
+                400: "The structure key or name already exists within its parent.",
+            },
+        },
     )
     async def create_competency_matrix_section(
         self,
@@ -327,7 +359,13 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-subsection-create-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
-        opt={"pat_permissions": ("competency.matrix.create", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.create", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The question or referenced structure entry does not exist.",
+                400: "The structure key or name already exists within its parent.",
+            },
+        },
     )
     async def create_competency_matrix_subsection(
         self,
@@ -367,7 +405,16 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-sheet-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.delete", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.delete", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The selected structure node does not exist.",
+                409: (
+                    "The structure contains questions; explicit "
+                    "deleteWithQuestions=true is required."
+                ),
+            },
+        },
     )
     async def delete_competency_matrix_sheet(
         self,
@@ -397,7 +444,16 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-section-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.delete", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.delete", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The selected structure node does not exist.",
+                409: (
+                    "The structure contains questions; explicit "
+                    "deleteWithQuestions=true is required."
+                ),
+            },
+        },
     )
     async def delete_competency_matrix_section(
         self,
@@ -427,7 +483,16 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-subsection-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.delete", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.delete", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The selected structure node does not exist.",
+                409: (
+                    "The structure contains questions; explicit "
+                    "deleteWithQuestions=true is required."
+                ),
+            },
+        },
     )
     async def delete_competency_matrix_subsection(
         self,
@@ -456,7 +521,10 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-sheet-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.update", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.update", "competency.matrix.publish"),
+            "openapi_errors": {400: "The ordered IDs must contain every sibling exactly once."},
+        },
     )
     async def update_competency_matrix_sheet_priorities(
         self,
@@ -488,7 +556,13 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-section-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.update", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.update", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The parent sheet or section does not exist.",
+                400: "The ordered IDs must contain every sibling exactly once.",
+            },
+        },
     )
     async def update_competency_matrix_section_priorities(
         self,
@@ -523,7 +597,13 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-subsection-priorities-update-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.update", "competency.matrix.publish")},
+        opt={
+            "pat_permissions": ("competency.matrix.update", "competency.matrix.publish"),
+            "openapi_errors": {
+                404: "The parent sheet or section does not exist.",
+                400: "The ordered IDs must contain every sibling exactly once.",
+            },
+        },
     )
     async def update_competency_matrix_subsection_priorities(
         self,
@@ -644,7 +724,16 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-queued-questions-import-preview-api-handler",
         status_code=status_codes.HTTP_200_OK,
-        opt={"pat_permissions": ("competency.matrix.create",)},
+        opt={
+            "pat_permissions": ("competency.matrix.create",),
+            "openapi_errors": {
+                400: (
+                    "The import file format, columns, selected rows, or question "
+                    "values are invalid. Row issues can appear in nested_errors with "
+                    "attr=file.row.N."
+                )
+            },
+        },
     )
     async def preview_queued_competency_matrix_questions_import(
         self,
@@ -652,7 +741,10 @@ class AdminCompetencyMatrixApiController(Controller):
             QueuedQuestionsImportPreviewRequestSchema,
             api_multipart_body(
                 title="Queued question import preview request",
-                description="Multipart file upload for queued question import preview.",
+                description="Upload .txt/.csv/.xlsx/.xlsm binary content. Preview returns "
+                "source row numbers, "
+                "validation errors, and duplicate warnings without creating queued questions. "
+                "Use the same file and the selected row numbers in the confirmation operation.",
                 examples=({"file": "questions.xlsx"},),
             ),
         ],
@@ -683,7 +775,16 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
-        opt={"pat_permissions": ("competency.matrix.create",)},
+        opt={
+            "pat_permissions": ("competency.matrix.create",),
+            "openapi_errors": {
+                400: (
+                    "The import file format, columns, selected rows, or question "
+                    "values are invalid. Row issues can appear in nested_errors with "
+                    "attr=file.row.N."
+                )
+            },
+        },
     )
     async def import_queued_competency_matrix_questions(
         self,
@@ -691,7 +792,11 @@ class AdminCompetencyMatrixApiController(Controller):
             QueuedQuestionsImportConfirmationRequestSchema,
             api_multipart_body(
                 title="Queued question import request",
-                description="Multipart file upload with selected queued question rows.",
+                description="Upload the same .txt/.csv/.xlsx/.xlsm binary content used for "
+                "preview and a "
+                "non-empty selectedRowNumbers list. Row numbers refer to source rows, including "
+                "the header where present. The server revalidates the file before "
+                "creating entries.",
                 examples=({"file": "questions.xlsx", "selectedRowNumbers": [2, 3]},),
             ),
         ],
@@ -721,7 +826,10 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-queued-question-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.delete",)},
+        opt={
+            "pat_permissions": ("competency.matrix.delete",),
+            "openapi_errors": {404: "The queued question does not exist."},
+        },
     )
     async def delete_queued_competency_matrix_question(
         self,
@@ -741,7 +849,13 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-queued-question-create-item-api-handler",
         status_code=status_codes.HTTP_201_CREATED,
-        opt={"pat_permissions": ("competency.matrix.create",)},
+        opt={
+            "pat_permissions": ("competency.matrix.create",),
+            "openapi_errors": {
+                404: "The question, subsection, or attached resource does not exist.",
+                400: "Published questions must satisfy all publication requirements.",
+            },
+        },
     )
     async def create_competency_matrix_item_from_queue(  # noqa: PLR0913
         self,
@@ -885,7 +999,13 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
-        opt={"pat_permissions": ("competency.matrix.create",)},
+        opt={
+            "pat_permissions": ("competency.matrix.create",),
+            "openapi_errors": {
+                404: "The question, subsection, or attached resource does not exist.",
+                400: "Published questions must satisfy all publication requirements.",
+            },
+        },
     )
     async def create_competency_matrix_item(  # noqa: PLR0913
         self,
@@ -958,7 +1078,10 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
-        opt={"pat_permissions": ("competency.matrix.read",)},
+        opt={
+            "pat_permissions": ("competency.matrix.read",),
+            "openapi_errors": {404: "The question or referenced structure entry does not exist."},
+        },
     )
     async def get_competency_matrix_item(
         self,
@@ -981,7 +1104,13 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-item-update-api-handler",
         status_code=status_codes.HTTP_200_OK,
-        opt={"pat_permissions": ("competency.matrix.update",)},
+        opt={
+            "pat_permissions": ("competency.matrix.update",),
+            "openapi_errors": {
+                404: "The question, subsection, or attached resource does not exist.",
+                400: "Published questions must satisfy all publication requirements.",
+            },
+        },
     )
     async def update_competency_matrix_item(  # noqa: PLR0913
         self,
@@ -1048,7 +1177,10 @@ class AdminCompetencyMatrixApiController(Controller):
         ),
         name="admin-competency-matrix-item-delete-api-handler",
         status_code=status_codes.HTTP_204_NO_CONTENT,
-        opt={"pat_permissions": ("competency.matrix.delete",)},
+        opt={
+            "pat_permissions": ("competency.matrix.delete",),
+            "openapi_errors": {404: "The question or referenced structure entry does not exist."},
+        },
     )
     async def delete_competency_matrix_item(
         self,
@@ -1078,7 +1210,10 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
-        opt={"pat_permissions": ("competency.matrix.publish",)},
+        opt={
+            "pat_permissions": ("competency.matrix.publish",),
+            "openapi_errors": {404: "The question or referenced structure entry does not exist."},
+        },
     )
     async def set_draft_status_to_competency_matrix_item(
         self,
@@ -1108,7 +1243,13 @@ class AdminCompetencyMatrixApiController(Controller):
                 sync_to_thread=False,
             ),
         },
-        opt={"pat_permissions": ("competency.matrix.publish",)},
+        opt={
+            "pat_permissions": ("competency.matrix.publish",),
+            "openapi_errors": {
+                404: "The question or referenced structure entry does not exist.",
+                400: "The question lacks fields required for publication.",
+            },
+        },
     )
     async def set_published_status_to_competency_matrix_item(
         self,
