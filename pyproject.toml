@@ -40,7 +40,7 @@ dev = [
     "granian[reload]>=2.8.4",
     "mypy>=2.4.0",
     "pip-audit>=2.10.1",
-    "pytest==9.1.1",
+    "pytest==9.2.0",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "pytest-xdist>=3.8.0",
