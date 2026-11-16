@@ -1,4 +1,4 @@
-FROM ghcr.io/astral-sh/uv:0.12.23-python3.14-trixie-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.13.8-python3.14-trixie-slim AS builder
 
 ENV APP_PATH=/project
 ENV UV_VENV_PATH=/project/.venv
@@ -13,7 +13,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache --no-default-groups --all-extras --no-install-project
 
 
-FROM python:3.14-slim-trixie
+FROM python:3.15-slim-trixie
 
 ENV CUSTOM_USER=python-user
 ENV APP_PATH=/project
